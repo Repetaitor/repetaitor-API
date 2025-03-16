@@ -48,12 +48,12 @@ public class AuthCodesRepository(ApplicationContext context) : IAuthCodesReposit
         }
     }
 
-    public async Task<bool> EmailIsVerfied(string email)
+    public async Task<bool> EmailIsVerfied(string guid, string email)
     {
         try
         {
-            var cd = await _context.AuthCodes.OrderByDescending(x => x.CreateDate).FirstOrDefaultAsync(x => x.Email == email);
-            return cd != null && cd.IsVerified;
+            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
+            return cd is { IsVerified: true };
         }
         catch (Exception)
         {

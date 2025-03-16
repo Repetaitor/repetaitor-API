@@ -38,11 +38,11 @@ public class UserAuthorizationService(
             };
         var generatedCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
         var result = await mailService.SendAuthMail(email, "Authentication Code", generatedCode);
-        if (result != "")
+        if (!result)
             return new ResponseViewModel<SendVerificationCodeResponse>()
             {
                 Code = -1,
-                Message = result
+                Message = "Email Not Sent",
             };
         var guid = await authCodesRepository.CreateAuthCode(generatedCode, email);
         return new ResponseViewModel<SendVerificationCodeResponse>()
@@ -71,7 +71,7 @@ public class UserAuthorizationService(
     }
     public async Task<ResponseViewModel<SignUpUserResponse>> SignUpUser(SignUpUserRequest request)
     {
-        if (!await authCodesRepository.EmailIsVerfied(request.Email))
+        if (!await authCodesRepository.EmailIsVerfied(request.AuthCodeGuid, request.Email))
             return new ResponseViewModel<SignUpUserResponse>()
             {
                 Code = -1,

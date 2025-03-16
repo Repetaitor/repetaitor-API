@@ -14,7 +14,7 @@ public class MailService : IMailService
         Host = "smtp.gmail.com",
         Port = 587
     };
-    public async Task<string> SendAuthMail(string to, string subject, string body)
+    public async Task<bool> SendAuthMail(string to, string subject, string body)
     {
         try
         {
@@ -41,12 +41,12 @@ public class MailService : IMailService
                 smtclinet.Credentials = new System.Net.NetworkCredential(_options.Email, _options.Password);
 
                 await smtclinet.SendMailAsync(mail);
-                return "";
+                return true;
             }
         }
         catch (Exception ex)
         {
-            return ex.Message;
+            return false;
         }
     }
 }
