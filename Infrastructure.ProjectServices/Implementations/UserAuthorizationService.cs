@@ -71,7 +71,7 @@ public class UserAuthorizationService(
     }
     public async Task<ResponseViewModel<SignUpUserResponse>> SignUpUser(SignUpUserRequest request)
     {
-        if (!await authCodesRepository.EmailIsVerfied(request.AuthCodeGuid, request.Email))
+        if (!await authCodesRepository.EmailIsVerified(request.AuthCodeGuid, request.Email))
             return new ResponseViewModel<SignUpUserResponse>()
             {
                 Code = -1,
@@ -91,7 +91,7 @@ public class UserAuthorizationService(
                     Success = false,
                 }
             };
-        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email, GetHashedPassword(request.Password));
+        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email, GetHashedPassword(request.Password), request.IsTeacher);
         if (result)
         {
             return new ResponseViewModel<SignUpUserResponse>()
@@ -129,7 +129,7 @@ public class UserAuthorizationService(
                 {
                     User = result,
                     JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
-                        { new Claim("email", result.Email), new Claim("userId", result.Id.ToString()) }),
+                        { new Claim("email", result.Email), new Claim("userId", result.Id.ToString()), new Claim(ClaimTypes.Role, result.isTeacher ? "Teacher" : "Student"), }),
                 }
             };
         }

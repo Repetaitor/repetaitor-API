@@ -48,7 +48,7 @@ public class AuthCodesRepository(ApplicationContext context) : IAuthCodesReposit
         }
     }
 
-    public async Task<bool> EmailIsVerfied(string guid, string email)
+    public async Task<bool> EmailIsVerified(string guid, string email)
     {
         try
         {

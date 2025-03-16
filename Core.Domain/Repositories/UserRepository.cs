@@ -31,6 +31,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
+                isTeacher = user.IsTeacher
             };
         }
         catch (Exception)
@@ -39,7 +40,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
         }
     }
 
-    public async Task<bool> AddUser(string firstName, string lastName, string email, string password)
+    public async Task<bool> AddUser(string firstName, string lastName, string email, string password, bool isTeacher)
     {
         try
         {
@@ -48,6 +49,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = firstName,
                 LastName = lastName,
                 Email = email,
+                IsTeacher = isTeacher,
                 Password = password,
             };
             await context.Users.AddAsync(user);
@@ -72,6 +74,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
+                isTeacher = user.IsTeacher
             };
         }
         catch
