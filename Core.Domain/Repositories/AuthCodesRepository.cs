@@ -10,32 +10,34 @@ public class AuthCodesRepository(ApplicationContext context) : IAuthCodesReposit
 {
     private ApplicationContext _context = context;
 
-    public async Task<bool> CreateAuthCode(string code, string email)
+    public async Task<string> CreateAuthCode(string code, string email)
     {
         try
         {
+            var newGuid = Guid.NewGuid();
             var auth = new AuthenticationCodes()
             {
                 Code = code,
+                Guid = newGuid.ToString(),
                 Email = email,
                 IsVerified = false
             };
             await _context.AuthCodes.AddAsync(auth);
             await _context.SaveChangesAsync();
-            return true;
+            return newGuid.ToString();
         }
         catch (Exception ex)
         {
-            return false;
+            return "";
         }
     }
 
-    public async Task<bool> CheckAuthCode(string email, string code)
+    public async Task<bool> CheckAuthCode(string guid, string email, string code)
     {
         try
         {
-            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.IsVerified == false);
-            if (cd == null || cd.Email != email || cd.Code != code || (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 3) {return false;}
+            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Guid == guid && x.Email == email && x.IsVerified == false);
+            if (cd == null || cd.Email != email || cd.Code != code || (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 10) {return false;}
             cd.IsVerified = true;
             await _context.SaveChangesAsync();
             return true;

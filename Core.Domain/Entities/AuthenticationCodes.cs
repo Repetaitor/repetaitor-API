@@ -7,6 +7,8 @@ public class AuthenticationCodes
 {
     public int Id { get; set; }
     [DataType("nvarchar(64)")]
+    public string Guid { get; set; }
+    [DataType("nvarchar(64)")]
     public string Email { get; set; }
     [DataType("nvarchar(64)")]
     public string Code { get; set; }

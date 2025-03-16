@@ -44,21 +44,21 @@ public class UserAuthorizationService(
                 Code = -1,
                 Message = result
             };
-        var res = await authCodesRepository.CreateAuthCode(generatedCode, email);
+        var guid = await authCodesRepository.CreateAuthCode(generatedCode, email);
         return new ResponseViewModel<SendVerificationCodeResponse>()
         {
-            Code = res ? 0 : -1,
-            Message = res ? "Verification Code Send" : "Something went wrong",
+            Code = !string.IsNullOrEmpty(guid) ? 0 : -1,
+            Message = !string.IsNullOrEmpty(guid) ? "Verification Code Send" : "Something went wrong",
             Data = new SendVerificationCodeResponse()
             {
-                Result = res
+                Guid = guid
             }
         };
     }
 
-    public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string email, string code)
+    public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code)
     {
-        var verified = await authCodesRepository.CheckAuthCode(email, code);
+        var verified = await authCodesRepository.CheckAuthCode(guid, email, code);
         return new ResponseViewModel<VerifyEmailResponse>()
         {
             Code = verified ? 0 : -1,

@@ -23,7 +23,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     [HttpPost("[Action]")]
     public async Task<ResponseViewModel<VerifyEmailResponse>> CheckVerificationCode([FromBody] VerifyEmailRequest request)
     {
-        return await userAuthorizationService.VerifyEmail(request.Email, request.Code);
+        return await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
     }
 
     [HttpPost("[Action]")]

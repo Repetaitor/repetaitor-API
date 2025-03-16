@@ -10,6 +10,6 @@ public interface IUserAuthorizationService
 
     Task<ResponseViewModel<SignUpUserResponse>> SignUpUser(SignUpUserRequest request);
 
-    Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string email, string code);
+    Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code);
     Task<ResponseViewModel<UserSignInResponse>> MakeUserSignIn(string identification, string password);
 }
