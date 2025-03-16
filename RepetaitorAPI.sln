@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Application", "Core.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Domain", "Core.Domain\Core.Domain.csproj", "{9BDBC2E5-601F-4A80-A668-5835C2E3C9ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.ProjectServices", "Infrastructure.ProjectServices\Infrastructure.ProjectServices.csproj", "{7E93537C-50B0-456F-A1EB-8F6BC1A5A118}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.MailSenderService", "Infrastructure.MailSenderService\Infrastructure.MailSenderService.csproj", "{26874BF0-15A8-4042-B1AB-428270CF70A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,10 +34,20 @@ Global
 		{9BDBC2E5-601F-4A80-A668-5835C2E3C9ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BDBC2E5-601F-4A80-A668-5835C2E3C9ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BDBC2E5-601F-4A80-A668-5835C2E3C9ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E93537C-50B0-456F-A1EB-8F6BC1A5A118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E93537C-50B0-456F-A1EB-8F6BC1A5A118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E93537C-50B0-456F-A1EB-8F6BC1A5A118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E93537C-50B0-456F-A1EB-8F6BC1A5A118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26874BF0-15A8-4042-B1AB-428270CF70A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26874BF0-15A8-4042-B1AB-428270CF70A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26874BF0-15A8-4042-B1AB-428270CF70A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26874BF0-15A8-4042-B1AB-428270CF70A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E6F63C56-C444-4B3B-AFF3-B73DD4D13D7B} = {6E9CD7E2-6A10-4BF5-BD8A-250C594BE3DC}
 		{9BDBC2E5-601F-4A80-A668-5835C2E3C9ED} = {6E9CD7E2-6A10-4BF5-BD8A-250C594BE3DC}
 		{4DDC5EA6-5B8A-4C75-95C0-B708DB6A8C66} = {828EC393-A69F-405D-A60D-C3D05FDA380C}
+		{7E93537C-50B0-456F-A1EB-8F6BC1A5A118} = {AB0ABF00-1FC8-4A2D-B6D1-F14ECB860FDF}
+		{26874BF0-15A8-4042-B1AB-428270CF70A0} = {AB0ABF00-1FC8-4A2D-B6D1-F14ECB860FDF}
 	EndGlobalSection
 EndGlobal

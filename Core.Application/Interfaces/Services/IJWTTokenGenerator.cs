@@ -1,0 +1,11 @@
+using System.Security.Claims;
+using Application.Models;
+using Core.Application.Models;
+
+namespace Core.Application.Interfaces.Services;
+
+public interface IJWTTokenGenerator
+{
+    string GenerateJWTtoken(IEnumerable<Claim> claims);
+    UserModal GetClaimsFromToken(string token);
+}
