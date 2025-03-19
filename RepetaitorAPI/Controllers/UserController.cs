@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Authorization;
+using Core.Application.Models.DTO.UserInfo;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RepetaitorAPI.Controllers;
@@ -25,5 +26,11 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     public async Task<ResponseViewModel<UserSignInResponse>> SignIn([FromBody] UserSignInRequest request)
     {
         return await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
+    }
+
+    [HttpGet("[Action]")]
+    public async Task<ResponseViewModel<UserModal>> GetUserBaseInfo([FromQuery] int userId)
+    {
+        return await userService.GetUserDefaultInfoAsync(userId);
     }
 }
