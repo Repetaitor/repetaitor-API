@@ -6,9 +6,9 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IUserAuthorizationService
 {
-    Task<ResponseViewModel<SendVerificationCodeResponse>> SendVerificationCode(string email);
+    Task<string?> SendVerificationCode(string email, int userId);
 
-    Task<ResponseViewModel<SignUpUserResponse>> SignUpUser(SignUpUserRequest request);
+    Task<ResponseViewModel<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request);
 
     Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code);
     Task<ResponseViewModel<UserSignInResponse>> MakeUserSignIn(string identification, string password);

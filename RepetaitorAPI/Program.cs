@@ -20,6 +20,7 @@ builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IJWTTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSwaggerGen(c =>
 {

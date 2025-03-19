@@ -31,7 +31,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                isTeacher = user.IsTeacher
+                Role = user.Role
             };
         }
         catch (Exception)
@@ -40,7 +40,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
         }
     }
 
-    public async Task<bool> AddUser(string firstName, string lastName, string email, string password, bool isTeacher)
+    public async Task<int> AddUser(string firstName, string lastName, string email, string password, string role)
     {
         try
         {
@@ -49,10 +49,26 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = firstName,
                 LastName = lastName,
                 Email = email,
-                IsTeacher = isTeacher,
+                Role = role,
                 Password = password,
             };
             await context.Users.AddAsync(user);
+            await context.SaveChangesAsync();
+            return user.Id;
+        }
+        catch (Exception)
+        {
+            return -1;
+        }
+    }
+
+    public async Task<bool> ActivateUser(int userId)
+    {
+        try
+        {
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null) return false;
+            user.isActive = true;
             await context.SaveChangesAsync();
             return true;
         }
@@ -61,7 +77,6 @@ public class UserRepository(ApplicationContext context) : IUserRepository
             return false;
         }
     }
-
     public async Task<UserModal?> GetUserInfo(int userId)
     {
         try
@@ -74,7 +89,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                isTeacher = user.IsTeacher
+                Role = user.Role
             };
         }
         catch

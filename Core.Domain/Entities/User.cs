@@ -11,9 +11,13 @@ namespace Core.Domain.Entities
         public string LastName { get; set; }
         [DataType("nvarchar(64)")]
         public string Email { get; set; }
-        [DataType("boolean")] 
-        public bool IsTeacher { get; set; } = false;
+        [DataType("nvarchar(64)")] 
+        public string Role { get; set; } = "Student";
         [DataType("nvarchar(64)")]
         public string Password { get; set; }
+        [DataType("boolean")] 
+        public bool isActive { get; set; } = false;
+        [DataType("DateTime")]
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }

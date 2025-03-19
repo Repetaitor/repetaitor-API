@@ -7,5 +7,5 @@ namespace Core.Application.Interfaces.Services;
 public interface IJWTTokenGenerator
 {
     string GenerateJWTtoken(IEnumerable<Claim> claims);
-    UserModal GetClaimsFromToken(string token);
+    bool CheckUserIdWithTokenClaims(int UserId, string token);
 }

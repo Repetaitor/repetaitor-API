@@ -7,6 +7,7 @@ public interface IUserRepository
 {
     Task<bool> EmailExists(string email);
     Task<UserModal?> CheckIfUser(string email, string password);
-    Task<bool> AddUser(string firstName, string lastName, string email, string password, bool isTeacher);
+    Task<int> AddUser(string firstName, string lastName, string email, string password, string role);
+    Task<bool> ActivateUser(int userId);
     Task<UserModal?> GetUserInfo(int userId);
 }

@@ -26,7 +26,7 @@ namespace Infrastructure.ProjectServices.Implementations
            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
            return $"Bearer {new JwtSecurityTokenHandler().WriteToken(jwt)}";
         }
-        public UserModal GetClaimsFromToken(string token)
+        public bool CheckUserIdWithTokenClaims(int UserId, string token)
         {
             if (string.IsNullOrEmpty(token))
             {
@@ -48,15 +48,11 @@ namespace Infrastructure.ProjectServices.Implementations
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
 
-                return new UserModal
-                {
-                    Id = int.Parse(principal.FindFirst("userId")!.Value),
-                    Email = principal.FindFirst("email")!.Value,
-                };
+                return UserId == int.Parse(principal.FindFirst("userId")!.Value);
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to validate token.", ex);
+                return false;
             }
         }
     }

@@ -24,4 +24,13 @@
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.3.efcore.9.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Models\DTO\Task\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Models\DTO\Task\CreateTaskRequest.cs" />
+      <Compile Remove="Interfaces\Repositories\IEsseyTasksRepository.cs" />
+    </ItemGroup>
+
 </Project>

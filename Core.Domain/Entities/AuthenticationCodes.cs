@@ -6,6 +6,7 @@ namespace Core.Domain.Entities;
 public class AuthenticationCodes
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
     [DataType("nvarchar(64)")]
     public string Guid { get; set; }
     [DataType("nvarchar(64)")]

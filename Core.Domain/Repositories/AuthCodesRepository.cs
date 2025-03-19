@@ -6,17 +6,18 @@ using Org.BouncyCastle.Asn1.Cms;
 
 namespace Core.Domain.Repositories;
 
-public class AuthCodesRepository(ApplicationContext context) : IAuthCodesRepository
+public class AuthCodesRepository(ApplicationContext context, IUserRepository userRepository) : IAuthCodesRepository
 {
     private ApplicationContext _context = context;
 
-    public async Task<string> CreateAuthCode(string code, string email)
+    public async Task<string> CreateAuthCode(string code, string email, int userId)
     {
         try
         {
             var newGuid = Guid.NewGuid();
             var auth = new AuthenticationCodes()
             {
+                UserId = userId,
                 Code = code,
                 Guid = newGuid.ToString(),
                 Email = email,
@@ -40,7 +41,7 @@ public class AuthCodesRepository(ApplicationContext context) : IAuthCodesReposit
             if (cd == null || cd.Email != email || cd.Code != code || (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 10) {return false;}
             cd.IsVerified = true;
             await _context.SaveChangesAsync();
-            return true;
+            return await userRepository.ActivateUser(cd.UserId);
         }
         catch (Exception)
         {

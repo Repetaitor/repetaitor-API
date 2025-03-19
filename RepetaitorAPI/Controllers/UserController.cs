@@ -10,25 +10,20 @@ namespace RepetaitorAPI.Controllers;
 public class UserController(IUserService userService, IUserAuthorizationService userAuthorizationService)
 {
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SendVerificationCode([FromBody] SendVerificationCodeRequest request)
-    {
-        return await userAuthorizationService.SendVerificationCode(request.Email);
-    }
-    [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<SignUpUserResponse>> SignUpUser([FromBody] SignUpUserRequest request)
+    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SignUp([FromBody] SignUpUserRequest request)
     {
         return await userAuthorizationService.SignUpUser(request);
     }
 
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<VerifyEmailResponse>> CheckVerificationCode([FromBody] VerifyEmailRequest request)
+    public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyAuthCode([FromBody] VerifyEmailRequest request)
     {
         return await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
     }
 
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<UserSignInResponse>> UserSignIn([FromBody] UserSignInRequest request)
+    public async Task<ResponseViewModel<UserSignInResponse>> SignIn([FromBody] UserSignInRequest request)
     {
-        return await userAuthorizationService.MakeUserSignIn(request.Identifier, request.Password);
+        return await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
     }
 }

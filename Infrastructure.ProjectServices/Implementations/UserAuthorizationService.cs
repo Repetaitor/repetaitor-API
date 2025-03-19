@@ -5,6 +5,7 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
@@ -27,92 +28,67 @@ public class UserAuthorizationService(
         return builder.ToString();
     }
 
-    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SendVerificationCode(string email)
+    public async Task<string?> SendVerificationCode(string email, int userId)
     {
-        var checkEmail = await userRepository.EmailExists(email);
-        if (checkEmail)
-            return new ResponseViewModel<SendVerificationCodeResponse>()
-            {
-                Code = -1,
-                Message = "Email Already Exists",
-            };
         var generatedCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
         var result = await mailService.SendAuthMail(email, "Authentication Code", generatedCode);
         if (!result)
-            return new ResponseViewModel<SendVerificationCodeResponse>()
-            {
-                Code = -1,
-                Message = "Email Not Sent",
-            };
-        var guid = await authCodesRepository.CreateAuthCode(generatedCode, email);
-        return new ResponseViewModel<SendVerificationCodeResponse>()
-        {
-            Code = !string.IsNullOrEmpty(guid) ? 0 : -1,
-            Message = !string.IsNullOrEmpty(guid) ? "Verification Code Send" : "Something went wrong",
-            Data = new SendVerificationCodeResponse()
-            {
-                Guid = guid
-            }
-        };
+            return null;
+        var guid = await authCodesRepository.CreateAuthCode(generatedCode, email, userId);
+        return guid;
     }
 
     public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code)
     {
         var verified = await authCodesRepository.CheckAuthCode(guid, email, code);
         return new ResponseViewModel<VerifyEmailResponse>()
-        {
-            Code = verified ? 0 : -1,
-            Message = verified ? "" : "Something went wrong",
-            Data = new VerifyEmailResponse()
             {
-                Verified = verified
-            }
-        };
+                Code = verified ? 0 : -1,
+                Message = verified ? "" : "Something went wrong",
+                Data = new VerifyEmailResponse()
+                {
+                    Verified = verified
+                }
+            };
     }
-    public async Task<ResponseViewModel<SignUpUserResponse>> SignUpUser(SignUpUserRequest request)
+    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request)
     {
-        if (!await authCodesRepository.EmailIsVerified(request.AuthCodeGuid, request.Email))
-            return new ResponseViewModel<SignUpUserResponse>()
-            {
-                Code = -1,
-                Message = "Email Is Not Verified",
-                Data = new SignUpUserResponse()
-                {
-                    Success = false,
-                }
-            };
         if (await userRepository.EmailExists(request.Email))
-            return new ResponseViewModel<SignUpUserResponse>()
+            return new ResponseViewModel<SendVerificationCodeResponse>()
             {
                 Code = -1,
-                Message = "Email Already Exists",
-                Data = new SignUpUserResponse()
-                {
-                    Success = false,
-                }
+                Message = "Email Already Exists"
             };
-        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email, GetHashedPassword(request.Password), request.IsTeacher);
-        if (result)
+        if(request.Role != "Student" && request.Role != "Teacher")
+            return new ResponseViewModel<SendVerificationCodeResponse>()
+            {
+                Code = -1,
+                Message = "Valid Role Required"
+            };
+        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email, GetHashedPassword(request.Password), request.Role);
+        if (result == -1)
+            return new ResponseViewModel<SendVerificationCodeResponse>()
+            {
+                Code = -1,
+                Message = "Something went wrong when adding user",
+            };
+        var guid = await SendVerificationCode(request.Email, result);
+        if (guid != null)
         {
-            return new ResponseViewModel<SignUpUserResponse>()
+            return new ResponseViewModel<SendVerificationCodeResponse>()
             {
                 Code = 0,
-                Message = "User Added",
-                Data = new SignUpUserResponse()
+                Message = "",
+                Data = new SendVerificationCodeResponse()
                 {
-                    Success = true,
+                    Guid = guid,
                 }
             };
         }
-
-        return new ResponseViewModel<SignUpUserResponse>()
+        return new ResponseViewModel<SendVerificationCodeResponse>()
         {
             Code = -1,
             Message = "Something went wrong when adding user",
-            Data = new SignUpUserResponse()
-            {
-                Success = false,
-            }
         };
     }
 
@@ -129,7 +105,7 @@ public class UserAuthorizationService(
                 {
                     User = result,
                     JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
-                        { new Claim("email", result.Email), new Claim("userId", result.Id.ToString()), new Claim(ClaimTypes.Role, result.isTeacher ? "Teacher" : "Student"), }),
+                        { new Claim("email", result.Email), new Claim("userId", result.Id.ToString()), new Claim(ClaimTypes.Role, result.Role), }),
                 }
             };
         }
