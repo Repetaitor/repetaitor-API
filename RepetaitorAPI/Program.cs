@@ -18,6 +18,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthCodesRepository, AuthCodesRepository>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IJWTTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IEssayRepository, EssayRepository>();
+builder.Services.AddScoped<IEssayService, EssayService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpContextAccessor();
@@ -71,6 +73,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             ValidateIssuerSigningKey = false,
         };
+        options.TokenValidationParameters.RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
     });
 builder.Services.AddCors(options =>
 {

@@ -42,15 +42,16 @@ public class UserAuthorizationService(
     {
         var verified = await authCodesRepository.CheckAuthCode(guid, email, code);
         return new ResponseViewModel<VerifyEmailResponse>()
+        {
+            Code = verified ? 0 : -1,
+            Message = verified ? "" : "Something went wrong",
+            Data = new VerifyEmailResponse()
             {
-                Code = verified ? 0 : -1,
-                Message = verified ? "" : "Something went wrong",
-                Data = new VerifyEmailResponse()
-                {
-                    Verified = verified
-                }
-            };
+                Verified = verified
+            }
+        };
     }
+
     public async Task<ResponseViewModel<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request)
     {
         if (await userRepository.EmailExists(request.Email))
@@ -59,13 +60,14 @@ public class UserAuthorizationService(
                 Code = -1,
                 Message = "Email Already Exists"
             };
-        if(request.Role != "Student" && request.Role != "Teacher")
+        if (request.Role != "Student" && request.Role != "Teacher")
             return new ResponseViewModel<SendVerificationCodeResponse>()
             {
                 Code = -1,
                 Message = "Valid Role Required"
             };
-        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email, GetHashedPassword(request.Password), request.Role);
+        var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email,
+            GetHashedPassword(request.Password), request.Role);
         if (result == -1)
             return new ResponseViewModel<SendVerificationCodeResponse>()
             {
@@ -85,6 +87,7 @@ public class UserAuthorizationService(
                 }
             };
         }
+
         return new ResponseViewModel<SendVerificationCodeResponse>()
         {
             Code = -1,
@@ -105,7 +108,10 @@ public class UserAuthorizationService(
                 {
                     User = result,
                     JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
-                        { new Claim("email", result.Email), new Claim("userId", result.Id.ToString()), new Claim(ClaimTypes.Role, result.Role), }),
+                    {
+                        new Claim("email", result.Email), new Claim("userId", result.Id.ToString()),
+                        new Claim(ClaimTypes.Role, result.Role),
+                    }),
                 }
             };
         }

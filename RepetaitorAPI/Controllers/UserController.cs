@@ -6,7 +6,7 @@ using Core.Application.Models.DTO.UserInfo;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RepetaitorAPI.Controllers;
-[Microsoft.AspNetCore.Components.Route("api/[controller]")]
+[Route("api/[controller]")]
 [ApiController]
 public class UserController(IUserService userService, IUserAuthorizationService userAuthorizationService)
 {
