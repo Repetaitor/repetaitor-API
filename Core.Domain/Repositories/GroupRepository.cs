@@ -1,0 +1,220 @@
+using Core.Application.Interfaces.Repositories;
+using Core.Application.Models;
+using Core.Domain.Data;
+using Core.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Core.Domain.Repositories;
+
+public class GroupRepository(ApplicationContext context) : IGroupRepository
+{
+    public async Task<GroupBaseModal?> CreateGroup(string groupName, string groupCode, int ownerId)
+    {
+        try
+        {
+            var group = new RepetaitorGroup()
+            {
+                OwnerId = ownerId,
+                GroupName = groupName,
+                GroupCode = groupCode,
+                IsActive = true,
+                CreateDate = DateTime.UtcNow
+            };
+            await context.AddAsync(group);
+            await context.SaveChangesAsync();
+            return new GroupBaseModal()
+            {
+                Id = group.Id,
+                OwnerId = group.OwnerId,
+                GroupName = group.GroupName,
+                GroupCode = group.GroupCode,
+                CreateDate = group.CreateDate,
+                StudentsCount = 0
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> ChangeGroupState(int userId, int groupId, bool isActive)
+    {
+        try
+        {
+            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null || group.OwnerId != userId) return false;
+            group.IsActive = isActive;
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    public async Task<GroupBaseModal?> GetStudentGroup(int userId)
+    {
+        try
+        {
+            var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
+            var group = await context.groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id) && x.IsActive);
+            return group != null ? new GroupBaseModal()
+            {
+                Id = group.Id,
+                OwnerId = group.OwnerId,
+                CreateDate = group.CreateDate,
+                GroupName = group.GroupName,
+                StudentsCount = context.UserGroups.Count(t => t.GroupId == group.Id),
+                GroupCode = group.GroupCode,
+            } : new GroupBaseModal();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId, bool isActive)
+    {
+        try
+        {
+            var groups = await context.groups.Where(x => x.OwnerId == userId && x.IsActive == isActive).OrderByDescending(x => x.CreateDate).Select(x => new GroupBaseModal()
+            {
+                Id = x.Id,
+                OwnerId = x.OwnerId,
+                CreateDate = x.CreateDate,
+                GroupName = x.GroupName,
+                StudentsCount = context.UserGroups.Count(t => t.GroupId == x.Id),
+                GroupCode = x.GroupCode,
+            }).AsNoTracking().ToListAsync();
+            return groups;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    
+    public async Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle)
+    {
+        try
+        {
+            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null) return null;
+            group.GroupName = groupTitle;
+            await context.SaveChangesAsync();
+            return new GroupBaseModal()
+            {
+                Id = group.Id,
+                OwnerId = group.OwnerId,
+                GroupName = group.GroupName,
+                GroupCode = group.GroupCode,
+                CreateDate = group.CreateDate,
+                StudentsCount = await context.UserGroups.CountAsync(x => x.GroupId == groupId && x.UserId == userId),
+            };;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    public async Task<bool> UpdateGroupCode(int userId, int groupId, string groupCode)
+    {
+        try
+        {
+            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null) return false;
+            group.GroupCode = groupCode;
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> AddUserToGroup(int userId, string groupCode)
+    {
+        try
+        {
+            var studGroup = await GetStudentGroup(userId);
+            if (studGroup == null || studGroup!.Id != 0) return false;
+            var group = await context.groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
+            if (group == null || group.IsActive == false ) return false;
+            var userGroup = new UserGroups()
+            {
+                GroupId = group.Id,
+                UserId = userId
+            };
+            await context.UserGroups.AddAsync(userGroup);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveUserFromGroup(int groupId, int userId)
+    {
+        try
+        {
+            var userGroup =
+                await context.UserGroups.FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == userId);
+            if (userGroup == null) return false;
+            context.UserGroups.Remove(userGroup);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<List<GroupBaseModal>> SearchGroup(string groupName, bool isActive)
+    {
+        try
+        {
+            var groups = await context.groups.Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%") && x.IsActive == isActive).OrderByDescending(x => x.CreateDate).Select(x => new GroupBaseModal()
+            {
+                Id = x.Id,
+                OwnerId = x.OwnerId,
+                CreateDate = x.CreateDate,
+                GroupName = x.GroupName,
+                StudentsCount = context.UserGroups.Count(t => t.GroupId == x.Id),
+                GroupCode = x.GroupCode,
+            }).AsNoTracking().ToListAsync();
+            return groups;
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    public async Task<List<UserModal>?> GetGroupUsers(int userId, int groupId)
+    {
+        try
+        {
+            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null || group.OwnerId != userId) return null;
+            var userIds = context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId);
+            return await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()
+            {
+                Id = x.Id,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                Email = x.Email,
+                Role = x.Role
+            }).ToListAsync();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+}

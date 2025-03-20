@@ -9,6 +9,8 @@ namespace Core.Domain.Data
         public DbSet<User> Users => Set<User>(); 
         public DbSet<AuthenticationCodes> AuthCodes => Set<AuthenticationCodes>();
         public DbSet<Essay> Essays => Set<Essay>();
+        public DbSet<RepetaitorGroup> groups => Set<RepetaitorGroup>();
+        public DbSet<UserGroups> UserGroups => Set<UserGroups>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

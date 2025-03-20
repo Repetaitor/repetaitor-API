@@ -32,20 +32,20 @@ public class EssayController(
     }
 
     [Authorize(Roles = "Teacher")]
-    [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<ResultResponse>> DeleteEssay([FromBody] DeleteEssayRequest request)
+    [HttpDelete("[Action]")]
+    public async Task<ResponseViewModel<ResultResponse>> DeleteEssay([FromQuery] int essayId, [FromQuery] int userId)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
+        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
             return new ResponseViewModel<ResultResponse>()
             {
                 Code = -1,
                 Message = "You do not have permission to delete this essay.",
             };
-        return await essayService.DeleteEssay(request.EssayId, request.UserId);
+        return await essayService.DeleteEssay(essayId, userId);
     }
     
-    [HttpPost("[Action]")]
+    [HttpPut("[Action]")]
     public async Task<ResponseViewModel<ResultResponse>> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,

@@ -20,6 +20,8 @@ builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IJWTTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IEssayRepository, EssayRepository>();
 builder.Services.AddScoped<IEssayService, EssayService>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpContextAccessor();
