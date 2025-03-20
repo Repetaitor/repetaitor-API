@@ -9,13 +9,14 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class GroupService(IGroupRepository groupRepository) : IGroupService
 {
     private static readonly Random Random = new Random();
-    
+
     private static string GenerateClassCode(int length = 6)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         return new string(Enumerable.Repeat(chars, length)
             .Select(s => s[Random.Next(s.Length)]).ToArray());
     }
+
     public async Task<ResponseViewModel<GroupBaseModal>> CreateGroup(string groupName, int ownerId)
     {
         var newGroupCode = GenerateClassCode();
@@ -74,7 +75,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
         return new ResponseViewModel<GroupBaseModal>()
         {
-            Code =  res != null ? 0 : -1,
+            Code = res != null ? 0 : -1,
             Message = res != null ? "Title Updated" : "Failed to Update Title",
             Data = res
         };
@@ -136,7 +137,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
     public async Task<ResponseViewModel<List<GroupBaseModal>>> SearchGroup(string groupName, bool isActive)
     {
-        var res = await groupRepository.SearchGroup(groupName , isActive);
+        var res = await groupRepository.SearchGroup(groupName, isActive);
         return new ResponseViewModel<List<GroupBaseModal>>()
         {
             Code = 0,
