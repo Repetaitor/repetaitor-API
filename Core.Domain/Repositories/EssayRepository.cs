@@ -82,4 +82,24 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
             return [];
         }
     }
+
+    public async Task<EssayModal?> GetEssay(int essayId)
+    {
+        try
+        {
+            var essay = await context.Essays.FirstOrDefaultAsync(x => x.Id == essayId);
+            if(essay == null) return null;
+            return new EssayModal()
+            {
+                Id = essay.Id,
+                EssayTitle = essay.EssayTitle,
+                EssayDescription = essay.EssayDescription,
+                ExpectedWordCount = essay.ExpectedWordCount
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 }

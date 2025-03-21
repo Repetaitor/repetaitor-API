@@ -18,7 +18,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
                 GroupName = groupName,
                 GroupCode = groupCode,
                 IsActive = true,
-                CreateDate = DateTime.UtcNow
+                CreateDate = DateTime.Now
             };
             await context.AddAsync(group);
             await context.SaveChangesAsync();
@@ -42,7 +42,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
             if (group == null || group.OwnerId != userId) return false;
             group.IsActive = isActive;
             await context.SaveChangesAsync();
@@ -59,7 +59,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
-            var group = await context.groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id) && x.IsActive);
+            var group = await context.Groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id) && x.IsActive);
             return group != null
                 ? new GroupBaseModal()
                 {
@@ -82,7 +82,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var groups = await context.groups.Where(x => x.OwnerId == userId && x.IsActive == isActive)
+            var groups = await context.Groups.Where(x => x.OwnerId == userId && x.IsActive == isActive)
                 .OrderByDescending(x => x.CreateDate).Select(x => new GroupBaseModal()
                 {
                     Id = x.Id,
@@ -104,7 +104,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
             if (group == null) return null;
             group.GroupName = groupTitle;
             await context.SaveChangesAsync();
@@ -129,7 +129,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
             if (group == null) return false;
             group.GroupCode = groupCode;
             await context.SaveChangesAsync();
@@ -147,7 +147,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         {
             var studGroup = await GetStudentGroup(userId);
             if (studGroup == null || studGroup!.Id != 0) return false;
-            var group = await context.groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
             if (group == null || group.IsActive == false) return false;
             var userGroup = new UserGroups()
             {
@@ -185,7 +185,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var groups = await context.groups
+            var groups = await context.Groups
                 .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%") &&
                             x.IsActive == isActive).OrderByDescending(x => x.CreateDate).Select(x =>
                     new GroupBaseModal()
@@ -209,7 +209,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
             if (group == null || group.OwnerId != userId) return null;
             var userIds = context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId);
             return await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()

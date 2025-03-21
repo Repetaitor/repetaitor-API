@@ -8,4 +8,5 @@ public interface IEssayRepository
     Task<bool> DeleteEssay(int essayId, int byUser);
     Task<bool> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount, int byUser);
     Task<List<EssayModal>> GetUserEssays(int userId);
+    Task<EssayModal?> GetEssay(int essayId);
 }

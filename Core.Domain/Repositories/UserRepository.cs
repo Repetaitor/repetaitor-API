@@ -81,7 +81,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
     {
         try
         {
-            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var user = context.Users.FirstOrDefault(x => x.Id == userId);
             if (user == null) return null;
             return new UserModal()
             {
@@ -92,7 +92,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
                 Role = user.Role
             };
         }
-        catch
+        catch (Exception)
         {
             return null;
         }
