@@ -25,10 +25,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Models\DTO\Task\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Compile Remove="Models\DTO\Task\CreateTaskRequest.cs" />
       <Compile Remove="Interfaces\Repositories\IEsseyTasksRepository.cs" />
     </ItemGroup>

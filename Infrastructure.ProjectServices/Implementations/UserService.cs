@@ -8,7 +8,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 {
     public async Task<ResponseViewModel<UserModal>> GetUserDefaultInfoAsync(int userId)
     {
-        var user = await userRepository.GetUserInfo(userId);
+        var user = await Task.Run(() => userRepository.GetUserInfo(userId));
         if (user == null)
         {
             return new ResponseViewModel<UserModal>()
