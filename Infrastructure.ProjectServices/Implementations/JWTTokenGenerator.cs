@@ -59,5 +59,35 @@ namespace Infrastructure.ProjectServices.Implementations
                 return false;
             }
         }
+        public int GetUserIdFromToken(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new ArgumentException("Token cannot be null or empty.");
+            }
+            token = token.Split(" ").Last();
+            try
+            {
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey()
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+
+                var principal =
+                    tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+
+
+                return int.Parse(principal.FindFirst("userId")!.Value);
+            }
+            catch (Exception ex)
+            {
+                return -1;
+            }
+        }
     }
 }

@@ -8,4 +8,5 @@ public interface IJWTTokenGenerator
 {
     string GenerateJWTtoken(IEnumerable<Claim> claims);
     bool CheckUserIdWithTokenClaims(int userId, string token);
+    int GetUserIdFromToken(string token);
 }

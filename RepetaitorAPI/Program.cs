@@ -22,6 +22,8 @@ builder.Services.AddScoped<IEssayRepository, EssayRepository>();
 builder.Services.AddScoped<IEssayService, EssayService>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpContextAccessor();
