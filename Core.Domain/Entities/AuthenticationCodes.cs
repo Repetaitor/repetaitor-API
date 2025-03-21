@@ -14,7 +14,7 @@ public class AuthenticationCodes
     [DataType("nvarchar(64)")]
     public string Code { get; set; }
     [DataType("DateTime")] 
-    public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+    public DateTime CreateDate { get; set; } = DateTime.Now;
     [DataType("boolean")]
     public bool IsVerified { get; set; }
 }

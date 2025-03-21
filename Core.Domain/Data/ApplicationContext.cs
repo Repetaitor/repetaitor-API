@@ -9,7 +9,13 @@ namespace Core.Domain.Data
         public DbSet<User> Users => Set<User>(); 
         public DbSet<AuthenticationCodes> AuthCodes => Set<AuthenticationCodes>();
         public DbSet<Essay> Essays => Set<Essay>();
-        public DbSet<RepetaitorGroup> groups => Set<RepetaitorGroup>();
+        public DbSet<RepetaitorGroup> Groups => Set<RepetaitorGroup>();
+        public DbSet<Assignment> Assignments => Set<Assignment>();
+        public DbSet<AssignmentStatus> AssignmentStatuses => Set<AssignmentStatus>();
+        public DbSet<EvaluationCommentsStatus> EvaluationCommentsStatuses => Set<EvaluationCommentsStatus>();
+        public DbSet<EvaluationTextComment> EvaluationTextComments => Set<EvaluationTextComment>();
+        public DbSet<GeneralComment> GeneralComments => Set<GeneralComment>();
+        public DbSet<UserAssignment> UserAssignments => Set<UserAssignment>();
         public DbSet<UserGroups> UserGroups => Set<UserGroups>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
