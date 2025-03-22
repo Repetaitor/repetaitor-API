@@ -19,5 +19,9 @@ namespace Core.Domain.Entities
         public bool isActive { get; set; } = false;
         [DataType("DateTime")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public virtual ICollection<RepetaitorGroup> RepetaitorGroups { get; set; }
+        public virtual ICollection<Assignment> CreatedAssignments { get; set; }
+        public virtual ICollection<UserAssignment> AssignedAssignments { get; set; }
+        public virtual ICollection<Essay> CreatedEssays { get; set; }
     }
 }

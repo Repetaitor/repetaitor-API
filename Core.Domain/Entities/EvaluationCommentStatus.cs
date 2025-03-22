@@ -9,4 +9,5 @@ public class EvaluationCommentsStatus
     public string Name { get; set; }
     [DataType("nvarchar(64)")]
     public string Color { get; set; }
+    public ICollection<EvaluationTextComment> EvaluationTextComments { get; set; }
 }

@@ -9,4 +9,5 @@ public class AssignmentStatus
     public string Name { get; set; }
     [DataType("nvarchar(64)")]
     public string Color { get; set; }
+    public virtual ICollection<UserAssignment> UserAssignments { get; set; }
 }

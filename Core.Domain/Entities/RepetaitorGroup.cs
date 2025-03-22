@@ -14,4 +14,7 @@ public class RepetaitorGroup
     public bool IsActive { get; set; }
     [DataType("DateTime")]
     public DateTime CreateDate { get; set; }
+    public virtual User Owner { get; set; }
+    public virtual ICollection<User> UsersInGroup { get; set; }
+    public virtual ICollection<Assignment> Assignments { get; set; }
 }

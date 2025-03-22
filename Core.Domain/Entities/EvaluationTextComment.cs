@@ -10,4 +10,6 @@ public class EvaluationTextComment
     public int EndIndex { get; set; }
     public string Comment { get; set; }
     public int StatusId { get; set; }
+    public virtual EvaluationCommentsStatus Status { get; set; }
+    public virtual UserAssignment UserAssignment { get; set; }
 }

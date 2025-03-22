@@ -11,4 +11,6 @@ public class Essay
     public int ExpectedWordCount { get; set; }
     [DataType("DateTime")]
     public DateTime CreateDate { get; set; } = DateTime.Now;
+    public virtual User Creator { get; set; }
+    public virtual ICollection<Assignment> Assignments { get; set; }
 }

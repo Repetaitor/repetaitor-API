@@ -9,4 +9,5 @@ public class GeneralComment
     public int StatusId { get; set; }
     [DataType("Text")]
     public string Comment { get; set; }
+    public virtual UserAssignment UserAssignment { get; set; }
 }

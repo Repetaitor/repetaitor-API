@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Core.Domain.Entities;
 
@@ -16,4 +17,8 @@ public class Assignment
     public DateTime CreationTime { get; set; } = DateTime.Now;
     [DataType("DateTime")]
     public DateTime DueDate { get; set; }
+    public virtual RepetaitorGroup Group { get; set; }
+    public virtual Essay Essay { get; set; }
+    public virtual User Creator { get; set; }
+    public ICollection<UserAssignment> UserAssignments { get; set; }
 }
