@@ -14,5 +14,6 @@ public interface IGroupRepository
     Task<bool> AddUserToGroup(int userId, string groupCode);
     Task<bool> RemoveUserFromGroup(int groupId, int userId);
     Task<List<UserModal>?> GetGroupUsers(int userId, int groupId);
+    Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId);
     Task<List<GroupBaseModal>> SearchGroup(string groupName, bool isActive);
 }

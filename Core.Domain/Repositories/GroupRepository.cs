@@ -2,6 +2,7 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Data;
 using Core.Domain.Entities;
+using Core.Domain.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Domain.Repositories;
@@ -22,15 +23,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             };
             await context.AddAsync(group);
             await context.SaveChangesAsync();
-            return new GroupBaseModal()
-            {
-                Id = group.Id,
-                OwnerId = group.OwnerId,
-                GroupName = group.GroupName,
-                GroupCode = group.GroupCode,
-                CreateDate = group.CreateDate,
-                StudentsCount = 0
-            };
+            return GroupMapper.ToGroupModal(group, 0);
         }
         catch (Exception)
         {
@@ -61,16 +54,8 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
             var group = await context.Groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id) && x.IsActive);
             return group != null
-                ? new GroupBaseModal()
-                {
-                    Id = group.Id,
-                    OwnerId = group.OwnerId,
-                    CreateDate = group.CreateDate,
-                    GroupName = group.GroupName,
-                    StudentsCount = context.UserGroups.Count(t => t.GroupId == group.Id),
-                    GroupCode = group.GroupCode,
-                }
-                : new GroupBaseModal();
+                ? GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
+                : null;
         }
         catch (Exception)
         {
@@ -83,15 +68,9 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var groups = await context.Groups.Where(x => x.OwnerId == userId && x.IsActive == isActive)
-                .OrderByDescending(x => x.CreateDate).Select(x => new GroupBaseModal()
-                {
-                    Id = x.Id,
-                    OwnerId = x.OwnerId,
-                    CreateDate = x.CreateDate,
-                    GroupName = x.GroupName,
-                    StudentsCount = context.UserGroups.Count(t => t.GroupId == x.Id),
-                    GroupCode = x.GroupCode,
-                }).AsNoTracking().ToListAsync();
+                .OrderByDescending(x => x.CreateDate).Select(x =>
+                    GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
+                .ToListAsync();
             return groups;
         }
         catch (Exception)
@@ -108,16 +87,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             if (group == null) return null;
             group.GroupName = groupTitle;
             await context.SaveChangesAsync();
-            return new GroupBaseModal()
-            {
-                Id = group.Id,
-                OwnerId = group.OwnerId,
-                GroupName = group.GroupName,
-                GroupCode = group.GroupCode,
-                CreateDate = group.CreateDate,
-                StudentsCount = await context.UserGroups.CountAsync(x => x.GroupId == groupId && x.UserId == userId),
-            };
-            ;
+            return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
         }
         catch (Exception)
         {
@@ -181,6 +151,21 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         }
     }
 
+    public async Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId)
+    {
+        try
+        {
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null || (group.OwnerId != userId &&
+                                  context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id))) return null;
+            return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     public async Task<List<GroupBaseModal>> SearchGroup(string groupName, bool isActive)
     {
         try
@@ -188,15 +173,8 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             var groups = await context.Groups
                 .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%") &&
                             x.IsActive == isActive).OrderByDescending(x => x.CreateDate).Select(x =>
-                    new GroupBaseModal()
-                    {
-                        Id = x.Id,
-                        OwnerId = x.OwnerId,
-                        CreateDate = x.CreateDate,
-                        GroupName = x.GroupName,
-                        StudentsCount = context.UserGroups.Count(t => t.GroupId == x.Id),
-                        GroupCode = x.GroupCode,
-                    }).AsNoTracking().ToListAsync();
+                    GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
+                .ToListAsync();
             return groups;
         }
         catch (Exception)

@@ -16,4 +16,5 @@ public interface IGroupService
     Task<ResponseViewModel<ResultResponse>> RemoveUserFromGroup(int groupId, int userId);
     Task<ResponseViewModel<List<UserModal>>> GetGroupUsers(int userId, int groupId);
     Task<ResponseViewModel<List<GroupBaseModal>>> SearchGroup(string groupName, bool isActive);
+    Task<ResponseViewModel<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId);
 }

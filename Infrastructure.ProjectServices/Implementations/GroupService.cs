@@ -145,4 +145,16 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
             Data = res
         };
     }
+
+    public async Task<ResponseViewModel<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId)
+    {
+        var res = await groupRepository.GetGroupBaseInfoById(userId, groupId);
+
+        return new ResponseViewModel<GroupBaseModal>()
+        {
+            Code = res != null ? 0 : -1,
+            Message = res != null ? "" : "Failed to Get Group Base Info",
+            Data = res
+        };
+    }
 }
