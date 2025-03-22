@@ -26,7 +26,6 @@ builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -87,7 +86,6 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
         });
 });
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 var app = builder.Build();
 app.UseCors("_myAllowSpecificOrigins");

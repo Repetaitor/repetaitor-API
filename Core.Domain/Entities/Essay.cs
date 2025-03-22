@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Core.Domain.Entities;
 
 public class Essay
@@ -7,4 +9,6 @@ public class Essay
     public string EssayTitle { get; set; }
     public string EssayDescription { get; set; }
     public int ExpectedWordCount { get; set; }
+    [DataType("DateTime")]
+    public DateTime CreateDate { get; set; } = DateTime.Now;
 }

@@ -9,5 +9,6 @@ public class BaseAssignmentResponse
     public UserModal? Creator { get; set; }
     public DateTime DueDate { get; set; }
     public int ExpectedWordCount { get; set; }
+    public int ActualWordCount { get; set; }
     public int TotalScore { get; set; } = -1;
 }

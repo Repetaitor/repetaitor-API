@@ -7,19 +7,16 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class EssayService(IEssayRepository essayRepository) : IEssayService
 {
-    public async Task<ResponseViewModel<ResultResponse>> CreateNewEssay(string essayTitle, string essayDescription,
+    public async Task<ResponseViewModel<EssayModal>> CreateNewEssay(string essayTitle, string essayDescription,
         int expectedWordCount, int creatorId)
     {
         var res = await essayRepository.CreateNewEssay(essayTitle, essayDescription, expectedWordCount, creatorId);
 
-        return new ResponseViewModel<ResultResponse>()
+        return new ResponseViewModel<EssayModal>()
         {
-            Code = res ? 0 : 1,
-            Message = res ? "Essay added" : "Something went wrong",
-            Data = new ResultResponse()
-            {
-                Result = res
-            }
+            Code = res != null ? 0 : 1,
+            Message = res != null ? "Essay Created" : "Something went wrong",
+            Data = res
         };
     }
 
@@ -37,18 +34,15 @@ public class EssayService(IEssayRepository essayRepository) : IEssayService
         };
     }
 
-    public async Task<ResponseViewModel<ResultResponse>> UpdateEssay(int essayId, string essayTitle, string essayDescription,
+    public async Task<ResponseViewModel<EssayModal>> UpdateEssay(int essayId, string essayTitle, string essayDescription,
         int expectedWordCount, int byUser)
     {
         var res = await essayRepository.UpdateEssay(essayId, essayTitle, essayDescription, expectedWordCount, byUser);
-        return new ResponseViewModel<ResultResponse>()
+        return new ResponseViewModel<EssayModal>()
         {
-            Code = res ? 0 : 1,
-            Message = res ? "Essay Updated" : "Something went wrong",
-            Data = new ResultResponse()
-            {
-                Result = res
-            }
+            Code = res != null ? 0 : 1,
+            Message = res != null ? "Essay Updated" : "Something went wrong",
+            Data = res
         };
     }
 
@@ -59,6 +53,17 @@ public class EssayService(IEssayRepository essayRepository) : IEssayService
         {
             Code = 0,
             Message = "",
+            Data = res
+        };
+    }
+
+    public async Task<ResponseViewModel<EssayModal>> GetEssayById(int essayId)
+    {
+        var res  = await essayRepository.GetEssay(essayId);
+        return new ResponseViewModel<EssayModal>()
+        {
+            Code = res != null ? 0 : 1,
+            Message = res != null ? "Essay Updated" : "Something went wrong",
             Data = res
         };
     }

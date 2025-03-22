@@ -8,7 +8,7 @@ namespace Core.Domain.Repositories;
 
 public class EssayRepository(ApplicationContext context) : IEssayRepository
 {
-    public async Task<bool> CreateNewEssay(string essayTitle, string essayDescription, int expectedWordCount, int creatorId)
+    public async Task<EssayModal?> CreateNewEssay(string essayTitle, string essayDescription, int expectedWordCount, int creatorId)
     {
         try
         {
@@ -21,11 +21,19 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
             };
             await context.Essays.AddAsync(newEssay);
             await context.SaveChangesAsync();
-            return true;
+            return new EssayModal()
+            {
+                Id = newEssay.Id,
+                EssayTitle = newEssay.EssayTitle,
+                EssayDescription = newEssay.EssayDescription,
+                ExpectedWordCount = newEssay.ExpectedWordCount,
+                CreatorId = newEssay.CreatorId,
+                CreateDate = newEssay.CreateDate
+            };
         }
         catch (Exception)
         {
-            return false;
+            return null;
         }
     }
 
@@ -45,21 +53,29 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
         }
     }
 
-    public async Task<bool> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount, int byUser)
+    public async Task<EssayModal?> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount, int byUser)
     {
         try
         {
             var essay = await context.Essays.FirstOrDefaultAsync(x => x.Id == essayId);
-            if (essay == null || essay.CreatorId != byUser) return false;
+            if (essay == null || essay.CreatorId != byUser) return null;
             essay.EssayTitle = essayTitle;
             essay.EssayDescription = essayDescription;
             essay.ExpectedWordCount = expectedWordCount;
             await context.SaveChangesAsync();
-            return true;
+            return new EssayModal()
+            {
+                Id = essay.Id,
+                EssayTitle = essay.EssayTitle,
+                EssayDescription = essay.EssayDescription,
+                ExpectedWordCount = essay.ExpectedWordCount,
+                CreatorId = essay.CreatorId,
+                CreateDate = essay.CreateDate
+            };;
         }
         catch (Exception)
         {
-            return false;
+            return null;
         }
     }
 
@@ -73,7 +89,8 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
                 CreatorId = x.CreatorId,
                 EssayTitle = x.EssayTitle,
                 EssayDescription = x.EssayDescription,
-                ExpectedWordCount = x.ExpectedWordCount
+                ExpectedWordCount = x.ExpectedWordCount,
+                CreateDate = x.CreateDate
             }).AsNoTracking().ToListAsync();
             return essay;
         }
@@ -94,7 +111,9 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
                 Id = essay.Id,
                 EssayTitle = essay.EssayTitle,
                 EssayDescription = essay.EssayDescription,
-                ExpectedWordCount = essay.ExpectedWordCount
+                ExpectedWordCount = essay.ExpectedWordCount,
+                CreatorId = essay.CreatorId,
+                CreateDate = essay.CreateDate
             };
         }
         catch (Exception)

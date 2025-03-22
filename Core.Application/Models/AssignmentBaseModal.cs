@@ -7,6 +7,7 @@ public class AssignmentBaseModal
     public string Instructions { get; set; }
     public int GroupId { get; set; }
     public EssayModal? Essay { get; set; }
+    public int ActualWordCount { get; set; }
     public UserModal? Creator { get; set; }
     public StatusBaseModal? Status { get; set; }
     public int TotalScore { get; set; } = -1;

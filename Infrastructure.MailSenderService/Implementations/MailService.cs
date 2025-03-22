@@ -24,7 +24,7 @@ public class MailService : IMailService
                 content = await reader.ReadToEndAsync();
                 content = content.Replace("AuthenticationCode", body);
             }
-            MailMessage mail = new MailMessage()
+            var mail = new MailMessage()
             {
                 From = new MailAddress(_options.Email),
                 Subject = subject,

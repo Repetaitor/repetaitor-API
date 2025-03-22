@@ -7,4 +7,5 @@ public class EssayModal
     public string EssayDescription { get; set; }
     public int ExpectedWordCount { get; set; }
     public int CreatorId { get; set; }
+    public DateTime CreateDate { get; set; }
 }

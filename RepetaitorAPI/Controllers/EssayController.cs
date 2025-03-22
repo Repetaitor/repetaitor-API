@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace RepetaitorAPI.Controllers;
 
-[Authorize(Roles = "Teacher")]
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class EssayController(
@@ -17,12 +17,13 @@ public class EssayController(
     IJWTTokenGenerator tokenGenerator,
     IHttpContextAccessor httpContextAccessor)
 {
+    [Authorize(Roles = "Teacher")]
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<ResultResponse>> AddNewEssay([FromBody] CreateNewEssayRequest request)
+    public async Task<ResponseViewModel<EssayModal>> AddNewEssay([FromBody] CreateNewEssayRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<ResultResponse>()
+            return new ResponseViewModel<EssayModal>()
             {
                 Code = -1,
                 Message = "You do not have permission to add this essay.",
@@ -30,7 +31,7 @@ public class EssayController(
         return await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
     }
-
+    [Authorize(Roles = "Teacher")]
     [Authorize(Roles = "Teacher")]
     [HttpDelete("[Action]")]
     public async Task<ResponseViewModel<ResultResponse>> DeleteEssay([FromQuery] int essayId, [FromQuery] int userId)
@@ -44,13 +45,13 @@ public class EssayController(
             };
         return await essayService.DeleteEssay(essayId, userId);
     }
-    
+    [Authorize(Roles = "Teacher")]
     [HttpPut("[Action]")]
-    public async Task<ResponseViewModel<ResultResponse>> UpdateEssay([FromBody] UpdateEssayRequest request)
+    public async Task<ResponseViewModel<EssayModal>> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<ResultResponse>()
+            return new ResponseViewModel<EssayModal>()
             {
                 Code = -1,
                 Message = "You do not have permission to update this essay.",
@@ -58,6 +59,7 @@ public class EssayController(
         return await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
     }
+    [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     public async Task<ResponseViewModel<List<EssayModal>>> GetUserEssay([FromQuery] int userId)
     {
@@ -69,5 +71,10 @@ public class EssayController(
                 Message = "You do not have permission to delete this essay.",
             };
         return await essayService.GetUserEssays(userId);
+    }
+    [HttpGet("[Action]")]
+    public async Task<ResponseViewModel<EssayModal>> GetEssayById([FromQuery] int essayId)
+    {
+        return await essayService.GetEssayById(essayId);
     }
 }
