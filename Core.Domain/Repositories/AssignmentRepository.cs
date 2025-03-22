@@ -4,6 +4,7 @@ using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Domain.Data;
 using Core.Domain.Entities;
+using Core.Domain.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Domain.Repositories;
@@ -14,17 +15,15 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
-    public async Task<AssignmentBaseModal?> CreateNewAssignment(int userId, string assignmentTitle, string instructions,
+    public async Task<AssignmentBaseModal?> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
         try
         {
-            var group = context.Groups.Any(x => x.OwnerId == userId && x.Id == groupId);
             if (!context.Groups.Any(x => x.OwnerId == userId && x.Id == groupId) ||
                 !context.Essays.Any(x => x.Id == essayId && x.CreatorId == userId)) return null;
             var assgn = new Assignment
             {
-                AssignmentTitle = assignmentTitle,
                 Instructions = instructions,
                 GroupId = groupId,
                 EssayId = essayId,
@@ -33,14 +32,16 @@ public class AssignmentRepository(
             };
             await context.Assignments.AddAsync(assgn);
             await context.SaveChangesAsync();
+            assgn = await context.Assignments.Include(assignment => assignment.Creator)
+                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assgn.Id);
+            if (assgn == null) return null;
             return new AssignmentBaseModal()
             {
                 Id = assgn.Id,
-                AssignmentTitle = assgn.AssignmentTitle,
                 Instructions = assgn.Instructions,
                 GroupId = assgn.GroupId,
-                Creator = await userRepository.GetUserInfo(assgn.CreatorId),
-                Essay = await essayRepository.GetEssay(assgn.EssayId),
+                Creator = UserMapper.ToUserModal(assgn.Creator),
+                Essay = EssayMapper.ToEssayModal(assgn.Essay),
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
             };
@@ -83,16 +84,16 @@ public class AssignmentRepository(
     {
         try
         {
-            var assgn = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+            var assgn = await context.Assignments.Include(assignment => assignment.Creator)
+                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
             if (assgn == null) return null;
             return new AssignmentBaseModal()
             {
                 Id = assgn.Id,
-                AssignmentTitle = assgn.AssignmentTitle,
                 Instructions = assgn.Instructions,
                 GroupId = assgn.GroupId,
-                Creator = await userRepository.GetUserInfo(assgn.CreatorId),
-                Essay = await essayRepository.GetEssay(assgn.EssayId),
+                Creator = UserMapper.ToUserModal(assgn.Creator),
+                Essay = EssayMapper.ToEssayModal(assgn.Essay),
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
             };
@@ -103,26 +104,26 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<AssignmentBaseModal?> UpdateAssignment(int userId, int assignmentId, string assignmentTitle,
-        string instructions, int essayId)
+    public async Task<AssignmentBaseModal?> UpdateAssignment(int userId, int assignmentId, string instructions,
+        int essayId, DateTime dueDate)
     {
         try
         {
             if (!await context.Essays.AnyAsync(x => x.Id == essayId)) return null;
-            var assgn = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+            var assgn = await context.Assignments.Include(assignment => assignment.Creator)
+                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
             if (assgn == null) return null;
-            assgn.AssignmentTitle = assignmentTitle;
             assgn.Instructions = instructions;
             assgn.EssayId = essayId;
+            assgn.DueDate = dueDate;
             await context.SaveChangesAsync();
             return new AssignmentBaseModal()
             {
                 Id = assgn.Id,
-                AssignmentTitle = assgn.AssignmentTitle,
                 Instructions = assgn.Instructions,
                 GroupId = assgn.GroupId,
-                Creator = await userRepository.GetUserInfo(assgn.CreatorId),
-                Essay = await essayRepository.GetEssay(assgn.EssayId),
+                Creator = UserMapper.ToUserModal(assgn.Creator),
+                Essay = EssayMapper.ToEssayModal(assgn.Essay),
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
             };
@@ -179,27 +180,18 @@ public class AssignmentRepository(
         {
             var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
             if (!group) return null;
-            var assignmentsData = await context.Assignments
-                .Where(x => x.GroupId == groupId)
-                .ToListAsync();
-            
-            var assignments = new List<AssignmentBaseModal>();
-            foreach (var assgn in assignmentsData)
-            {
-                var creator = await userRepository.GetUserInfo(assgn.CreatorId);
-                var essay = await essayRepository.GetEssay(assgn.EssayId);
-                assignments.Add(new AssignmentBaseModal()
+            var assignments = await context.Assignments
+                .Where(x => x.GroupId == groupId).Include(assignment => assignment.Creator)
+                .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
                 {
                     Id = assgn.Id,
-                    AssignmentTitle = assgn.AssignmentTitle,
                     Instructions = assgn.Instructions,
                     GroupId = assgn.GroupId,
-                    Creator = creator,
-                    Essay = essay,
+                    Creator = UserMapper.ToUserModal(assgn.Creator),
+                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
                     DueDate = assgn.DueDate,
                     CreationTime = assgn.CreationTime,
-                });
-            }
+                }).ToListAsync();
             return assignments;
         }
         catch (Exception)
@@ -216,7 +208,6 @@ public class AssignmentRepository(
             {
                 Id = s.Id,
                 Name = s.Name,
-                Color = s.Color,
             }).OrderBy(x => x.Name).ToListAsync();
         }
         catch
@@ -253,10 +244,11 @@ public class AssignmentRepository(
                 return true;
             }
 
-            ;
+            if (userAssgn.StatusId == 1) return false;
             userAssgn.Text = text;
             userAssgn.WordCount = wordCount;
             userAssgn.StatusId = isSubmitted ? 1 : 2;
+            userAssgn.SubmitDate = isSubmitted ? DateTime.Now : default;
             await context.SaveChangesAsync();
             return true;
         }
@@ -274,7 +266,6 @@ public class AssignmentRepository(
             {
                 Id = s.Id,
                 Name = s.Name,
-                Color = s.Color,
             }).OrderBy(x => x.Name).ToListAsync();
         }
         catch
@@ -293,7 +284,6 @@ public class AssignmentRepository(
             {
                 Id = status.Id,
                 Name = status.Name,
-                Color = status.Color
             };
         }
         catch (Exception)
@@ -312,7 +302,6 @@ public class AssignmentRepository(
             {
                 Id = status.Id,
                 Name = status.Name,
-                Color = status.Color
             };
         }
         catch (Exception)
@@ -321,7 +310,7 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<AssignmentBaseModal>?> GetUserAssignments(int userId, int statusId)
+    public async Task<List<UserAssignmentBaseModal>?> GetUserAssignments(int userId, int statusId)
     {
         try
         {
@@ -329,27 +318,33 @@ public class AssignmentRepository(
             if (user == null) return null;
             var group = await groupRepository.GetStudentGroup(userId);
             if (group == null) return null;
-            var assignmentIds = await context.Assignments.Where(x => x.GroupId == group.Id).ToListAsync();
-            var assignments = new List<AssignmentBaseModal>();
-            foreach (var assignment in assignmentIds)
+            var assignmentIds =
+                await context.Assignments.Where(x => x.GroupId == group.Id).Select(x => x.Id).ToListAsync();
+            var assignments = new List<UserAssignmentBaseModal>();
+            foreach (var assgnId in assignmentIds)
             {
-                var userAssign =
-                    await context.UserAssignments.FirstOrDefaultAsync(x => x.AssignmentId == assignment.Id);
-                if (userAssign == null && statusId != 3 && statusId != -1) continue;
-                assignments.Add(new AssignmentBaseModal()
+                var userAssgn =
+                    await context.UserAssignments.Include(userAssignment => userAssignment.Status)
+                        .Include(userAssignment => userAssignment.Assignment)
+                        .Include(userAssignment => userAssignment.User).FirstOrDefaultAsync(x =>
+                            x.AssignmentId == assgnId && x.UserId == userId);
+                assignments.Add(new UserAssignmentBaseModal()
                 {
-                    Id = assignment.Id,
-                    AssignmentTitle = assignment.AssignmentTitle,
-                    Instructions = assignment.Instructions,
-                    GroupId = assignment.GroupId,
-                    Creator = await userRepository.GetUserInfo(assignment.CreatorId),
-                    Essay = await essayRepository.GetEssay(assignment.EssayId),
-                    Status = await GetAssignmentStatusById(userAssign?.StatusId ?? 3) ?? null,
-                    DueDate = assignment.DueDate,
-                    CreationTime = assignment.CreationTime,
-                    TotalScore = userAssign is { IsEvaluated: true }
-                        ? userAssign.FluencyScore + userAssign.GrammarScore
-                        : -1
+                    Student = (userAssgn != null
+                        ? UserMapper.ToUserModal(userAssgn.User)
+                        : await userRepository.GetUserInfo(userId))!,
+                    Assignment = (userAssgn != null
+                        ? AssignmentMapper.ToAssignmentBaseModal(userAssgn.Assignment)
+                        : await GetAssignmentById(assgnId))!,
+                    Status = (userAssgn != null
+                        ? new StatusBaseModal() { Id = userAssgn.Status.Id, Name = userAssgn.Status.Name }
+                        : await GetAssignmentStatusById(3))!,
+                    IsEvaluated = userAssgn?.IsEvaluated ?? false,
+                    TotalScore = userAssgn != null
+                        ? userAssgn.IsEvaluated ? userAssgn.FluencyScore + userAssgn.GrammarScore : -1
+                        : -1,
+                    ActualWordCount = userAssgn?.WordCount ?? 0,
+                    SubmitDate = userAssgn?.SubmitDate,
                 });
             }
 
@@ -361,31 +356,36 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<AssignmentBaseModal>?> GetUserNotSeenEvaluatedAssignments(int userId)
+    public async Task<List<UserAssignmentBaseModal>?> GetUserNotSeenEvaluatedAssignments(int userId)
     {
         try
         {
-            var assgns = await context.UserAssignments
-                .Where(x => x.UserId == userId && x.StatusId == 1 && x.IsEvaluated == true && x.FeedbackSeen == false)
-                .ToListAsync();
-            var assignments = new List<AssignmentBaseModal>();
-            foreach (var x in assgns)
-            {
-                var assgn = await GetAssignmentById(x.AssignmentId);
-                assignments.Add(new AssignmentBaseModal()
+            var user = await userRepository.GetUserInfo(userId);
+            if (user == null) return null;
+            var group = await groupRepository.GetStudentGroup(userId);
+            if (group == null) return null;
+            var assignmentIds =
+                await context.Assignments.Where(x => x.GroupId == group.Id).Select(x => x.Id).ToListAsync();
+
+            var assignments = await context.UserAssignments
+                .Where(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
+                            !x.FeedbackSeen).Include(x => x.User)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Creator)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Essay).Include(x => x.Status)
+                .Select(x => new UserAssignmentBaseModal()
                 {
-                    Id = assgn.Id,
-                    AssignmentTitle = assgn.AssignmentTitle,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = assgn.Creator,
-                    Essay = assgn.Essay,
-                    Status = await GetAssignmentStatusById(1),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
-                    TotalScore = x.FluencyScore + x.GrammarScore
-                });
-            }
+                    Student = UserMapper.ToUserModal(x.User),
+                    Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                    Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                    TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                    IsEvaluated = x.IsEvaluated,
+                    ActualWordCount = x.WordCount,
+                    SubmitDate = x.SubmitDate
+                }).ToListAsync();
+
+
             return assignments;
         }
         catch (Exception)
@@ -447,7 +447,29 @@ public class AssignmentRepository(
         {
             var assgn = await context.UserAssignments
                 .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
-            if (assgn == null) return null;
+            if (assgn == null)
+            {
+                var defAssgn = await GetAssignmentById(assignmentId);
+                var userGroup = await groupRepository.GetStudentGroup(userId);
+                if (defAssgn == null || userGroup == null || defAssgn.GroupId != userGroup.Id) return null;
+                return new UserAssignmentModal()
+                {
+                    AssignDate = defAssgn.CreationTime,
+                    FeedbackSeen = false,
+                    FluencyScore = 0,
+                    GrammarScore = 0,
+                    AssignmentId = defAssgn.Id,
+                    Status = await GetAssignmentStatusById(3),
+                    Text = "",
+                    WordCount = 0,
+                    UserId = userId,
+                    IsEvaluated = false,
+                    GeneralCommentS = [],
+                    EvaluationComments = []
+                };
+            }
+
+            ;
             if (callerId == assgn.UserId && assgn.IsEvaluated)
             {
                 assgn.FeedbackSeen = true;
@@ -456,7 +478,6 @@ public class AssignmentRepository(
 
             return new UserAssignmentModal()
             {
-                Id = assgn.Id,
                 AssignDate = assgn.AssignDate,
                 FeedbackSeen = assgn.FeedbackSeen,
                 FluencyScore = assgn.FluencyScore,
@@ -477,34 +498,27 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<AssignmentBaseModal>?> GetTeacherAssignments(int userId)
+    public async Task<List<UserAssignmentBaseModal>?> GetTeacherAssignments(int userId)
     {
         try
         {
-            var teacherAssignments =
-                await context.Assignments.Where(x => x.CreatorId == userId).Select(x => x.Id).ToListAsync();
-            var studentsSubmitAssignments = await context.UserAssignments
-                .Where(x => x.StatusId == 1 && !x.IsEvaluated && teacherAssignments.Contains(x.AssignmentId))
-                .ToListAsync();
-            var jobs = new List<AssignmentBaseModal>();
-            foreach (var x in studentsSubmitAssignments)
+            var studentsSubmitAssignments = context.UserAssignments.Include(x => x.User)
+                .Include(x => x.Assignment).ThenInclude(x => x.Creator)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Essay)
+                .Include(x => x.Status)
+                .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId);
+                
+
+            return await studentsSubmitAssignments.Select(x => new UserAssignmentBaseModal()
             {
-                var assgn = await GetAssignmentById(x.AssignmentId);
-                jobs.Add(new AssignmentBaseModal()
-                {
-                    Id = assgn.Id,
-                    AssignmentTitle = assgn.AssignmentTitle,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = assgn.Creator,
-                    Essay = assgn.Essay,
-                    Status = await GetAssignmentStatusById(1),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
-                    TotalScore = -1
-                });
-            }
-            return jobs;
+                Student = UserMapper.ToUserModal(x.User),
+                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                ActualWordCount = x.WordCount,
+                SubmitDate = x.SubmitDate
+            }).ToListAsync();;
         }
         catch (Exception)
         {

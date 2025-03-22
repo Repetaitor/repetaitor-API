@@ -4,7 +4,6 @@ namespace Core.Application.Models;
 
 public class UserAssignmentModal
 {
-    public int Id { get; set; }
     public int UserId { get; set; }
     public int AssignmentId { get; set; }
     public StatusBaseModal? Status { get; set; }

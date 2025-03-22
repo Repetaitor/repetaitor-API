@@ -6,8 +6,6 @@ namespace Core.Domain.Entities;
 public class Assignment
 {
     public int Id { get; set; }
-    [DataType("nvarchar(100)")]
-    public string AssignmentTitle { get; set; }
     [DataType("Text")]
     public string Instructions { get; set; } = "";
     public int GroupId { get; set; }

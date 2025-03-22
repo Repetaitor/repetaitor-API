@@ -9,92 +9,50 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
 {
-    public async Task<ResponseViewModel<BaseAssignmentResponse>> CreateNewAssignment(
+    public async Task<ResponseViewModel<AssignmentBaseModal>> CreateNewAssignment(
         CreateNewAssignmentsRequest request)
     {
-        var res = await assignmentRepository.CreateNewAssignment(request.UserId, request.AssignmentTitle,
+        var res = await assignmentRepository.CreateNewAssignment(request.UserId,
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
-        return new ResponseViewModel<BaseAssignmentResponse>()
+        return new ResponseViewModel<AssignmentBaseModal>()
         {
-            Code = res != null ? 0 : -1,
+            Code = res != null ? 0 : -1, 
             Message = res != null ? "Assignment created" : "Assignment create failed",
-            Data = res != null
-                ? new BaseAssignmentResponse()
-                {
-                    AssignmentId = res.Id,
-                    AssignmentName = res.AssignmentTitle,
-                    Instructions = res.Instructions,
-                    Creator = res.Creator,
-                    DueDate = res.DueDate,
-                    ExpectedWordCount = res.Essay?.ExpectedWordCount ?? 0
-                }
-                : null
+            Data = res 
         };
     }
 
-    public async Task<ResponseViewModel<BaseAssignmentResponse>> UpdateAssignment(UpdateAssignmentRequest request)
+    public async Task<ResponseViewModel<AssignmentBaseModal>> UpdateAssignment(UpdateAssignmentRequest request)
     {
         var res = await assignmentRepository.UpdateAssignment(request.UserId, request.AssignmentId,
-            request.AssignmentTitle, request.Instructions, request.EssayId);
-        return new ResponseViewModel<BaseAssignmentResponse>()
+            request.Instructions, request.EssayId, request.DueDate);
+        return new ResponseViewModel<AssignmentBaseModal>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "Assignment Updated" : "Assignment Update Failed",
-            Data = res != null
-                ? new BaseAssignmentResponse()
-                {
-                    AssignmentId = res.Id,
-                    AssignmentName = res.AssignmentTitle,
-                    Instructions = res.Instructions,
-                    Creator = res.Creator,
-                    DueDate = res.DueDate,
-                    ExpectedWordCount = res.Essay?.ExpectedWordCount ?? 0
-                }
-                : null
+            Data = res
         };
     }
 
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetGroupAssignments(int userId, int groupId)
+    public async Task<ResponseViewModel<List<AssignmentBaseModal>>> GetGroupAssignments(int userId, int groupId)
     {
         var res = await assignmentRepository.GetGroupAssignments(userId, groupId);
-        return new ResponseViewModel<List<BaseAssignmentResponse>>()
+        return new ResponseViewModel<List<AssignmentBaseModal>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get Group Assignments",
-            Data = res != null
-                ? res.Select(x => new BaseAssignmentResponse()
-                {
-                    AssignmentId = x.Id,
-                    AssignmentName = x.AssignmentTitle,
-                    Instructions = x.Instructions,
-                    Creator = x.Creator,
-                    DueDate = x.DueDate,
-                    ExpectedWordCount = x.Essay?.ExpectedWordCount ?? 0
-                }).ToList()
-                : []
+            Data = res
         };
     }
 
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserAssignments(int userId, int statusId)
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserAssignments(int userId, int statusId)
     {
         var res = await assignmentRepository.GetUserAssignments(userId, statusId);
-        return new ResponseViewModel<List<BaseAssignmentResponse>>()
+        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get User Assignments",
-            Data = res != null
-                ? res.Select(x => new BaseAssignmentResponse()
-                {
-                    AssignmentId = x.Id,
-                    AssignmentName = x.AssignmentTitle ?? "",
-                    Instructions = x.Instructions ?? "",
-                    Status = x.Status ?? null,
-                    Creator = x.Creator,
-                    DueDate = x.DueDate,
-                    ExpectedWordCount = x.Essay?.ExpectedWordCount ?? 0,
-                    TotalScore = x.TotalScore
-                }).ToList()
-                : []
+            Data = res 
         };
     }
 
@@ -125,26 +83,14 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserNotSeenEvaluatedAssignments(int userId)
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserNotSeenEvaluatedAssignments(int userId)
     {
         var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId);
-        return new ResponseViewModel<List<BaseAssignmentResponse>>()
+        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get UserNotSeenEvaluatedAssignments",
-            Data = res != null
-                ? res.Select(x => new BaseAssignmentResponse()
-                {
-                    AssignmentId = x.Id,
-                    AssignmentName = x.AssignmentTitle ?? "",
-                    Instructions = x.Instructions ?? "",
-                    Creator = x.Creator,
-                    DueDate = x.DueDate,
-                    Status = x.Status ?? null,
-                    ExpectedWordCount = x.Essay?.ExpectedWordCount ?? 0,
-                    TotalScore = x.TotalScore
-                }).ToList()
-                : []
+            Data = res 
         };
     }
 
@@ -182,26 +128,14 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetTeacherAssignments(int userId)
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetTeacherAssignments(int userId)
     {
         var res = await assignmentRepository.GetTeacherAssignments(userId);
-        return new ResponseViewModel<List<BaseAssignmentResponse>>()
+        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get TeacherAssignments",
-            Data = res != null
-                ? res.Select(x => new BaseAssignmentResponse()
-                {
-                    AssignmentId = x.Id,
-                    AssignmentName = x.AssignmentTitle ?? "",
-                    Instructions = x.Instructions ?? "",
-                    Creator = x.Creator,
-                    DueDate = x.DueDate,
-                    Status = x.Status ?? null,
-                    ExpectedWordCount = x.Essay?.ExpectedWordCount ?? 0,
-                    TotalScore = x.TotalScore
-                }).ToList()
-                : []
+            Data = res
         };
     }
 }

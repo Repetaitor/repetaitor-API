@@ -116,7 +116,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var studGroup = await GetStudentGroup(userId);
-            if (studGroup == null || studGroup!.Id != 0) return false;
+            if (studGroup != null) return false;
             var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
             if (group == null || group.IsActive == false) return false;
             var userGroup = new UserGroups()

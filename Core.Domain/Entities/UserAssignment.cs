@@ -19,6 +19,8 @@ public class UserAssignment
     public bool IsEvaluated { get; set; } =  false;
     [DataType("DateTime")]
     public DateTime AssignDate { get; set; } = DateTime.Now;
+    [DataType("DateTime")]
+    public DateTime SubmitDate { get; set; }
     public virtual User User { get; set; }
     public virtual Assignment Assignment { get; set; }
     public virtual AssignmentStatus Status { get; set; }

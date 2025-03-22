@@ -8,23 +8,22 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IAssignmentService
 {
-    Task<ResponseViewModel<BaseAssignmentResponse>> CreateNewAssignment(CreateNewAssignmentsRequest request);
+    Task<ResponseViewModel<AssignmentBaseModal>> CreateNewAssignment(CreateNewAssignmentsRequest request);
 
-    Task<ResponseViewModel<BaseAssignmentResponse>> UpdateAssignment(
-        [FromBody] UpdateAssignmentRequest request);
+    Task<ResponseViewModel<AssignmentBaseModal>> UpdateAssignment(UpdateAssignmentRequest request);
 
-    Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetGroupAssignments(int userId, int groupId);
+    Task<ResponseViewModel<List<AssignmentBaseModal>>> GetGroupAssignments(int userId, int groupId);
     
-    Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserAssignments(int userId, int statusId);
+    Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserAssignments(int userId, int statusId);
     Task<ResponseViewModel<ResultResponse>> SaveOrSubmitAssignment(SaveOrSubmitAssignmentRequest request);
     Task<ResponseViewModel<UserAssignmentModal>> GetUserAssignment(int callerId, int userId, int assignmentId);
     
-    Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserNotSeenEvaluatedAssignments(int userId);
+    Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserNotSeenEvaluatedAssignments(int userId);
     
     Task<ResponseViewModel<List<StatusBaseModal>>> GetEvaluationTextStatuses();
     
     Task<ResponseViewModel<List<StatusBaseModal>>> GetAssignmentStatuses();
     
     Task<ResponseViewModel<ResultResponse>> EvaluateAssignments(EvaluateAssignmentRequest request);
-    Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetTeacherAssignments(int userId);
+    Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetTeacherAssignments(int userId);
 }

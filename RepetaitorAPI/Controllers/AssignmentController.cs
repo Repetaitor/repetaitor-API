@@ -19,12 +19,12 @@ public class AssignmentController(
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[action]")]
-    public async Task<ResponseViewModel<BaseAssignmentResponse>> CreateNewAssignment(
+    public async Task<ResponseViewModel<AssignmentBaseModal>> CreateNewAssignment(
         [FromBody] CreateNewAssignmentsRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<BaseAssignmentResponse>()
+            return new ResponseViewModel<AssignmentBaseModal>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
@@ -34,12 +34,12 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpPut("[action]")]
-    public async Task<ResponseViewModel<BaseAssignmentResponse>> UpdateAssignment(
+    public async Task<ResponseViewModel<AssignmentBaseModal>> UpdateAssignment(
         [FromBody] UpdateAssignmentRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<BaseAssignmentResponse>()
+            return new ResponseViewModel<AssignmentBaseModal>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
@@ -61,12 +61,12 @@ public class AssignmentController(
     }
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetGroupAssignments([FromQuery] int userId,
+    public async Task<ResponseViewModel<List<AssignmentBaseModal>>> GetGroupAssignments([FromQuery] int userId,
         [FromQuery] int groupId)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<BaseAssignmentResponse>>()
+            return new ResponseViewModel<List<AssignmentBaseModal>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
@@ -75,7 +75,7 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserAssignments([FromQuery] int userId,
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserAssignments([FromQuery] int userId,
         [FromQuery] int statusId)
     {
         return await assignmentService.GetUserAssignments(userId, statusId);
@@ -91,12 +91,12 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetUserNotSeenEvaluatedAssignments(
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserNotSeenEvaluatedAssignments(
         [FromQuery] int userId)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<BaseAssignmentResponse>>()
+            return new ResponseViewModel<List<UserAssignmentBaseModal>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
@@ -132,12 +132,12 @@ public class AssignmentController(
     }
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<BaseAssignmentResponse>>> GetNeedEvaluationAssignments(
+    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetNeedEvaluationAssignments(
         [FromQuery] int teacherId)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(teacherId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<BaseAssignmentResponse>>()
+            return new ResponseViewModel<List<UserAssignmentBaseModal>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
