@@ -2,6 +2,7 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Data;
 using Core.Domain.Entities;
+using Core.Domain.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Domain.Repositories;
@@ -24,15 +25,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
         try
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Email == email && x.Password == password);
-            if (user == null) return null;
-            return new UserModal()
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Role = user.Role
-            };
+            return user == null ? null : UserMapper.ToUserModal(user);
         }
         catch (Exception)
         {
@@ -81,16 +74,8 @@ public class UserRepository(ApplicationContext context) : IUserRepository
     {
         try
         {
-            var user = context.Users.FirstOrDefault(x => x.Id == userId);
-            if (user == null) return null;
-            return new UserModal()
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Role = user.Role
-            };
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            return user == null ? null : UserMapper.ToUserModal(user);
         }
         catch (Exception)
         {
