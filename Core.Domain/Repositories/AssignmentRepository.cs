@@ -15,6 +15,70 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
+    private async Task<bool> AssignToAllStudentsInGroup(int assignmentId, int groupId)
+    {
+        var userIds = await context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId)
+            .ToListAsync();
+        try
+        {
+            foreach (var userAssgn in userIds.Select(userId => new UserAssignment()
+                     {
+                         AssignmentId = assignmentId,
+                         UserId = userId,
+                         StatusId = 3,
+                         Text = "",
+                         WordCount = 0,
+                         GrammarScore = 0,
+                         FluencyScore = 0,
+                         FeedbackSeen = false,
+                         IsEvaluated = false,
+                         AssignDate = DateTime.Now,
+                     }))
+            {
+                await context.UserAssignments.AddAsync(userAssgn);
+                await context.SaveChangesAsync();
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId)
+    {
+        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId).Select(x => x.Id)
+            .ToListAsync();
+        try
+        {
+            foreach (var userAssgn in assgnIds.Select(assgnId => new UserAssignment()
+                     {
+                         AssignmentId = assgnId,
+                         UserId = userId,
+                         StatusId = 3,
+                         Text = "",
+                         WordCount = 0,
+                         GrammarScore = 0,
+                         FluencyScore = 0,
+                         FeedbackSeen = false,
+                         IsEvaluated = false,
+                         AssignDate = DateTime.Now,
+                     }))
+            {
+                await context.UserAssignments.AddAsync(userAssgn);
+                await context.SaveChangesAsync();
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public async Task<AssignmentBaseModal?> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
@@ -35,6 +99,7 @@ public class AssignmentRepository(
             assgn = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assgn.Id);
             if (assgn == null) return null;
+            await AssignToAllStudentsInGroup(assgn.Id, assgn.GroupId);
             return new AssignmentBaseModal()
             {
                 Id = assgn.Id,
@@ -51,34 +116,6 @@ public class AssignmentRepository(
             return null;
         }
     }
-
-    // private async Task<bool> AssignTaskToAllGroupStudents(int assignmentId, int groupId)
-    // {
-    //     try
-    //     {
-    //         var userIds = await context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId).ToListAsync();
-    //         var userAssgn = userIds.Select(userId => new UserAssignment()
-    //             {
-    //                 AssignmentId = assignmentId,
-    //                 UserId = userId,
-    //                 StatusId = 3,
-    //                 Text = "",
-    //                 WordCount = 0,
-    //                 GrammarScore = 0,
-    //                 FluencyScore = 0,
-    //                 FeedbackSeen = false,
-    //                 IsEvaluated = false,
-    //                 AssignDate = DateTime.Now,
-    //             })
-    //             .ToList();
-    //         await context.UserAssignments.AddRangeAsync(userAssgn);
-    //         return true;
-    //     }
-    //     catch (Exception)
-    //     {
-    //         return false;
-    //     }
-    // }
 
     public async Task<AssignmentBaseModal?> GetAssignmentById(int assignmentId)
     {
@@ -174,14 +211,16 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<AssignmentBaseModal>?> GetGroupAssignments(int userId, int groupId)
+    public async Task<(List<AssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId, int? offset,
+        int? limit)
     {
         try
         {
             var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
-            if (!group) return null;
+            if (!group) return (null, 0);
             var assignments = await context.Assignments
-                .Where(x => x.GroupId == groupId).Include(assignment => assignment.Creator)
+                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0).Take(limit ?? 5)
+                .Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
                 {
                     Id = assgn.Id,
@@ -192,11 +231,13 @@ public class AssignmentRepository(
                     DueDate = assgn.DueDate,
                     CreationTime = assgn.CreationTime,
                 }).ToListAsync();
-            return assignments;
+            var cnt = await context.Assignments
+                .CountAsync(x => x.GroupId == groupId);
+            return (assignments, cnt);
         }
         catch (Exception)
         {
-            return null;
+            return (null, 0);
         }
     }
 
@@ -224,27 +265,7 @@ public class AssignmentRepository(
             var userAssgn =
                 await context.UserAssignments.FirstOrDefaultAsync(x =>
                     x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn == null)
-            {
-                userAssgn = new UserAssignment()
-                {
-                    AssignmentId = assignmentId,
-                    UserId = userId,
-                    StatusId = isSubmitted ? 1 : 2,
-                    Text = text,
-                    WordCount = wordCount,
-                    GrammarScore = 0,
-                    FluencyScore = 0,
-                    FeedbackSeen = false,
-                    IsEvaluated = false,
-                    AssignDate = DateTime.Now,
-                };
-                await context.UserAssignments.AddAsync(userAssgn);
-                await context.SaveChangesAsync();
-                return true;
-            }
-
-            if (userAssgn.StatusId == 1) return false;
+            if (userAssgn == null || userAssgn.StatusId == 1) return false;
             userAssgn.Text = text;
             userAssgn.WordCount = wordCount;
             userAssgn.StatusId = isSubmitted ? 1 : 2;
@@ -268,7 +289,7 @@ public class AssignmentRepository(
                 Name = s.Name,
             }).OrderBy(x => x.Name).ToListAsync();
         }
-        catch
+        catch (Exception)
         {
             return null;
         }
@@ -310,66 +331,56 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<UserAssignmentBaseModal>?> GetUserAssignments(int userId, int statusId)
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, int statusId, int? offset,
+        int? limit)
     {
         try
         {
-            var user = await userRepository.GetUserInfo(userId);
-            if (user == null) return null;
-            var group = await groupRepository.GetStudentGroup(userId);
-            if (group == null) return null;
-            var assignmentIds =
-                await context.Assignments.Where(x => x.GroupId == group.Id).Select(x => x.Id).ToListAsync();
-            var assignments = new List<UserAssignmentBaseModal>();
-            foreach (var assgnId in assignmentIds)
-            {
-                var userAssgn =
-                    await context.UserAssignments.Include(userAssignment => userAssignment.Status)
-                        .Include(userAssignment => userAssignment.Assignment)
-                        .Include(userAssignment => userAssignment.User).FirstOrDefaultAsync(x =>
-                            x.AssignmentId == assgnId && x.UserId == userId);
-                assignments.Add(new UserAssignmentBaseModal()
-                {
-                    Student = (userAssgn != null
-                        ? UserMapper.ToUserModal(userAssgn.User)
-                        : await userRepository.GetUserInfo(userId))!,
-                    Assignment = (userAssgn != null
-                        ? AssignmentMapper.ToAssignmentBaseModal(userAssgn.Assignment)
-                        : await GetAssignmentById(assgnId))!,
-                    Status = (userAssgn != null
-                        ? new StatusBaseModal() { Id = userAssgn.Status.Id, Name = userAssgn.Status.Name }
-                        : await GetAssignmentStatusById(3))!,
-                    IsEvaluated = userAssgn?.IsEvaluated ?? false,
-                    TotalScore = userAssgn != null
-                        ? userAssgn.IsEvaluated ? userAssgn.FluencyScore + userAssgn.GrammarScore : -1
-                        : -1,
-                    ActualWordCount = userAssgn?.WordCount ?? 0,
-                    SubmitDate = userAssgn?.SubmitDate,
-                });
-            }
-
-            return assignments;
+            var userAssgns =
+                await context.UserAssignments.Include(userAssignment => userAssignment.Status)
+                    .Include(x => x.Assignment)
+                    .ThenInclude(a => a.Creator)
+                    .Include(x => x.Assignment)
+                    .ThenInclude(a => a.Essay)
+                    .Include(userAssignment => userAssignment.User)
+                    .Where(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId))
+                    .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
+                    .Take(limit ?? 5).Select(x =>
+                        new UserAssignmentBaseModal()
+                        {
+                            Student = UserMapper.ToUserModal(x.User),
+                            Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                            Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                            IsEvaluated = x.IsEvaluated,
+                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                            ActualWordCount = x.WordCount,
+                            SubmitDate = x.SubmitDate,
+                        }).ToListAsync();
+            var cnt = await context.UserAssignments
+                .CountAsync(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId));
+            return (userAssgns, cnt);
         }
         catch (Exception)
         {
-            return null;
+            return (null, 0);
         }
     }
 
-    public async Task<List<UserAssignmentBaseModal>?> GetUserNotSeenEvaluatedAssignments(int userId)
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserNotSeenEvaluatedAssignments(int userId, int? offset,
+        int? limit)
     {
         try
         {
             var user = await userRepository.GetUserInfo(userId);
-            if (user == null) return null;
+            if (user == null) return (null, 0);
             var group = await groupRepository.GetStudentGroup(userId);
-            if (group == null) return null;
+            if (group == null) return (null, 0);
             var assignmentIds =
                 await context.Assignments.Where(x => x.GroupId == group.Id).Select(x => x.Id).ToListAsync();
 
             var assignments = await context.UserAssignments
                 .Where(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
-                            !x.FeedbackSeen).Include(x => x.User)
+                            !x.FeedbackSeen).Skip(offset ?? 0).Take(limit ?? 5).Include(x => x.User)
                 .Include(x => x.Assignment)
                 .ThenInclude(a => a.Creator)
                 .Include(x => x.Assignment)
@@ -384,13 +395,15 @@ public class AssignmentRepository(
                     ActualWordCount = x.WordCount,
                     SubmitDate = x.SubmitDate
                 }).ToListAsync();
+            var cnt = await context.UserAssignments
+                .CountAsync(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
+                                 !x.FeedbackSeen);
 
-
-            return assignments;
+            return (assignments, cnt);
         }
         catch (Exception)
         {
-            return null;
+            return (null, 0);
         }
     }
 
@@ -447,29 +460,7 @@ public class AssignmentRepository(
         {
             var assgn = await context.UserAssignments
                 .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
-            if (assgn == null)
-            {
-                var defAssgn = await GetAssignmentById(assignmentId);
-                var userGroup = await groupRepository.GetStudentGroup(userId);
-                if (defAssgn == null || userGroup == null || defAssgn.GroupId != userGroup.Id) return null;
-                return new UserAssignmentModal()
-                {
-                    AssignDate = defAssgn.CreationTime,
-                    FeedbackSeen = false,
-                    FluencyScore = 0,
-                    GrammarScore = 0,
-                    AssignmentId = defAssgn.Id,
-                    Status = await GetAssignmentStatusById(3),
-                    Text = "",
-                    WordCount = 0,
-                    UserId = userId,
-                    IsEvaluated = false,
-                    GeneralCommentS = [],
-                    EvaluationComments = []
-                };
-            }
-
-            ;
+            if (assgn == null) return null;
             if (callerId == assgn.UserId && assgn.IsEvaluated)
             {
                 assgn.FeedbackSeen = true;
@@ -498,31 +489,68 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<List<UserAssignmentBaseModal>?> GetTeacherAssignments(int userId)
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId, int? offset, int? limit)
     {
         try
         {
-            var studentsSubmitAssignments = context.UserAssignments.Include(x => x.User)
+            var studentsSubmitAssignments = await context.UserAssignments.Include(x => x.User)
                 .Include(x => x.Assignment).ThenInclude(x => x.Creator)
                 .Include(x => x.Assignment)
                 .ThenInclude(a => a.Essay)
                 .Include(x => x.Status)
-                .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId);
-                
-
-            return await studentsSubmitAssignments.Select(x => new UserAssignmentBaseModal()
-            {
-                Student = UserMapper.ToUserModal(x.User),
-                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
-                Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
-                TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
-                ActualWordCount = x.WordCount,
-                SubmitDate = x.SubmitDate
-            }).ToListAsync();;
+                .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId).Skip(offset ?? 0)
+                .Take(limit ?? 5).Select(x => new UserAssignmentBaseModal()
+                {
+                    Student = UserMapper.ToUserModal(x.User),
+                    Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                    Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                    TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                    ActualWordCount = x.WordCount,
+                    SubmitDate = x.SubmitDate
+                }).ToListAsync();
+            var cnt = await context.UserAssignments
+                .CountAsync(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId);
+            return (studentsSubmitAssignments, cnt);
         }
         catch (Exception)
         {
-            return null;
+            return (null, 0);
+        }
+    }
+
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int assignmentId, int statusId,
+        int? offset,
+        int? limit)
+    {
+        try
+        {
+            var userAssgns =
+                await context.UserAssignments.Include(userAssignment => userAssignment.User)
+                    .Include(x => x.Assignment)
+                    .ThenInclude(a => a.Creator)
+                    .Include(x => x.Assignment)
+                    .ThenInclude(a => a.Essay)
+                    .Include(userAssignment => userAssignment.Status).Where(x =>
+                        x.AssignmentId == assignmentId && (statusId == -1 || x.StatusId == statusId))
+                    .OrderBy(x => x.StatusId).Skip(offset ?? 0)
+                    .Take(limit ?? 10).Select(x =>
+                        new UserAssignmentBaseModal()
+                        {
+                            Student = UserMapper.ToUserModal(x.User),
+                            Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                            Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                            IsEvaluated = x.IsEvaluated,
+                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                            ActualWordCount = x.WordCount,
+                            SubmitDate = x.SubmitDate,
+                        }).ToListAsync();
+            var cnt = await context.UserAssignments.CountAsync(x =>
+                x.AssignmentId == assignmentId && (statusId == -1 || x.StatusId == statusId));
+            return (userAssgns, cnt);
+        }
+        catch (Exception)
+        {
+            return (null, 0);
         }
     }
 }

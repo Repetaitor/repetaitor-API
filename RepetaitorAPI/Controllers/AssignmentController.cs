@@ -1,6 +1,7 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Assignments;
 using Core.Application.Models.DTO.Essays;
 using Core.Domain.Entities;
@@ -46,6 +47,7 @@ public class AssignmentController(
             };
         return await assignmentService.UpdateAssignment(request);
     }
+
     [HttpPost("[action]")]
     public async Task<ResponseViewModel<ResultResponse>> SaveOrSubmitAssignment(
         [FromBody] SaveOrSubmitAssignmentRequest request)
@@ -59,26 +61,28 @@ public class AssignmentController(
             };
         return await assignmentService.SaveOrSubmitAssignment(request);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<AssignmentBaseModal>>> GetGroupAssignments([FromQuery] int userId,
-        [FromQuery] int groupId)
+    public async Task<ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments([FromQuery]
+        GetGroupAssignmentsRequest
+            request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
+        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<AssignmentBaseModal>>()
+            return new ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
             };
-        return await assignmentService.GetGroupAssignments(userId, groupId);
+        return await assignmentService.GetGroupAssignments(request.UserId, request.GroupId, request.Offset, request.Limit);
     }
 
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserAssignments([FromQuery] int userId,
-        [FromQuery] int statusId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(
+        [FromQuery] GetUserAssignmentsRequest request)
     {
-        return await assignmentService.GetUserAssignments(userId, statusId);
+        return await assignmentService.GetUserAssignments(request.UserId, request.StatusId, request.Offset, request.Limit);
     }
 
     [HttpGet("[action]")]
@@ -91,17 +95,18 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserNotSeenEvaluatedAssignments(
-        [FromQuery] int userId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>>
+        GetUserNotSeenEvaluatedAssignments(
+            [FromQuery] GetUserNotSeenEvaluatedAssignmentsRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
+        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<UserAssignmentBaseModal>>()
+            return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
             };
-        return await assignmentService.GetUserNotSeenEvaluatedAssignments(userId);
+        return await assignmentService.GetUserNotSeenEvaluatedAssignments(request.UserId, request.Offset, request.Limit);
     }
 
     [HttpGet("[action]")]
@@ -130,18 +135,42 @@ public class AssignmentController(
             };
         return await assignmentService.EvaluateAssignments(request);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetNeedEvaluationAssignments(
-        [FromQuery] int teacherId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetNeedEvaluationAssignments(
+        [FromQuery] GetNeedEvaluationAssignmentsRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(teacherId,
+        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.TeacherId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<UserAssignmentBaseModal>>()
+            return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = -1,
                 Message = "You do not have permission.",
             };
-        return await assignmentService.GetTeacherAssignments(teacherId);
+        return await assignmentService.GetTeacherAssignments(request.TeacherId, request.Offset, request.Limit);
+    }
+
+    [HttpGet("[action]")]
+    public async Task<ResponseViewModel<AssignmentBaseModal>> GetAssignmentBaseInfoById(
+        [FromQuery] int assignmentId)
+    {
+        return await assignmentService.GetAssignmentBaseInfoById(assignmentId);
+    }
+
+    [Authorize(Roles = "Teacher")]
+    [HttpGet("[action]")]
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUsersTasksByAssignment(
+        [FromQuery] GetUsersTasksByAssignmentRequest request)
+    {
+        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.userId,
+                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
+            return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
+            {
+                Code = -1,
+                Message = "You do not have permission.",
+            };
+        return await assignmentService.GetAssigmentUsersTasks(request.AssignmentId, request.statusId, request.offset,
+            request.limit);
     }
 }

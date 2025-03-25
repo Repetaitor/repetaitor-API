@@ -2,6 +2,7 @@ using Azure.Core;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Assignments;
 using Core.Application.Models.DTO.Essays;
 
@@ -16,9 +17,9 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
         return new ResponseViewModel<AssignmentBaseModal>()
         {
-            Code = res != null ? 0 : -1, 
+            Code = res != null ? 0 : -1,
             Message = res != null ? "Assignment created" : "Assignment create failed",
-            Data = res 
+            Data = res
         };
     }
 
@@ -34,25 +35,33 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<List<AssignmentBaseModal>>> GetGroupAssignments(int userId, int groupId)
+    public async Task<ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId, int groupId,int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetGroupAssignments(userId, groupId);
-        return new ResponseViewModel<List<AssignmentBaseModal>>()
+        var (res, count) = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
+        return new ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get Group Assignments",
-            Data = res
+            Data = new CountedResponse<List<AssignmentBaseModal>>()
+            {
+                Result = res,
+                TotalCount = count
+            }
         };
     }
 
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserAssignments(int userId, int statusId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId, int statusId,int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetUserAssignments(userId, statusId);
-        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
+        var (res, count) = await assignmentRepository.GetUserAssignments(userId, statusId, offset, limit);
+        return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get User Assignments",
-            Data = res 
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            {
+                Result = res,
+                TotalCount = count
+            }
         };
     }
 
@@ -83,14 +92,18 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetUserNotSeenEvaluatedAssignments(int userId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(int userId,int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId);
-        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
+        var (res, count) = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
+        return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get UserNotSeenEvaluatedAssignments",
-            Data = res 
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            {
+                Result = res,
+                TotalCount = count
+            }
         };
     }
 
@@ -128,14 +141,45 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<List<UserAssignmentBaseModal>>> GetTeacherAssignments(int userId)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(int userId,int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetTeacherAssignments(userId);
-        return new ResponseViewModel<List<UserAssignmentBaseModal>>()
+        var (res, count) = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
+        return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
         {
             Code = res != null ? 0 : -1,
             Message = res != null ? "" : "Failed To Get TeacherAssignments",
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            {
+                Result = res,
+                TotalCount = count
+            }
+        };
+    }
+
+    public async Task<ResponseViewModel<AssignmentBaseModal>> GetAssignmentBaseInfoById(int assignmentId)
+    {
+        var res = await assignmentRepository.GetAssignmentById(assignmentId);
+        return new ResponseViewModel<AssignmentBaseModal>()
+        {
+            Code = res != null ? 0 : -1,
+            Message = res != null ? "" : "Failed To Get Assignment Base Info",
             Data = res
+        };
+    }
+
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int assignmentId,
+        int statusId, int? offset, int? limit)
+    {
+        var (res, count) = await assignmentRepository.GetAssigmentUsersTasks(assignmentId, statusId, offset, limit);
+        return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
+        {
+            Code = res != null ? 0 : -1,
+            Message = res != null ? "" : "Failed To Get Assignment User Tasks",
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            {
+                Result = res,
+                TotalCount = count
+            }
         };
     }
 }

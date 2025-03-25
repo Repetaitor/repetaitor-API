@@ -4,11 +4,13 @@ using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Domain.Repositories;
 
-public class GroupRepository(ApplicationContext context) : IGroupRepository
+public class GroupRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IGroupRepository
 {
+    private IAssignmentRepository AssignmentRepository => _serviceProvider.GetRequiredService<IAssignmentRepository>();
     public async Task<GroupBaseModal?> CreateGroup(string groupName, string groupCode, int ownerId)
     {
         try
@@ -126,6 +128,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             };
             await context.UserGroups.AddAsync(userGroup);
             await context.SaveChangesAsync();
+            await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
             return true;
         }
         catch (Exception)
