@@ -95,11 +95,12 @@ public class AssignmentRepository(
                 CreatorId = userId
             };
             await context.Assignments.AddAsync(assgn);
+            var rs = await AssignToAllStudentsInGroup(assgn.Id, assgn.GroupId);
+            if (!rs) return null;
             await context.SaveChangesAsync();
             assgn = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assgn.Id);
             if (assgn == null) return null;
-            await AssignToAllStudentsInGroup(assgn.Id, assgn.GroupId);
             return new AssignmentBaseModal()
             {
                 Id = assgn.Id,

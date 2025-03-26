@@ -127,8 +127,9 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 UserId = userId
             };
             await context.UserGroups.AddAsync(userGroup);
+            var rs = await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
+            if(!rs) return false;
             await context.SaveChangesAsync();
-            await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
             return true;
         }
         catch (Exception)
