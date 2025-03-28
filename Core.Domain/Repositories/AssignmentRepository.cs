@@ -220,7 +220,8 @@ public class AssignmentRepository(
             var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
             if (!group) return (null, 0);
             var assignments = await context.Assignments
-                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0).Take(limit ?? 5)
+                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
+                .Take(limit ?? 5)
                 .Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
                 {

@@ -11,6 +11,7 @@ namespace Core.Domain.Repositories;
 public class GroupRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IGroupRepository
 {
     private IAssignmentRepository AssignmentRepository => _serviceProvider.GetRequiredService<IAssignmentRepository>();
+
     public async Task<GroupBaseModal?> CreateGroup(string groupName, string groupCode, int ownerId)
     {
         try
@@ -128,7 +129,7 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
             };
             await context.UserGroups.AddAsync(userGroup);
             var rs = await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
-            if(!rs) return false;
+            if (!rs) return false;
             await context.SaveChangesAsync();
             return true;
         }

@@ -17,12 +17,16 @@ public interface IAssignmentRepository
     Task<UserAssignmentModal?> GetUserAssignment(int callerId, int userId, int assignmentId);
     Task<AssignmentBaseModal?> GetAssignmentById(int assignmentId);
 
-    Task<AssignmentBaseModal?> UpdateAssignment(int userId, int assignmentId, string instructions, int essayId, DateTime dueDate);
+    Task<AssignmentBaseModal?> UpdateAssignment(int userId, int assignmentId, string instructions, int essayId,
+        DateTime dueDate);
 
     Task<bool> EvaluateAssignment(int teacherId, int userId, int assignmentId, int fluencyScore, int grammarScore,
         List<EvaluationTextCommentModal> evaluationTextComments, List<GeneralCommentModal> generalComments);
 
     Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId, int? offset, int? limit);
-    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int assignmentId, int statusId, int? offset, int? limit);
+
+    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int assignmentId, int statusId, int? offset,
+        int? limit);
+
     Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId);
 }

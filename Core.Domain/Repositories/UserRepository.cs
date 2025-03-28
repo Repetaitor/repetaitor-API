@@ -20,6 +20,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
             return false;
         }
     }
+
     public async Task<UserModal?> CheckIfUser(string email, string password)
     {
         try
@@ -70,6 +71,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
             return false;
         }
     }
+
     public async Task<UserModal?> GetUserInfo(int userId)
     {
         try

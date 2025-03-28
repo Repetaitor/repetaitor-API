@@ -35,6 +35,7 @@ namespace Infrastructure.ProjectServices.Implementations
             {
                 throw new ArgumentException("Token cannot be null or empty.");
             }
+
             token = token.Split(" ").Last();
             try
             {
@@ -59,12 +60,14 @@ namespace Infrastructure.ProjectServices.Implementations
                 return false;
             }
         }
+
         public int GetUserIdFromToken(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
                 throw new ArgumentException("Token cannot be null or empty.");
             }
+
             token = token.Split(" ").Last();
             try
             {

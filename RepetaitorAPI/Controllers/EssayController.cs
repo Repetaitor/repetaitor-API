@@ -31,6 +31,7 @@ public class EssayController(
         return await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
     }
+
     [Authorize(Roles = "Teacher")]
     [Authorize(Roles = "Teacher")]
     [HttpDelete("[Action]")]
@@ -45,6 +46,7 @@ public class EssayController(
             };
         return await essayService.DeleteEssay(essayId, userId);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpPut("[Action]")]
     public async Task<ResponseViewModel<EssayModal>> UpdateEssay([FromBody] UpdateEssayRequest request)
@@ -59,6 +61,7 @@ public class EssayController(
         return await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     public async Task<ResponseViewModel<List<EssayModal>>> GetUserEssay([FromQuery] int userId)
@@ -72,6 +75,7 @@ public class EssayController(
             };
         return await essayService.GetUserEssays(userId);
     }
+
     [HttpGet("[Action]")]
     public async Task<ResponseViewModel<EssayModal>> GetEssayById([FromQuery] int essayId)
     {

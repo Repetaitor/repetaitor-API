@@ -35,7 +35,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId, int groupId,int? offset, int? limit)
+    public async Task<ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId,
+        int groupId, int? offset, int? limit)
     {
         var (res, count) = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
         return new ResponseViewModel<CountedResponse<List<AssignmentBaseModal>>>()
@@ -50,7 +51,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId, int statusId,int? offset, int? limit)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
+        int statusId, int? offset, int? limit)
     {
         var (res, count) = await assignmentRepository.GetUserAssignments(userId, statusId, offset, limit);
         return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
@@ -92,7 +94,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(int userId,int? offset, int? limit)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>>
+        GetUserNotSeenEvaluatedAssignments(int userId, int? offset, int? limit)
     {
         var (res, count) = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
         return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
@@ -141,7 +144,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(int userId,int? offset, int? limit)
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(
+        int userId, int? offset, int? limit)
     {
         var (res, count) = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
         return new ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>()
@@ -167,7 +171,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         };
     }
 
-    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int assignmentId,
+    public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(
+        int assignmentId,
         int statusId, int? offset, int? limit)
     {
         var (res, count) = await assignmentRepository.GetAssigmentUsersTasks(assignmentId, statusId, offset, limit);

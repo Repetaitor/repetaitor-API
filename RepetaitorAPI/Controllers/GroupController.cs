@@ -149,8 +149,10 @@ public class GroupController(
     {
         return await groupService.SearchGroup(groupName, isActive);
     }
+
     [HttpGet("[Action]")]
-    public async Task<ResponseViewModel<GroupBaseModal>> GetGroupBaseInfoById([FromQuery] int userId, [FromQuery] int groupId)
+    public async Task<ResponseViewModel<GroupBaseModal>> GetGroupBaseInfoById([FromQuery] int userId,
+        [FromQuery] int groupId)
     {
         return await groupService.GetGroupBaseInfoById(userId, groupId);
     }

@@ -37,8 +37,14 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
     {
         try
         {
-            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Guid == guid && x.Email == email && x.IsVerified == false);
-            if (cd == null || cd.Email != email || cd.Code != code || (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 10) {return false;}
+            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
+                x.Guid == guid && x.Email == email && x.IsVerified == false);
+            if (cd == null || cd.Email != email || cd.Code != code ||
+                (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 10)
+            {
+                return false;
+            }
+
             cd.IsVerified = true;
             await _context.SaveChangesAsync();
             return await userRepository.ActivateUser(cd.UserId);

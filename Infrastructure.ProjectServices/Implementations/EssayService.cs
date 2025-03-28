@@ -34,7 +34,8 @@ public class EssayService(IEssayRepository essayRepository) : IEssayService
         };
     }
 
-    public async Task<ResponseViewModel<EssayModal>> UpdateEssay(int essayId, string essayTitle, string essayDescription,
+    public async Task<ResponseViewModel<EssayModal>> UpdateEssay(int essayId, string essayTitle,
+        string essayDescription,
         int expectedWordCount, int byUser)
     {
         var res = await essayRepository.UpdateEssay(essayId, essayTitle, essayDescription, expectedWordCount, byUser);
@@ -59,7 +60,7 @@ public class EssayService(IEssayRepository essayRepository) : IEssayService
 
     public async Task<ResponseViewModel<EssayModal>> GetEssayById(int essayId)
     {
-        var res  = await essayRepository.GetEssay(essayId);
+        var res = await essayRepository.GetEssay(essayId);
         return new ResponseViewModel<EssayModal>()
         {
             Code = res != null ? 0 : 1,

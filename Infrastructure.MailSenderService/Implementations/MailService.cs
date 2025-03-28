@@ -14,6 +14,7 @@ public class MailService : IMailService
         Host = "smtp.gmail.com",
         Port = 587
     };
+
     public async Task<bool> SendAuthMail(string to, string subject, string body)
     {
         try
@@ -24,6 +25,7 @@ public class MailService : IMailService
                 content = await reader.ReadToEndAsync();
                 content = content.Replace("AuthenticationCode", body);
             }
+
             var mail = new MailMessage()
             {
                 From = new MailAddress(_options.Email),

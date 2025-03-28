@@ -75,14 +75,16 @@ public class AssignmentController(
                 Code = -1,
                 Message = "You do not have permission.",
             };
-        return await assignmentService.GetGroupAssignments(request.UserId, request.GroupId, request.Offset, request.Limit);
+        return await assignmentService.GetGroupAssignments(request.UserId, request.GroupId, request.Offset,
+            request.Limit);
     }
 
     [HttpGet("[action]")]
     public async Task<ResponseViewModel<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(
         [FromQuery] GetUserAssignmentsRequest request)
     {
-        return await assignmentService.GetUserAssignments(request.UserId, request.StatusId, request.Offset, request.Limit);
+        return await assignmentService.GetUserAssignments(request.UserId, request.StatusId, request.Offset,
+            request.Limit);
     }
 
     [HttpGet("[action]")]
@@ -106,7 +108,8 @@ public class AssignmentController(
                 Code = -1,
                 Message = "You do not have permission.",
             };
-        return await assignmentService.GetUserNotSeenEvaluatedAssignments(request.UserId, request.Offset, request.Limit);
+        return await assignmentService.GetUserNotSeenEvaluatedAssignments(request.UserId, request.Offset,
+            request.Limit);
     }
 
     [HttpGet("[action]")]
