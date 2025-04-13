@@ -13,7 +13,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
     {
         try
         {
-            return await context.Users.AnyAsync(x => x.Email == email);
+            return await context.Users.AnyAsync(x => x.Email == email && x.isActive);
         }
         catch (Exception)
         {
