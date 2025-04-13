@@ -40,7 +40,7 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
             var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
                 x.Guid == guid && x.Email == email && x.IsVerified == false);
             if (cd == null || cd.Email != email || cd.Code != code ||
-                (DateTime.UtcNow - cd.CreateDate).TotalMinutes > 10)
+                (DateTime.Now - cd.CreateDate).TotalMinutes > 10)
             {
                 return false;
             }
