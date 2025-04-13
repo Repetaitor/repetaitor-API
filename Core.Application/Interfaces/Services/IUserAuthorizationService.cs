@@ -8,8 +8,8 @@ public interface IUserAuthorizationService
 {
     Task<string?> SendVerificationCode(string email, int userId);
 
-    Task<ResponseViewModel<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request);
+    Task<SendVerificationCodeResponse?> SignUpUser(SignUpUserRequest request);
 
-    Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code);
-    Task<ResponseViewModel<UserSignInResponse>> MakeUserSignIn(string identification, string password);
+    Task<VerifyEmailResponse?> VerifyEmail(string guid, string email, string code);
+    Task<UserSignInResponse?> MakeUserSignIn(string identification, string password);
 }

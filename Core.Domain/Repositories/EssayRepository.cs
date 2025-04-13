@@ -66,7 +66,7 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
         }
     }
 
-    public async Task<List<EssayModal>> GetUserEssays(int userId)
+    public async Task<List<EssayModal>?> GetUserEssays(int userId)
     {
         try
         {
@@ -76,7 +76,7 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
         }
         catch (Exception)
         {
-            return [];
+            return null;
         }
     }
 

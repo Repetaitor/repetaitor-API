@@ -10,6 +10,6 @@ public interface IEssayRepository
     Task<EssayModal?> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount,
         int byUser);
 
-    Task<List<EssayModal>> GetUserEssays(int userId);
+    Task<List<EssayModal>?> GetUserEssays(int userId);
     Task<EssayModal?> GetEssay(int essayId);
 }

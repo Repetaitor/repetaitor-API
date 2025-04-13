@@ -7,65 +7,35 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class EssayService(IEssayRepository essayRepository) : IEssayService
 {
-    public async Task<ResponseViewModel<EssayModal>> CreateNewEssay(string essayTitle, string essayDescription,
+    public async Task<EssayModal?> CreateNewEssay(string essayTitle, string essayDescription,
         int expectedWordCount, int creatorId)
     {
-        var res = await essayRepository.CreateNewEssay(essayTitle, essayDescription, expectedWordCount, creatorId);
-
-        return new ResponseViewModel<EssayModal>()
-        {
-            Code = res != null ? 0 : 1,
-            Message = res != null ? "Essay Created" : "Something went wrong",
-            Data = res
-        };
+        return await essayRepository.CreateNewEssay(essayTitle, essayDescription, expectedWordCount, creatorId);
     }
 
-    public async Task<ResponseViewModel<ResultResponse>> DeleteEssay(int essayId, int byUser)
+    public async Task<ResultResponse?> DeleteEssay(int essayId, int byUser)
     {
         var res = await essayRepository.DeleteEssay(essayId, byUser);
-        return new ResponseViewModel<ResultResponse>()
+        return new ResultResponse()
         {
-            Code = res ? 0 : 1,
-            Message = res ? "Essay removed" : "Something went wrong",
-            Data = new ResultResponse()
-            {
-                Result = res
-            }
+            Result = res
         };
     }
 
-    public async Task<ResponseViewModel<EssayModal>> UpdateEssay(int essayId, string essayTitle,
+    public async Task<EssayModal?> UpdateEssay(int essayId, string essayTitle,
         string essayDescription,
         int expectedWordCount, int byUser)
     {
-        var res = await essayRepository.UpdateEssay(essayId, essayTitle, essayDescription, expectedWordCount, byUser);
-        return new ResponseViewModel<EssayModal>()
-        {
-            Code = res != null ? 0 : 1,
-            Message = res != null ? "Essay Updated" : "Something went wrong",
-            Data = res
-        };
+        return await essayRepository.UpdateEssay(essayId, essayTitle, essayDescription, expectedWordCount, byUser);
     }
 
-    public async Task<ResponseViewModel<List<EssayModal>>> GetUserEssays(int userId)
+    public async Task<List<EssayModal>?> GetUserEssays(int userId)
     {
-        var res = await essayRepository.GetUserEssays(userId);
-        return new ResponseViewModel<List<EssayModal>>()
-        {
-            Code = 0,
-            Message = "",
-            Data = res
-        };
+        return await essayRepository.GetUserEssays(userId);
     }
 
-    public async Task<ResponseViewModel<EssayModal>> GetEssayById(int essayId)
+    public async Task<EssayModal?> GetEssayById(int essayId)
     {
-        var res = await essayRepository.GetEssay(essayId);
-        return new ResponseViewModel<EssayModal>()
-        {
-            Code = res != null ? 0 : 1,
-            Message = res != null ? "Essay Updated" : "Something went wrong",
-            Data = res
-        };
+        return await essayRepository.GetEssay(essayId);
     }
 }

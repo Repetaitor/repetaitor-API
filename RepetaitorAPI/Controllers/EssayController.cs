@@ -19,66 +19,58 @@ public class EssayController(
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<EssayModal>> AddNewEssay([FromBody] CreateNewEssayRequest request)
+    [ProducesResponseType(typeof(EssayModal), 200)]
+    public async Task<IResult> AddNewEssay([FromBody] CreateNewEssayRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<EssayModal>()
-            {
-                Code = -1,
-                Message = "You do not have permission to add this essay.",
-            };
-        return await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
+            return Results.Unauthorized();
+        var resp = await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
-    [Authorize(Roles = "Teacher")]
     [HttpDelete("[Action]")]
-    public async Task<ResponseViewModel<ResultResponse>> DeleteEssay([FromQuery] int essayId, [FromQuery] int userId)
+    public async Task<IResult> DeleteEssay([FromQuery] int essayId, [FromQuery] int userId)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<ResultResponse>()
-            {
-                Code = -1,
-                Message = "You do not have permission to delete this essay.",
-            };
-        return await essayService.DeleteEssay(essayId, userId);
+            return Results.Unauthorized();
+        var resp = await essayService.DeleteEssay(essayId, userId);
+        return resp is not { Result: true } ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpPut("[Action]")]
-    public async Task<ResponseViewModel<EssayModal>> UpdateEssay([FromBody] UpdateEssayRequest request)
+    [ProducesResponseType(typeof(EssayModal), 200)]
+    public async Task<IResult> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<EssayModal>()
-            {
-                Code = -1,
-                Message = "You do not have permission to update this essay.",
-            };
-        return await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
+            return Results.Unauthorized();
+        var resp = await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, request.UserId);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
-    public async Task<ResponseViewModel<List<EssayModal>>> GetUserEssay([FromQuery] int userId)
+    [ProducesResponseType(typeof(List<EssayModal>), 200)]
+    public async Task<IResult> GetUserEssay([FromQuery] int userId)
     {
         if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
                 httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return new ResponseViewModel<List<EssayModal>>()
-            {
-                Code = -1,
-                Message = "You do not have permission to delete this essay.",
-            };
-        return await essayService.GetUserEssays(userId);
+            return Results.Unauthorized();
+        var resp = await essayService.GetUserEssays(userId);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [HttpGet("[Action]")]
-    public async Task<ResponseViewModel<EssayModal>> GetEssayById([FromQuery] int essayId)
+    [ProducesResponseType(typeof(EssayModal), 200)]
+    public async Task<IResult> GetEssayById([FromQuery] int essayId)
     {
-        return await essayService.GetEssayById(essayId);
+        var resp = await essayService.GetEssayById(essayId);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 }

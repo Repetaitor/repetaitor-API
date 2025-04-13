@@ -5,14 +5,14 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IEssayService
 {
-    Task<ResponseViewModel<EssayModal>> CreateNewEssay(string essayTitle, string essayDescription,
+    Task<EssayModal?> CreateNewEssay(string essayTitle, string essayDescription,
         int expectedWordCount, int creatorId);
 
-    Task<ResponseViewModel<ResultResponse>> DeleteEssay(int essayId, int byUser);
+    Task<ResultResponse?> DeleteEssay(int essayId, int byUser);
 
-    Task<ResponseViewModel<EssayModal>> UpdateEssay(int essayId, string essayTitle, string essayDescription,
+    Task<EssayModal?> UpdateEssay(int essayId, string essayTitle, string essayDescription,
         int expectedWordCount, int byUser);
 
-    Task<ResponseViewModel<List<EssayModal>>> GetUserEssays(int userId);
-    Task<ResponseViewModel<EssayModal>> GetEssayById(int userId);
+    Task<List<EssayModal>?> GetUserEssays(int userId);
+    Task<EssayModal?> GetEssayById(int userId);
 }

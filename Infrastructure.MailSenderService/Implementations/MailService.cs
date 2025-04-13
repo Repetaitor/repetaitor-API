@@ -19,21 +19,13 @@ public class MailService : IMailService
     {
         try
         {
-            var content = "";
-            using (var reader = new StreamReader("main.html"))
-            {
-                content = await reader.ReadToEndAsync();
-                content = content.Replace("AuthenticationCode", body);
-            }
-
             var mail = new MailMessage()
             {
                 From = new MailAddress(_options.Email),
                 Subject = subject,
-                Body = content
+                Body = $"your auth code is {body}"
             };
             mail.To.Add(to);
-            mail.IsBodyHtml = true;
             using (var smtclinet = new SmtpClient())
             {
                 smtclinet.Host = _options.Host;

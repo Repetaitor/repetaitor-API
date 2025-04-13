@@ -12,26 +12,34 @@ namespace RepetaitorAPI.Controllers;
 public class UserController(IUserService userService, IUserAuthorizationService userAuthorizationService)
 {
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SignUp([FromBody] SignUpUserRequest request)
+    [ProducesResponseType(typeof(SendVerificationCodeResponse), 200)]
+    public async Task<IResult> SignUp([FromBody] SignUpUserRequest request)
     {
-        return await userAuthorizationService.SignUpUser(request);
+        var resp = await userAuthorizationService.SignUpUser(request);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyAuthCode([FromBody] VerifyEmailRequest request)
+    [ProducesResponseType(typeof(VerifyEmailResponse), 200)]
+    public async Task<IResult> VerifyAuthCode([FromBody] VerifyEmailRequest request)
     {
-        return await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
+        var resp= await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [HttpPost("[Action]")]
-    public async Task<ResponseViewModel<UserSignInResponse>> SignIn([FromBody] UserSignInRequest request)
+    [ProducesResponseType(typeof(UserSignInResponse), 200)]
+    public async Task<IResult> SignIn([FromBody] UserSignInRequest request)
     {
-        return await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
+        var resp = await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [HttpGet("[Action]")]
-    public async Task<ResponseViewModel<UserModal>> GetUserBaseInfo([FromQuery] int userId)
+    [ProducesResponseType(typeof(UserModal), 200)]
+    public async Task<IResult> GetUserBaseInfo([FromQuery] int userId)
     {
-        return await userService.GetUserDefaultInfoAsync(userId);
+        var resp = await userService.GetUserDefaultInfoAsync(userId);
+        return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 }

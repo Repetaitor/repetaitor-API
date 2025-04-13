@@ -38,88 +38,53 @@ public class UserAuthorizationService(
         return guid;
     }
 
-    public async Task<ResponseViewModel<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code)
+    public async Task<VerifyEmailResponse?> VerifyEmail(string guid, string email, string code)
     {
         var verified = await authCodesRepository.CheckAuthCode(guid, email, code);
-        return new ResponseViewModel<VerifyEmailResponse>()
+        return new VerifyEmailResponse()
         {
-            Code = verified ? 0 : -1,
-            Message = verified ? "" : "Something went wrong",
-            Data = new VerifyEmailResponse()
-            {
-                Verified = verified
-            }
+            Verified = verified
         };
     }
 
-    public async Task<ResponseViewModel<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request)
+    public async Task<SendVerificationCodeResponse?> SignUpUser(SignUpUserRequest request)
     {
         if (await userRepository.EmailExists(request.Email))
-            return new ResponseViewModel<SendVerificationCodeResponse>()
-            {
-                Code = -1,
-                Message = "Email Already Exists"
-            };
+            return null;
         if (request.Role != "Student" && request.Role != "Teacher")
-            return new ResponseViewModel<SendVerificationCodeResponse>()
-            {
-                Code = -1,
-                Message = "Valid Role Required"
-            };
+            return null;
         var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email,
             GetHashedPassword(request.Password), request.Role);
         if (result == -1)
-            return new ResponseViewModel<SendVerificationCodeResponse>()
-            {
-                Code = -1,
-                Message = "Something went wrong when adding user",
-            };
+            return null;
         var guid = await SendVerificationCode(request.Email, result);
         if (guid != null)
         {
-            return new ResponseViewModel<SendVerificationCodeResponse>()
+            return new SendVerificationCodeResponse()
             {
-                Code = 0,
-                Message = "",
-                Data = new SendVerificationCodeResponse()
-                {
-                    Guid = guid,
-                }
+                Guid = guid,
             };
         }
 
-        return new ResponseViewModel<SendVerificationCodeResponse>()
-        {
-            Code = -1,
-            Message = "Something went wrong when adding user",
-        };
+        return null;
     }
 
-    public async Task<ResponseViewModel<UserSignInResponse>> MakeUserSignIn(string identification, string password)
+    public async Task<UserSignInResponse?> MakeUserSignIn(string identification, string password)
     {
         var result = await userRepository.CheckIfUser(identification, GetHashedPassword(password));
         if (result != null)
         {
-            return new ResponseViewModel<UserSignInResponse>()
+            return new UserSignInResponse()
             {
-                Code = 0,
-                Message = "",
-                Data = new UserSignInResponse()
+                User = result,
+                JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
                 {
-                    User = result,
-                    JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
-                    {
-                        new Claim("email", result.Email), new Claim("userId", result.Id.ToString()),
-                        new Claim(ClaimTypes.Role, result.Role),
-                    }),
-                }
+                    new Claim("email", result.Email), new Claim("userId", result.Id.ToString()),
+                    new Claim(ClaimTypes.Role, result.Role),
+                }),
             };
         }
 
-        return new ResponseViewModel<UserSignInResponse>()
-        {
-            Code = -1,
-            Message = "User Not Found"
-        };
+        return null;
     }
 }
