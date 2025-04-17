@@ -64,7 +64,7 @@ namespace Core.Domain.Data
                     .AddJsonFile("appsettings.json")
                     .Build();
                 optionsBuilder.UseSqlServer(
-                    "Server=sql.bsite.net\\MSSQL2016;Database=repetaitor_DB;User Id=repetaitor_DB;Password=dachidachi1;Trusted_Connection=False;TrustServerCertificate=True;");
+                    "Server=sql.bsite.net\\MSSQL2016;Database=repetaitor_DB;User Id=repetaitor_DB;Password=repetaitor;Trusted_Connection=False;TrustServerCertificate=True;");
             }
         }
     }
