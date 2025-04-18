@@ -6,10 +6,14 @@ namespace Core.Domain.Data;
 
 public class ApplicationContextFactory : IDesignTimeDbContextFactory<ApplicationContext>
 {
+    private IConfiguration configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json")
+        .Build();
     public ApplicationContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-        optionsBuilder.UseSqlServer("Server=sql.bsite.net\\MSSQL2016;Database=repetaitor_DB;User Id=repetaitor_DB;Password=repetaitor;Trusted_Connection=False;TrustServerCertificate=True;");
+        optionsBuilder.UseSqlServer(configuration.GetConnectionString("ProductionConnection"));
         return new ApplicationContext(optionsBuilder.Options);
     }
 }

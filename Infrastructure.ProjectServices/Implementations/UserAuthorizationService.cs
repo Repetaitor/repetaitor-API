@@ -17,8 +17,7 @@ public class UserAuthorizationService(
 {
     private static string GetHashedPassword(string password)
     {
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
         var builder = new StringBuilder();
         foreach (var sByte in bytes)
         {
@@ -61,7 +60,7 @@ public class UserAuthorizationService(
         if (guid != null)
         {
             return new SendVerificationCodeResponse()
-            {
+            { 
                 Guid = guid,
             };
         }
@@ -77,11 +76,11 @@ public class UserAuthorizationService(
             return new UserSignInResponse()
             {
                 User = result,
-                JWTToken = jwtTokenGenerator.GenerateJWTtoken(new Claim[]
-                {
-                    new Claim("email", result.Email), new Claim("userId", result.Id.ToString()),
-                    new Claim(ClaimTypes.Role, result.Role),
-                }),
+                JWTToken = jwtTokenGenerator.GenerateJWTtoken([
+                    new Claim("email", result.Email), 
+                    new Claim("userId", result.Id.ToString()),
+                    new Claim(ClaimTypes.Role, result.Role)
+                ]),
             };
         }
 

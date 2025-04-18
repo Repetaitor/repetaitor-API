@@ -105,6 +105,7 @@ app.UseEndpoints(endpoints =>
 
 app.Run();
 
+public partial class MyProgram { }
 public static class AuthOptions
 {
     public const string ISSUER = "RepetaitorManager";
