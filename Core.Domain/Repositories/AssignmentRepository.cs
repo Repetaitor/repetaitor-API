@@ -68,9 +68,7 @@ public class AssignmentRepository(
                      }))
             {
                 await context.UserAssignments.AddAsync(userAssgn);
-                await context.SaveChangesAsync();
             }
-
             return true;
         }
         catch (Exception)
@@ -555,4 +553,18 @@ public class AssignmentRepository(
             return (null, 0);
         }
     }
+
+    public bool DeleteAllAssignments()
+    {
+        try
+        {
+            context.Assignments.RemoveRange(context.Assignments);
+            return true;
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    } 
 }

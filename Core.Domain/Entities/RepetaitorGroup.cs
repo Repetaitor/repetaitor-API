@@ -17,4 +17,5 @@ public class RepetaitorGroup
     public virtual User Owner { get; set; }
     public virtual ICollection<User> UsersInGroup { get; set; }
     public virtual ICollection<Assignment> Assignments { get; set; }
+    public virtual ICollection<UserGroups> UserGroups { get; set; }
 }

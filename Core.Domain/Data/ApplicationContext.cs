@@ -20,7 +20,6 @@ namespace Core.Domain.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
             modelBuilder.Entity<AuthenticationCodes>()
                 .HasIndex(e => e.Email)
                 .IsUnique();
@@ -51,8 +50,10 @@ namespace Core.Domain.Data
                 .HasForeignKey(u => u.StatusId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<UserAssignment>().HasOne(u => u.Assignment).WithMany(u => u.UserAssignments)
                 .HasForeignKey(u => u.AssignmentId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<UserAssignment>().HasIndex(u => new { u.UserId, u.AssignmentId}).
-                HasDatabaseName("UserAssignments_AssignmentId").IsUnique();
+            modelBuilder.Entity<UserAssignment>().HasIndex(u => new { u.UserId, u.AssignmentId })
+                .HasDatabaseName("UserAssignments_AssignmentId").IsUnique();
+            modelBuilder.Entity<UserGroups>().HasOne(u => u.Group).WithMany(u => u.UserGroups)
+                .HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -63,7 +64,9 @@ namespace Core.Domain.Data
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build();
-                optionsBuilder.UseSqlServer(configuration.GetConnectionString("ProductionConnection"));
+                optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "production"
+                    ? configuration.GetConnectionString("ProductionConnection")
+                    : configuration.GetConnectionString("TestConnection"));
             }
         }
     }
