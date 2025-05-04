@@ -23,9 +23,9 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         return await groupRepository.CreateGroup(groupName, newGroupCode, ownerId);
     }
 
-    public async Task<ResultResponse> ChangeGroupState(int userId, int groupId, bool isActive)
+    public async Task<ResultResponse> DeleteGroup(int userId, int groupId)
     {
-        var res = await groupRepository.ChangeGroupState(userId, groupId, isActive);
+        var res = await groupRepository.DeleteGroup(userId, groupId);
 
         return new ResultResponse()
         {
@@ -39,9 +39,9 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         return res is { Id: 0 } ? null : res;
     }
 
-    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId, bool isActive)
+    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId)
     {
-        return await groupRepository.GetTeacherGroups(userId, isActive);
+        return await groupRepository.GetTeacherGroups(userId);
     }
 
     public async Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle)
@@ -82,9 +82,9 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         return await groupRepository.GetGroupUsers(userId, groupId);
     }
 
-    public async Task<List<GroupBaseModal>?> SearchGroup(string groupName, bool isActive)
+    public async Task<List<GroupBaseModal>?> SearchGroup(string groupName)
     {
-        return await groupRepository.SearchGroup(groupName, isActive);
+        return await groupRepository.SearchGroup(groupName);
     }
 
     public async Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId)

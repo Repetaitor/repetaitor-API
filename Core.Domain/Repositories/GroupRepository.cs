@@ -21,7 +21,6 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 OwnerId = ownerId,
                 GroupName = groupName,
                 GroupCode = groupCode,
-                IsActive = true,
                 CreateDate = DateTime.Now
             };
             await context.AddAsync(group);
@@ -34,13 +33,13 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         }
     }
 
-    public async Task<bool> ChangeGroupState(int userId, int groupId, bool isActive)
+    public async Task<bool> DeleteGroup(int userId, int groupId)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
             if (group == null || group.OwnerId != userId) return false;
-            group.IsActive = isActive;
+            context.Groups.Remove(group);
             await context.SaveChangesAsync();
             return true;
         }
@@ -55,7 +54,7 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         try
         {
             var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
-            var group = await context.Groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id) && x.IsActive);
+            var group = await context.Groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id));
             return group != null
                 ? GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
                 : null;
@@ -66,11 +65,11 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         }
     }
 
-    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId, bool isActive)
+    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId)
     {
         try
         {
-            var groups = await context.Groups.Where(x => x.OwnerId == userId && x.IsActive == isActive)
+            var groups = await context.Groups.Where(x => x.OwnerId == userId)
                 .OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
                 .ToListAsync();
@@ -121,7 +120,7 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
             var studGroup = await GetStudentGroup(userId);
             if (studGroup != null) return false;
             var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
-            if (group == null || group.IsActive == false) return false;
+            if (group == null) return false;
             var userGroup = new UserGroups()
             {
                 GroupId = group.Id,
@@ -171,13 +170,12 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         }
     }
 
-    public async Task<List<GroupBaseModal>> SearchGroup(string groupName, bool isActive)
+    public async Task<List<GroupBaseModal>> SearchGroup(string groupName)
     {
         try
         {
             var groups = await context.Groups
-                .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%") &&
-                            x.IsActive == isActive).OrderByDescending(x => x.CreateDate).Select(x =>
+                .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%")).OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
                 .ToListAsync();
             return groups;

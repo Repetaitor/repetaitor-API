@@ -13,9 +13,9 @@ public class ApplicationContextFactory : IDesignTimeDbContextFactory<Application
     public ApplicationContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-        optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "production"
-            ? configuration.GetConnectionString("ProductionConnection")
-            : configuration.GetConnectionString("TestConnection"));
+        optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "test"
+            ? configuration.GetConnectionString("TestConnection")
+            : configuration.GetConnectionString("ProductionConnection"));
         return new ApplicationContext(optionsBuilder.Options);
     }
 }

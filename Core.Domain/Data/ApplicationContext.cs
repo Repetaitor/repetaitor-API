@@ -64,9 +64,9 @@ namespace Core.Domain.Data
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build();
-                optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "production"
-                    ? configuration.GetConnectionString("ProductionConnection")
-                    : configuration.GetConnectionString("TestConnection"));
+                optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "test"
+                    ? configuration.GetConnectionString("TestConnection")
+                    : configuration.GetConnectionString("ProductionConnection"));
             }
         }
     }

@@ -7,14 +7,14 @@ namespace Core.Application.Interfaces.Services;
 public interface IGroupService
 {
     Task<GroupBaseModal?> CreateGroup(string groupName, int ownerId);
-    Task<ResultResponse> ChangeGroupState(int userId, int groupId, bool isActive);
+    Task<ResultResponse> DeleteGroup(int userId, int groupId);
     Task<GroupBaseModal?> GetStudentGroup(int userId);
-    Task<List<GroupBaseModal>?> GetTeacherGroups(int userId, bool isActive);
+    Task<List<GroupBaseModal>?> GetTeacherGroups(int userId);
     Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle);
     Task<NewGroupCodeResponse?> RegenerateGroupCode(int userId, int groupId);
     Task<ResultResponse> AddUserToGroup(int userId, string groupCode);
     Task<ResultResponse> RemoveUserFromGroup(int groupId, int userId);
     Task<List<UserModal>?> GetGroupUsers(int userId, int groupId);
-    Task<List<GroupBaseModal>?> SearchGroup(string groupName, bool isActive);
+    Task<List<GroupBaseModal>?> SearchGroup(string groupName);
     Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId);
 }

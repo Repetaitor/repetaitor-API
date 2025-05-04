@@ -22,7 +22,7 @@ public class AssignmentController(
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[action]")]
-    [ProducesResponseType(typeof(AssignmentBaseModal), 200)]  
+    [ProducesResponseType(typeof(AssignmentBaseModal), 200)]
     public async Task<IResult> CreateNewAssignment(
         [FromBody] CreateNewAssignmentsRequest request)
     {
@@ -47,16 +47,15 @@ public class AssignmentController(
         [FromBody] SaveOrSubmitAssignmentRequest request)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp =  await assignmentService.SaveOrSubmitAssignment(userId, request);
+        var resp = await assignmentService.SaveOrSubmitAssignment(userId, request);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
     [ProducesResponseType(typeof(CountedResponse<List<AssignmentBaseModal>>), 200)]
-    public async Task<IResult> GetGroupAssignments([FromQuery]
-        GetGroupAssignmentsRequest
-            request)
+    public async Task<IResult> GetGroupAssignments([FromQuery] GetGroupAssignmentsRequest
+        request)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetGroupAssignments(userId, request.GroupId, request.Offset,
@@ -69,8 +68,9 @@ public class AssignmentController(
     public async Task<IResult> GetUserAssignments(
         [FromQuery] GetUserAssignmentsRequest request)
     {
-        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp =await assignmentService.GetUserAssignments(userId, request.StatusId, request.Offset,
+        var resp = await assignmentService.GetUserAssignments(request.UserId, 
+            request.StatusId,
+            request.Offset,
             request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -152,7 +152,8 @@ public class AssignmentController(
         [FromQuery] GetUsersTasksByAssignmentRequest request)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.statusId, request.offset,
+        var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.statusId,
+            request.offset,
             request.limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }

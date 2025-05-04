@@ -29,11 +29,11 @@ public class GroupController(
     }
 
     [Authorize(Roles = "Teacher")]
-    [HttpPut("[Action]")]
-    public async Task<IResult> ChangeGroupState([FromBody] ChangeStateGroupRequest request)
+    [HttpDelete("[Action]")]
+    public async Task<IResult> DeleteGroup([FromQuery] int groupId)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp = await groupService.ChangeGroupState(userId, request.GroupId, request.isActive);
+        var resp = await groupService.DeleteGroup(userId, groupId);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
@@ -47,9 +47,8 @@ public class GroupController(
 
     [HttpDelete("[Action]")]
     public async Task<IResult> RemoveStudentFromGroup(
-        [FromQuery] int groupId)
+        [FromQuery] int groupId, [FromQuery] int userId)
     {
-        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.RemoveUserFromGroup(groupId, userId);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
@@ -66,11 +65,11 @@ public class GroupController(
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<GroupBaseModal>), 200)]
-    public async Task<IResult> GetTeacherGroups([FromQuery] bool isActive)
+    public async Task<IResult> GetTeacherGroups()
     {
-        var currentUserId =
+        var userId =
             int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp = await groupService.GetTeacherGroups(currentUserId, isActive);
+        var resp = await groupService.GetTeacherGroups(userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -107,10 +106,9 @@ public class GroupController(
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<GroupBaseModal>), 200)]
-    public async Task<IResult> SearchGroup([FromQuery] string groupName,
-        [FromQuery] bool isActive)
+    public async Task<IResult> SearchGroup([FromQuery] string groupName)
     {
-        var resp = await groupService.SearchGroup(groupName, isActive);
+        var resp = await groupService.SearchGroup(groupName);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 

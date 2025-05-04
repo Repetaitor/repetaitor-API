@@ -10,8 +10,7 @@ public class RepetaitorGroup
     public string GroupName { get; set; }
     [DataType("nvarchar(64)")]
     public string GroupCode { get; set; }
-    [DataType("boolean")]
-    public bool IsActive { get; set; }
+    
     [DataType("DateTime")]
     public DateTime CreateDate { get; set; }
     public virtual User Owner { get; set; }

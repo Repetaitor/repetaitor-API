@@ -240,9 +240,6 @@ namespace Core.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
