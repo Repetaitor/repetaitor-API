@@ -518,12 +518,13 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int assignmentId, int statusId,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, int statusId,
         int? offset,
         int? limit)
     {
         try
         {
+            if(!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId)) return (null, 0);
             var userAssgns =
                 await context.UserAssignments.Include(userAssignment => userAssignment.User)
                     .Include(x => x.Assignment)

@@ -71,19 +71,17 @@ public class UserAuthorizationService(
     public async Task<UserSignInResponse?> MakeUserSignIn(string identification, string password)
     {
         var result = await userRepository.CheckIfUser(identification, GetHashedPassword(password));
-        if (result != null)
+        if (result == null) return null;
+        var claims = new List<Claim> {  new("email", result.Email), 
+            new(ClaimTypes.NameIdentifier, result.Id.ToString()),
+            new(ClaimTypes.Role, result.Role)};
+        var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+        return new UserSignInResponse()
         {
-            return new UserSignInResponse()
-            {
-                User = result,
-                JWTToken = jwtTokenGenerator.GenerateJWTtoken([
-                    new Claim("email", result.Email), 
-                    new Claim("userId", result.Id.ToString()),
-                    new Claim(ClaimTypes.Role, result.Role)
-                ]),
-            };
-        }
+                
+            User = result,
+            ClaimsIdentity = claimsIdentity
+        };
 
-        return null;
     }
 }

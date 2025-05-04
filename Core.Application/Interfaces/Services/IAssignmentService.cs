@@ -9,9 +9,9 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IAssignmentService
 {
-    Task<AssignmentBaseModal?> CreateNewAssignment(CreateNewAssignmentsRequest request);
+    Task<AssignmentBaseModal?> CreateNewAssignment(int userId, CreateNewAssignmentsRequest request);
 
-    Task<AssignmentBaseModal?> UpdateAssignment(UpdateAssignmentRequest request);
+    Task<AssignmentBaseModal?> UpdateAssignment(int userId, UpdateAssignmentRequest request);
 
     Task<CountedResponse<List<AssignmentBaseModal>>?> GetGroupAssignments(int userId, int groupId,
         int? offset, int? limit);
@@ -19,7 +19,7 @@ public interface IAssignmentService
     Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId, int statusId,
         int? offset, int? limit);
 
-    Task<ResultResponse> SaveOrSubmitAssignment(SaveOrSubmitAssignmentRequest request);
+    Task<ResultResponse> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request);
     Task<UserAssignmentModal?> GetUserAssignment(int callerId, int userId, int assignmentId);
 
     Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserNotSeenEvaluatedAssignments(
@@ -29,13 +29,13 @@ public interface IAssignmentService
 
     Task<List<StatusBaseModal>?> GetAssignmentStatuses();
 
-    Task<ResultResponse> EvaluateAssignments(EvaluateAssignmentRequest request);
+    Task<ResultResponse> EvaluateAssignments(int teacherId, EvaluateAssignmentRequest request);
 
     Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetTeacherAssignments(int userId,
         int? offset, int? limit);
 
     Task<AssignmentBaseModal?> GetAssignmentBaseInfoById(int assignmentId);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(int assignmentId,
+    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(int userId, int assignmentId,
         int statusId, int? offset, int? limit);
 }

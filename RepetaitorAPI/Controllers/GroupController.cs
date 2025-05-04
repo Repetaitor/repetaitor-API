@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Essays;
 using Core.Application.Models.DTO.Groups;
+using Core.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Bcpg;
@@ -21,10 +23,8 @@ public class GroupController(
     [ProducesResponseType(typeof(GroupBaseModal), 200)]
     public async Task<IResult> CreateGroup([FromBody] CreateGroupRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await groupService.CreateGroup(request.GroupName, request.UserId);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.CreateGroup(request.GroupName, userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -32,55 +32,45 @@ public class GroupController(
     [HttpPut("[Action]")]
     public async Task<IResult> ChangeGroupState([FromBody] ChangeStateGroupRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp =await groupService.ChangeGroupState(request.UserId, request.GroupId, request.isActive);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.ChangeGroupState(userId, request.GroupId, request.isActive);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
     [HttpPost("[Action]")]
     public async Task<IResult> AddStudentToGroup([FromBody] AddStudentToGroupRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await groupService.AddUserToGroup(request.UserId, request.GroupCode);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.AddUserToGroup(userId, request.GroupCode);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
     [HttpDelete("[Action]")]
-    public async Task<IResult> RemoveStudentFromGroup([FromQuery] int userId,
+    public async Task<IResult> RemoveStudentFromGroup(
         [FromQuery] int groupId)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.RemoveUserFromGroup(groupId, userId);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(GroupBaseModal), 200)]
-    public async Task<IResult> GetStudentGroups([FromQuery] int userId)
+    public async Task<IResult> GetStudentGroups()
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp= await groupService.GetStudentGroup(userId);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.GetStudentGroup(userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<GroupBaseModal>), 200)]
-    public async Task<IResult> GetTeacherGroups([FromQuery] int userId,
-        [FromQuery] bool isActive)
+    public async Task<IResult> GetTeacherGroups([FromQuery] bool isActive)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await groupService.GetTeacherGroups(userId, isActive);
+        var currentUserId =
+            int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.GetTeacherGroups(currentUserId, isActive);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -89,10 +79,8 @@ public class GroupController(
     [ProducesResponseType(typeof(GroupBaseModal), 200)]
     public async Task<IResult> UpdateGroupTitle([FromBody] UpdateGroupTitleRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await groupService.UpdateGroupTitle(request.UserId, request.GroupId, request.GroupTitle);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.UpdateGroupTitle(userId, request.GroupId, request.GroupTitle);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -102,9 +90,6 @@ public class GroupController(
     public async Task<IResult> RegenerateGroupCode(
         [FromBody] RegenerateGroupCodeRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
         var resp = await groupService.RegenerateGroupCode(request.UserId, request.GroupId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -112,11 +97,9 @@ public class GroupController(
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<UserModal>), 200)]
-    public async Task<IResult> GetGroupUsers([FromQuery] int userId, [FromQuery] int groupId)
+    public async Task<IResult> GetGroupUsers([FromQuery] int groupId)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetGroupUsers(userId, groupId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -133,9 +116,9 @@ public class GroupController(
 
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(GroupBaseModal), 200)]
-    public async Task<IResult> GetGroupBaseInfoById([FromQuery] int userId,
-        [FromQuery] int groupId)
+    public async Task<IResult> GetGroupBaseInfoById([FromQuery] int groupId)
     {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetGroupBaseInfoById(userId, groupId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }

@@ -5,6 +5,7 @@ using Core.Domain.Data;
 using Core.Domain.Repositories;
 using infrastructure.MailService.Implementations;
 using Infrastructure.ProjectServices.Implementations;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -31,13 +32,13 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "RepetaitorApi", Version = "v1" });
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Cookies", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Description =
+            "Cookie-based authentication. The authentication cookie will be sent automatically by the browser.",
+        Name = ".AspNetCore.Cookies",
+        In = ParameterLocation.Cookie,
+        Type = SecuritySchemeType.ApiKey
     });
 
     var securityScheme = new OpenApiSecurityScheme
@@ -45,45 +46,62 @@ builder.Services.AddSwaggerGen(c =>
         Reference = new OpenApiReference
         {
             Type = ReferenceType.SecurityScheme,
-            Id = "Bearer"
+            Id = "Cookies"
         }
     };
 
     var securityRequirement = new OpenApiSecurityRequirement
     {
-        { securityScheme, new string[] { } }
+        { securityScheme, Array.Empty<string>() }
     };
 
     c.AddSecurityRequirement(securityRequirement);
 });
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie("Cookies", options =>
+{
+    options.LoginPath = "/api/User/SignIn";
+    options.Cookie.Name = ".AspNetCore.Cookies";
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.Path = "/";
+    options.Cookie.HttpOnly = true; 
+    options.Cookie.MaxAge = TimeSpan.FromDays(7);
+    options.SlidingExpiration = false;
+    options.Events = new CookieAuthenticationEvents
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        OnRedirectToLogin = ctx =>
         {
+            if (ctx.Request.Path.StartsWithSegments("/api"))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                ctx.Response.Redirect(ctx.RedirectUri);
+            }
+            return Task.CompletedTask;
+        },
+        OnRedirectToAccessDenied = ctx =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api"))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            }
+            else
+            {
+                ctx.Response.Redirect(ctx.RedirectUri);
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
 
-            ValidateIssuer = true,
-
-            ValidIssuer = AuthOptions.ISSUER,
-
-            ValidateAudience = true,
-
-            ValidAudience = AuthOptions.AUDIENCE,
-
-            ValidateLifetime = false,
-
-            IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
-
-            ValidateIssuerSigningKey = false,
-        };
-        options.TokenValidationParameters.RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
-    });
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "_myAllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000").AllowCredentials().AllowAnyMethod().AllowAnyHeader();
         });
 });
 builder.Services.AddControllers();
@@ -98,14 +116,14 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 app.Run();
 
-public partial class MyProgram { }
+public partial class MyProgram
+{
+}
+
 public static class AuthOptions
 {
     public const string ISSUER = "RepetaitorManager";

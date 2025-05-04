@@ -2,7 +2,6 @@ namespace Core.Application.Models.DTO.Essays;
 
 public class UpdateEssayRequest
 {
-    public int UserId { get; set; }
     public int EssayId { get; set; }
     public string EssayTitle { get; set; }
     public string EssayDescription { get; set; }

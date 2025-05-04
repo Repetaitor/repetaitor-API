@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
@@ -25,10 +26,8 @@ public class AssignmentController(
     public async Task<IResult> CreateNewAssignment(
         [FromBody] CreateNewAssignmentsRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.CreateNewAssignment(request);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.CreateNewAssignment(userId, request);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -38,10 +37,8 @@ public class AssignmentController(
     public async Task<IResult> UpdateAssignment(
         [FromBody] UpdateAssignmentRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.UpdateAssignment(request);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.UpdateAssignment(userId, request);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -49,10 +46,8 @@ public class AssignmentController(
     public async Task<IResult> SaveOrSubmitAssignment(
         [FromBody] SaveOrSubmitAssignmentRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp =  await assignmentService.SaveOrSubmitAssignment(request);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp =  await assignmentService.SaveOrSubmitAssignment(userId, request);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
@@ -63,10 +58,8 @@ public class AssignmentController(
         GetGroupAssignmentsRequest
             request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.GetGroupAssignments(request.UserId, request.GroupId, request.Offset,
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetGroupAssignments(userId, request.GroupId, request.Offset,
             request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -76,7 +69,8 @@ public class AssignmentController(
     public async Task<IResult> GetUserAssignments(
         [FromQuery] GetUserAssignmentsRequest request)
     {
-        var resp =await assignmentService.GetUserAssignments(request.UserId, request.StatusId, request.Offset,
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp =await assignmentService.GetUserAssignments(userId, request.StatusId, request.Offset,
             request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -86,8 +80,9 @@ public class AssignmentController(
     public async Task<IResult> GetUserAssignment([FromQuery] int userId,
         [FromQuery] int assignmentId)
     {
+        var curUserId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetUserAssignment(
-            tokenGenerator.GetUserIdFromToken(httpContextAccessor.HttpContext!.Request.Headers.Authorization!), userId,
+            curUserId, userId,
             assignmentId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -98,10 +93,8 @@ public class AssignmentController(
         GetUserNotSeenEvaluatedAssignments(
             [FromQuery] GetUserNotSeenEvaluatedAssignmentsRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.GetUserNotSeenEvaluatedAssignments(request.UserId, request.Offset,
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetUserNotSeenEvaluatedAssignments(userId, request.Offset,
             request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
@@ -127,10 +120,8 @@ public class AssignmentController(
     public async Task<IResult> EvaluateAssignment(
         [FromBody] EvaluateAssignmentRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.TeacherId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.EvaluateAssignments(request);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.EvaluateAssignments(userId, request);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 
@@ -140,10 +131,8 @@ public class AssignmentController(
     public async Task<IResult> GetNeedEvaluationAssignments(
         [FromQuery] GetNeedEvaluationAssignmentsRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.TeacherId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.GetTeacherAssignments(request.TeacherId, request.Offset, request.Limit);
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetTeacherAssignments(userId, request.Offset, request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
@@ -162,10 +151,8 @@ public class AssignmentController(
     public async Task<IResult> GetUsersTasksByAssignment(
         [FromQuery] GetUsersTasksByAssignmentRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
-        var resp = await assignmentService.GetAssigmentUsersTasks(request.AssignmentId, request.statusId, request.offset,
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.statusId, request.offset,
             request.limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }

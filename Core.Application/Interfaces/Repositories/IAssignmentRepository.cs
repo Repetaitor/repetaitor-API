@@ -25,7 +25,7 @@ public interface IAssignmentRepository
 
     Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId, int? offset, int? limit);
 
-    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int assignmentId, int statusId, int? offset,
+    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, int statusId, int? offset,
         int? limit);
 
     Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId);

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Authorization;
@@ -22,21 +23,17 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> AddNewEssay([FromBody] CreateNewEssayRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
-            request.ExpectedWordCount, request.UserId);
+            request.ExpectedWordCount, userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpDelete("[Action]")]
-    public async Task<IResult> DeleteEssay([FromQuery] int essayId, [FromQuery] int userId)
+    public async Task<IResult> DeleteEssay([FromQuery] int essayId)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.DeleteEssay(essayId, userId);
         return resp is not { Result: true } ? Results.Problem() : Results.Ok(resp);
     }
@@ -46,22 +43,18 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(request.UserId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
-            request.ExpectedWordCount, request.UserId);
+            request.ExpectedWordCount, userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<EssayModal>), 200)]
-    public async Task<IResult> GetUserEssay([FromQuery] int userId)
+    public async Task<IResult> GetUserEssay()
     {
-        if (!tokenGenerator.CheckUserIdWithTokenClaims(userId,
-                httpContextAccessor.HttpContext!.Request.Headers.Authorization!))
-            return Results.Unauthorized();
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.GetUserEssays(userId);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }

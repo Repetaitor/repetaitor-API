@@ -11,15 +11,15 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
 {
     public async Task<AssignmentBaseModal?> CreateNewAssignment(
-        CreateNewAssignmentsRequest request)
+        int userId, CreateNewAssignmentsRequest request)
     {
-        return await assignmentRepository.CreateNewAssignment(request.UserId,
+        return await assignmentRepository.CreateNewAssignment(userId,
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
     }
 
-    public async Task<AssignmentBaseModal?> UpdateAssignment(UpdateAssignmentRequest request)
+    public async Task<AssignmentBaseModal?> UpdateAssignment(int userId, UpdateAssignmentRequest request)
     {
-        return await assignmentRepository.UpdateAssignment(request.UserId, request.AssignmentId,
+        return await assignmentRepository.UpdateAssignment(userId, request.AssignmentId,
             request.Instructions, request.EssayId, request.DueDate);
     }
 
@@ -49,9 +49,9 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
             : null;
     }
 
-    public async Task<ResultResponse> SaveOrSubmitAssignment(SaveOrSubmitAssignmentRequest request)
+    public async Task<ResultResponse> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request)
     {
-        var res = await assignmentRepository.SaveOrSubmitAssignment(request.UserId, request.AssignmentId, request.Text,
+        var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
             request.WordCount, request.IsSubmitted);
         return new ResultResponse()
         {
@@ -88,9 +88,9 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
         return await assignmentRepository.GetAssignmentStatuses();
     }
 
-    public async Task<ResultResponse> EvaluateAssignments(EvaluateAssignmentRequest request)
+    public async Task<ResultResponse> EvaluateAssignments(int teacherId, EvaluateAssignmentRequest request)
     {
-        var res = await assignmentRepository.EvaluateAssignment(request.TeacherId, request.UserId, request.AssignmentId,
+        var res = await assignmentRepository.EvaluateAssignment(teacherId, request.UserId, request.AssignmentId,
             request.FluencyScore, request.GrammarScore, request.EvaluationTextComments, request.GeneralComments);
         return new ResultResponse() { Result = res };
     }
@@ -114,10 +114,12 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     }
 
     public async Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(
+        int userId,
         int assignmentId,
         int statusId, int? offset, int? limit)
     {
-        var (res, count) = await assignmentRepository.GetAssigmentUsersTasks(assignmentId, statusId, offset, limit);
+        var (res, count) =
+            await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusId, offset, limit);
         return res != null
             ? new CountedResponse<List<UserAssignmentBaseModal>>()
             {
