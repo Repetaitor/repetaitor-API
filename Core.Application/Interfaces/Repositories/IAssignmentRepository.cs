@@ -29,4 +29,5 @@ public interface IAssignmentRepository
         int? limit);
 
     Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId);
+    Task<bool> RemoveGroupAssignmentsForUser(int userId, int groupId);
 }

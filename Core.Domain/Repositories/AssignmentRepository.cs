@@ -49,7 +49,9 @@ public class AssignmentRepository(
 
     public async Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId)
     {
-        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId).Select(x => x.Id)
+        var curUserAssignIds = await context.UserAssignments
+            .Where(x => x.UserId == userId).Select(x => x.AssignmentId).ToListAsync();
+        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId && !curUserAssignIds.Contains(x.Id)).Select(x => x.Id)
             .ToListAsync();
         try
         {
@@ -69,6 +71,7 @@ public class AssignmentRepository(
             {
                 await context.UserAssignments.AddAsync(userAssgn);
             }
+
             return true;
         }
         catch (Exception)
@@ -518,13 +521,15 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, int statusId,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId,
+        int statusId,
         int? offset,
         int? limit)
     {
         try
         {
-            if(!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId)) return (null, 0);
+            if (!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId))
+                return (null, 0);
             var userAssgns =
                 await context.UserAssignments.Include(userAssignment => userAssignment.User)
                     .Include(x => x.Assignment)
@@ -562,10 +567,29 @@ public class AssignmentRepository(
             context.Assignments.RemoveRange(context.Assignments);
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
             return false;
         }
-    } 
+    }
+
+    public async Task<bool> RemoveGroupAssignmentsForUser(int userId, int groupId)
+    {
+        try
+        {
+            var groupAssignmentsIds =
+                await context.Assignments.Where(x => x.GroupId == groupId).Select(x => x.Id).ToListAsync();
+            var userAssignmentsInGroup = await context.UserAssignments
+                .Where(x => x.UserId == userId && x.StatusId == 3 && groupAssignmentsIds.Contains(x.AssignmentId))
+                .ToListAsync();
+            context.UserAssignments.RemoveRange(userAssignmentsInGroup);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
 }

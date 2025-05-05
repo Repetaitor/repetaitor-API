@@ -138,13 +138,17 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         }
     }
 
-    public async Task<bool> RemoveUserFromGroup(int groupId, int userId)
+    public async Task<bool> RemoveUserFromGroup(int callerId, int groupId, int userId)
     {
         try
         {
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if(callerId != group?.OwnerId && callerId != userId) return false;
             var userGroup =
                 await context.UserGroups.FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == userId);
             if (userGroup == null) return false;
+            var res = await AssignmentRepository.RemoveGroupAssignmentsForUser(userId, groupId);
+            if (!res) return false;
             context.UserGroups.Remove(userGroup);
             await context.SaveChangesAsync();
             return true;

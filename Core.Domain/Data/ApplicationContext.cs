@@ -33,21 +33,19 @@ namespace Core.Domain.Data
                 .WithMany(a => a.GeneralComments).HasForeignKey(u => u.UserAssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Essay>().HasOne(u => u.Creator)
-                .WithMany(a => a.CreatedEssays).HasForeignKey(u => u.CreatorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(a => a.CreatedEssays).HasForeignKey(u => u.CreatorId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<RepetaitorGroup>().HasOne(u => u.Owner).WithMany(u => u.RepetaitorGroups)
-                .HasForeignKey(u => u.OwnerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(u => u.OwnerId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Assignment>().HasOne(u => u.Creator).WithMany(u => u.CreatedAssignments)
                 .HasForeignKey(u => u.CreatorId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Assignment>().HasOne(u => u.Group).WithMany(u => u.Assignments)
                 .HasForeignKey(u => u.GroupId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Assignment>().HasOne(u => u.Essay).WithMany(u => u.Assignments)
-                .HasForeignKey(u => u.EssayId).OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(u => u.EssayId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<UserAssignment>().HasOne(u => u.User).WithMany(u => u.AssignedAssignments)
-                .HasForeignKey(u => u.UserId).OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(u => u.UserId).OnDelete(DeleteBehavior.Restrict);;
             modelBuilder.Entity<UserAssignment>().HasOne(u => u.Status).WithMany(u => u.UserAssignments)
-                .HasForeignKey(u => u.StatusId).OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(u => u.StatusId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<UserAssignment>().HasOne(u => u.Assignment).WithMany(u => u.UserAssignments)
                 .HasForeignKey(u => u.AssignmentId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<UserAssignment>().HasIndex(u => new { u.UserId, u.AssignmentId })

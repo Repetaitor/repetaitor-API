@@ -68,9 +68,9 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         };
     }
 
-    public async Task<ResultResponse> RemoveUserFromGroup(int groupId, int userId)
+    public async Task<ResultResponse> RemoveUserFromGroup(int callerId, int groupId, int userId)
     {
-        var res = await groupRepository.RemoveUserFromGroup(groupId, userId);
+        var res = await groupRepository.RemoveUserFromGroup(callerId, groupId, userId);
         return new ResultResponse()
         {
             Result = res

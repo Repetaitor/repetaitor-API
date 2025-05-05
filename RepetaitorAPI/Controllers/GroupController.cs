@@ -49,7 +49,8 @@ public class GroupController(
     public async Task<IResult> RemoveStudentFromGroup(
         [FromQuery] int groupId, [FromQuery] int userId)
     {
-        var resp = await groupService.RemoveUserFromGroup(groupId, userId);
+        var callerId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await groupService.RemoveUserFromGroup(callerId, groupId, userId);
         return resp.Result ? Results.Ok() : Results.Problem();
     }
 

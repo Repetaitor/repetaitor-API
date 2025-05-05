@@ -12,7 +12,7 @@ public interface IGroupRepository
     Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle);
     Task<bool> UpdateGroupCode(int userId, int groupId, string groupCode);
     Task<bool> AddUserToGroup(int userId, string groupCode);
-    Task<bool> RemoveUserFromGroup(int groupId, int userId);
+    Task<bool> RemoveUserFromGroup(int callerId, int groupId, int userId);
     Task<List<UserModal>?> GetGroupUsers(int userId, int groupId);
     Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId);
     Task<List<GroupBaseModal>> SearchGroup(string groupName);
