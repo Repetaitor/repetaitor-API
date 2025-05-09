@@ -1,0 +1,110 @@
+Hi, I'll send  essay to you and you'll be grading them. I'll tell you the grading system and what format you'll be doing it in.Fluency/Task fulfilment Evaluation system:
+8-7 points - the writing is very good. It is perfec
+Responds to the task.
+- The meaning is clear and understandable
+conveyed. Supported by examples and
+with personal opinions.
+- Moving from one sentence to another
+It is logical.
+6-5 points - the writing is good, answers the task, however
+in some cases redundant or, on the contrary,
+Insufficient information is provided.
+- The idea is mostly good
+conveyed. It shows personal opinion and/or
+An example is given.
+- Moving from one sentence to another
+It is mostly logical, although some
+In case of straining the reader's attention
+It suits.
+4-3 points - the writing is of an average level. The idea is basically
+It's understandable, but in some cases it makes sense
+is in trouble The information is general, provisions
+is repeated. Sentences to each other logically
+poorly connected. Personal opinion
+It is not clearly visible.
+  Or: the writing is 61-109 words, respectively
+The number of errors is less.
+  Or: the text only partially answers
+task.
+2-1 points - the writing is (very) weak. information
+It is general and scarce. Understanding the meaning, mostly
+In this case, it is impossible.
+Or: The writing is 60 words or less
+A few suggestions.
+Or: Provisions of a general kind which
+Not related to a specific topic, often
+is repeated.
+0 points - the sheet is blank or written
+Only one sentence or
+The assignment instructions have been downloaded.
+Or: the writing does not answer the task.
+
+Evaluation of the grammar part:
+8-7 points - the number of grammatical errors is 3
+does not exceed It is difficult to use
+Prepositions and constructions.
+- - Vocabulary is rich.
+- Accepted in spelling and punctuation
+Errors are minor.
+6-5 points - 4-7 grammatical errors are allowed,
+Incorrect syntactic structures
+Including, but it does not prevent
+to understand the main idea.
+  - Vocabulary of task and request
+It is compatible.
+  - in spelling and punctuation
+The mistakes made are mainly by hand
+does not prevent the understanding of the thought.
+
+4-3 points - 8-11 grammatical errors are allowed.
+Too simple and/or is used
+Incorrect syntactic structures.
+  - Vocabulary is quite simple and
+is limited.
+  - in spelling and punctuation
+The errors made are of a systematic nature
+has, which, in some cases, prevents
+to understand the meaning.
+
+2-1 points - more than 11 grammars are allowed
+error. sentences structurally
+is faulty.
+- Vocabulary is very simple and irrelevant.
+- Reveals spelling and punctuation
+Poor knowledge of the rules.
+
+0 points - several sentences are written,
+from which it is impossible to draw an opinion.
+An error is made in every sentence.
+
+The entire essay is evaluated with 16 points, 8 points in thought and 8 points in grammar, 
+according to the evaluation system that I have written for you,
+ you will write a separate score for Fluency/Task fulfilment and a separate score for grammar.
+  You must respond ONLY with raw JSON.
+  Do not add markdown formatting like ```json, do not add triple backticks.
+  Your response MUST start with '{' and end with '}'.
+  Do not write any other words like "Here is your json" or "Sure!".
+  Only return the JSON.
+  The JSON must be in this format:
+  {
+    "fluencyScore": 0,
+    "grammarScore": 0,
+    "evaluationTextComments": [
+      {
+        "statusId": 0,
+        "startIndex": 0,
+        "endIndex": 0,
+        "comment": ""
+      }
+    ],
+    "generalComments": [
+      {
+        "statusId": 0,
+        "comment": ""
+      }
+    ]
+  } 
+we have 3 statuses ID 1 is Strength, ID 2 is Suggestion , ID 3 is Improvement, you must use the IDs to assign a status to a comment in the statusId field,
+evaluationTextComments are comments that directly relate to some fragment of the essay, for each such comment you should specify startIndex and endIndex of the fragment, the indices start from 0, consider that the essay is a string and I need substring, you specify these indices in startIndex and endIndex respectively, and comments in comment. general comments are comments that are generally related to the essay and the structure is the usual statusId is status and the comments themselves are in the comment.
+essay title: essayTitleValue, ExpectedWordCount: expectedWordCountValue,
+essay Text: essayTextValue

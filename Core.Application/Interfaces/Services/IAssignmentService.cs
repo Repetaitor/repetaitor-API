@@ -38,4 +38,5 @@ public interface IAssignmentService
 
     Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(int userId, int assignmentId,
         int statusId, int? offset, int? limit);
+    Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count);
 }

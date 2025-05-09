@@ -51,7 +51,8 @@ public class AssignmentRepository(
     {
         var curUserAssignIds = await context.UserAssignments
             .Where(x => x.UserId == userId).Select(x => x.AssignmentId).ToListAsync();
-        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId && !curUserAssignIds.Contains(x.Id)).Select(x => x.Id)
+        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId && !curUserAssignIds.Contains(x.Id))
+            .Select(x => x.Id)
             .ToListAsync();
         try
         {
@@ -590,6 +591,28 @@ public class AssignmentRepository(
         catch (Exception ex)
         {
             return false;
+        }
+    }
+
+    public async Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count)
+    {
+        try
+        {
+            var userAssgns = await context.UserAssignments.Include(u => u.Assignment)
+                .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1).Take(count)
+                .Select(x => new UserAssignmentViewForAI()
+                {
+                    UserId = x.UserId,
+                    AssignmentId = x.AssignmentId,
+                    EssayTitle = x.Assignment.Essay.EssayTitle,
+                    EssayText = x.Text,
+                    ExpectedWordCount = x.Assignment.Essay.ExpectedWordCount
+                }).ToListAsync();
+            return userAssgns;
+        }
+        catch (Exception ex)
+        {
+            return null;
         }
     }
 }

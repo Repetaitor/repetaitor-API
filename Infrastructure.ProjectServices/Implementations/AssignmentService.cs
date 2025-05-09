@@ -128,4 +128,10 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
             }
             : null;
     }
+
+    public async Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count)
+    {
+       var res = await assignmentRepository.GetUserAssignmentViewForAI(aiTeacherId, count);
+       return res;
+    }
 }

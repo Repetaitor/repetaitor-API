@@ -30,4 +30,5 @@ public interface IAssignmentRepository
 
     Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId);
     Task<bool> RemoveGroupAssignmentsForUser(int userId, int groupId);
+    Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count);
 }
