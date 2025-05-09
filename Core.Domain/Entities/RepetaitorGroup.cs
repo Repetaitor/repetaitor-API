@@ -10,6 +10,8 @@ public class RepetaitorGroup
     public string GroupName { get; set; }
     [DataType("nvarchar(64)")]
     public string GroupCode { get; set; }
+
+    public bool IsAIGroup { get; set; } = false;
     
     [DataType("DateTime")]
     public DateTime CreateDate { get; set; }

@@ -4,11 +4,13 @@ using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Domain.Repositories;
 
-public class UserRepository(ApplicationContext context) : IUserRepository
+public class UserRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IUserRepository
 {
+    private IGroupRepository GroupRepository => _serviceProvider.GetRequiredService<IGroupRepository>();
     public async Task<bool> EmailExists(string email)
     {
         try
@@ -63,6 +65,7 @@ public class UserRepository(ApplicationContext context) : IUserRepository
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (user == null) return false;
             user.isActive = true;
+            await GroupRepository.AddUserToGroup(userId, "$$$$$");
             await context.SaveChangesAsync();
             return true;
         }

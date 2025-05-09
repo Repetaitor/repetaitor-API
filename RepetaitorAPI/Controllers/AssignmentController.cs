@@ -70,6 +70,7 @@ public class AssignmentController(
     {
         var resp = await assignmentService.GetUserAssignments(request.UserId, 
             request.StatusId,
+            request.IsAIAssignment,
             request.Offset,
             request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);

@@ -335,7 +335,7 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, int statusId, int? offset,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, int statusId, bool IsAIAssignment, int? offset,
         int? limit)
     {
         try
@@ -346,8 +346,10 @@ public class AssignmentRepository(
                     .ThenInclude(a => a.Creator)
                     .Include(x => x.Assignment)
                     .ThenInclude(a => a.Essay)
+                    .Include(x => x.Assignment)
+                    .ThenInclude(a => a.Group)
                     .Include(userAssignment => userAssignment.User)
-                    .Where(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId))
+                    .Where(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId) && x.Assignment.Group.IsAIGroup == IsAIAssignment)
                     .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
                     .Take(limit ?? 5).Select(x =>
                         new UserAssignmentBaseModal()

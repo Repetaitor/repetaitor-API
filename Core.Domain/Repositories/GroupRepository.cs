@@ -21,7 +21,8 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 OwnerId = ownerId,
                 GroupName = groupName,
                 GroupCode = groupCode,
-                CreateDate = DateTime.Now
+                CreateDate = DateTime.Now,
+                IsAIGroup = ownerId == 1019
             };
             await context.AddAsync(group);
             await context.SaveChangesAsync();
@@ -117,10 +118,11 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
     {
         try
         {
-            var studGroup = await GetStudentGroup(userId);
-            if (studGroup != null) return false;
             var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
             if (group == null) return false;
+            var haveRealStudGroup = await context.UserGroups.Include(g => g.Group)
+                .AnyAsync(u => u.UserId == userId && !u.Group.IsAIGroup);
+            if (haveRealStudGroup) return false;
             var userGroup = new UserGroups()
             {
                 GroupId = group.Id,

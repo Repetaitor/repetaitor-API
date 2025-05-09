@@ -37,9 +37,9 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     }
 
     public async Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId,
-        int statusId, int? offset, int? limit)
+        int statusId,  bool IsAIAssignment,int? offset, int? limit)
     {
-        var (res, count) = await assignmentRepository.GetUserAssignments(userId, statusId, offset, limit);
+        var (res, count) = await assignmentRepository.GetUserAssignments(userId, statusId, IsAIAssignment, offset, limit);
         return res != null
             ? new CountedResponse<List<UserAssignmentBaseModal>>()
             {
