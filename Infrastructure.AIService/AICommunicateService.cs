@@ -18,7 +18,7 @@ public class AICommunicateService : IAICommunicateService
     
     {
         var content = "";
-        await using (FileStream fstream = File.OpenRead(@"C:\Users\dachi\RiderProjects\repetaitor-API\Infrastructure.AIService\message.txt"))
+        await using (FileStream fstream = File.OpenRead("message.txt"))
         {
             var buffer = new byte[fstream.Length];
             await fstream.ReadAsync(buffer, 0, buffer.Length);

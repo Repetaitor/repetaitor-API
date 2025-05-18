@@ -12,7 +12,7 @@ public interface IAssignmentRepository
     Task<List<StatusBaseModal>?> GetAssignmentStatuses();
     Task<bool> SaveOrSubmitAssignment(int userId, int assignmentId, string text, int wordCount, bool isSubmitted);
     Task<List<StatusBaseModal>?> GetEvaluationStatuses();
-    Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, int statusId, bool IsAIAssignment, int? offset, int? limit);
+    Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, string statusName, bool IsAIAssignment, int? offset, int? limit);
     Task<(List<UserAssignmentBaseModal>?, int)> GetUserNotSeenEvaluatedAssignments(int userId, int? offset, int? limit);
     Task<UserAssignmentModal?> GetUserAssignment(int callerId, int userId, int assignmentId);
     Task<AssignmentBaseModal?> GetAssignmentById(int assignmentId);
@@ -25,7 +25,7 @@ public interface IAssignmentRepository
 
     Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId, int? offset, int? limit);
 
-    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, int statusId, int? offset,
+    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, string statusName, int? offset,
         int? limit);
 
     Task<bool> AssignToStudentAllGroupAssignments(int userId, int groupId);

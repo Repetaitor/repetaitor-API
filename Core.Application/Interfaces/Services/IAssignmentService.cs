@@ -16,7 +16,7 @@ public interface IAssignmentService
     Task<CountedResponse<List<AssignmentBaseModal>>?> GetGroupAssignments(int userId, int groupId,
         int? offset, int? limit);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId, int statusId,
+    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId, string statusName,
         bool IsAIAssignment,int? offset, int? limit);
 
     Task<ResultResponse> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request);
@@ -37,6 +37,6 @@ public interface IAssignmentService
     Task<AssignmentBaseModal?> GetAssignmentBaseInfoById(int assignmentId);
 
     Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(int userId, int assignmentId,
-        int statusId, int? offset, int? limit);
+        string statusName, int? offset, int? limit);
     Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count);
 }

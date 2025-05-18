@@ -36,7 +36,6 @@ public class AssignmentRepository(
                      }))
             {
                 await context.UserAssignments.AddAsync(userAssgn);
-                await context.SaveChangesAsync();
             }
 
             return true;
@@ -72,7 +71,7 @@ public class AssignmentRepository(
             {
                 await context.UserAssignments.AddAsync(userAssgn);
             }
-
+            await context.SaveChangesAsync();
             return true;
         }
         catch (Exception)
@@ -97,9 +96,8 @@ public class AssignmentRepository(
                 CreatorId = userId
             };
             await context.Assignments.AddAsync(assgn);
-            var rs = await AssignToAllStudentsInGroup(assgn.Id, assgn.GroupId);
-            if (!rs) return null;
             await context.SaveChangesAsync();
+            await AssignToAllStudentsInGroup(assgn.Id, assgn.GroupId);
             assgn = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assgn.Id);
             if (assgn == null) return null;
@@ -114,7 +112,7 @@ public class AssignmentRepository(
                 CreationTime = assgn.CreationTime,
             };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             return null;
         }
@@ -335,13 +333,15 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, int statusId, bool IsAIAssignment, int? offset,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, string statusName,
+        bool IsAIAssignment, int? offset,
         int? limit)
     {
         try
         {
             var userAssgns =
-                await context.UserAssignments.Include(userAssignment => userAssignment.Status)
+                await context.UserAssignments
+                    .Include(x => x.Status)
                     .Include(x => x.Assignment)
                     .ThenInclude(a => a.Creator)
                     .Include(x => x.Assignment)
@@ -349,7 +349,9 @@ public class AssignmentRepository(
                     .Include(x => x.Assignment)
                     .ThenInclude(a => a.Group)
                     .Include(userAssignment => userAssignment.User)
-                    .Where(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId) && x.Assignment.Group.IsAIGroup == IsAIAssignment)
+                    .Where(x => x.UserId == userId &&
+                                (statusName == string.Empty || x.Status.Name == statusName) &&
+                                x.Assignment.Group.IsAIGroup == IsAIAssignment)
                     .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
                     .Take(limit ?? 5).Select(x =>
                         new UserAssignmentBaseModal()
@@ -362,11 +364,14 @@ public class AssignmentRepository(
                             ActualWordCount = x.WordCount,
                             SubmitDate = x.SubmitDate,
                         }).ToListAsync();
-            var cnt = await context.UserAssignments
-                .CountAsync(x => x.UserId == userId && (statusId == -1 || x.StatusId == statusId));
+            var cnt = await context.UserAssignments.Include(x => x.Status)
+                .CountAsync(x =>
+                    x.UserId == userId &&
+                    (statusName == string.Empty ||
+                     x.Status.Name == statusName));
             return (userAssgns, cnt);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             return (null, 0);
         }
@@ -525,7 +530,7 @@ public class AssignmentRepository(
     }
 
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId,
-        int statusId,
+        string statusName,
         int? offset,
         int? limit)
     {
@@ -540,7 +545,7 @@ public class AssignmentRepository(
                     .Include(x => x.Assignment)
                     .ThenInclude(a => a.Essay)
                     .Include(userAssignment => userAssignment.Status).Where(x =>
-                        x.AssignmentId == assignmentId && (statusId == -1 || x.StatusId == statusId))
+                        x.AssignmentId == assignmentId && (statusName == string.Empty || x.Status.Name == statusName.ToLower()))
                     .OrderBy(x => x.StatusId).Skip(offset ?? 0)
                     .Take(limit ?? 10).Select(x =>
                         new UserAssignmentBaseModal()
@@ -549,12 +554,12 @@ public class AssignmentRepository(
                             Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
                             Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                             IsEvaluated = x.IsEvaluated,
-                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,  
                             ActualWordCount = x.WordCount,
                             SubmitDate = x.SubmitDate,
                         }).ToListAsync();
             var cnt = await context.UserAssignments.CountAsync(x =>
-                x.AssignmentId == assignmentId && (statusId == -1 || x.StatusId == statusId));
+                x.AssignmentId == assignmentId && (statusName == string.Empty || x.Status.Name == statusName.ToLower()));
             return (userAssgns, cnt);
         }
         catch (Exception)
@@ -601,7 +606,8 @@ public class AssignmentRepository(
         try
         {
             var userAssgns = await context.UserAssignments.Include(u => u.Assignment)
-                .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1).Take(count)
+                .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1)
+                .Take(count)
                 .Select(x => new UserAssignmentViewForAI()
                 {
                     UserId = x.UserId,

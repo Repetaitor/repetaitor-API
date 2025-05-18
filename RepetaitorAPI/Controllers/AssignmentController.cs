@@ -43,6 +43,7 @@ public class AssignmentController(
     }
 
     [HttpPost("[action]")]
+    [ProducesResponseType(typeof(List<ResultResponse>), 200)]
     public async Task<IResult> SaveOrSubmitAssignment(
         [FromBody] SaveOrSubmitAssignmentRequest request)
     {
@@ -64,12 +65,12 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<AssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(CountedResponse<List<UserAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetUserAssignments(
         [FromQuery] GetUserAssignmentsRequest request)
     {
         var resp = await assignmentService.GetUserAssignments(request.UserId, 
-            request.StatusId,
+            request.StatusName,
             request.IsAIAssignment,
             request.Offset,
             request.Limit);
@@ -77,7 +78,7 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(UserAssignmentBaseModal), 200)]
+    [ProducesResponseType(typeof(UserAssignmentModal), 200)]
     public async Task<IResult> GetUserAssignment([FromQuery] int userId,
         [FromQuery] int assignmentId)
     {
@@ -118,6 +119,7 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpPut("[action]")]
+    [ProducesResponseType(typeof(List<ResultResponse>), 200)]
     public async Task<IResult> EvaluateAssignment(
         [FromBody] EvaluateAssignmentRequest request)
     {
@@ -153,9 +155,9 @@ public class AssignmentController(
         [FromQuery] GetUsersTasksByAssignmentRequest request)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.statusId,
-            request.offset,
-            request.limit);
+        var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.StatusName,
+            request.Offset,
+            request.Limit);
         return resp == null ? Results.Problem() : Results.Ok(resp);
     }
 }
