@@ -104,7 +104,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "_myAllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000").AllowCredentials().AllowAnyMethod().AllowAnyHeader();
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://repetaitor.netlify.app").AllowCredentials().AllowAnyMethod().AllowAnyHeader();
         });
 });
 builder.Services.AddControllers();
