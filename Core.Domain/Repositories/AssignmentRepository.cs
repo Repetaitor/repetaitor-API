@@ -195,7 +195,7 @@ public class AssignmentRepository(
                 EndIndex = x.EndIndex,
                 Comment = x.Comment,
             }).ToList();
-            var generalCommentList = evaluationTextComments.Select(x => new GeneralComment()
+            var generalCommentList = generalComments.Select(x => new GeneralComment()
             {
                 UserAssignmentId = userAssgn.Id,
                 StatusId = x.StatusId,
@@ -490,7 +490,7 @@ public class AssignmentRepository(
                 WordCount = assgn.WordCount,
                 UserId = assgn.UserId,
                 IsEvaluated = assgn.IsEvaluated,
-                GeneralCommentS = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
+                GeneralComments = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
                 EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? []
             };
         }

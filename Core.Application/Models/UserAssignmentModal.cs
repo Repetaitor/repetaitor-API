@@ -14,6 +14,6 @@ public class UserAssignmentModal
     public bool FeedbackSeen { get; set; } 
     public bool IsEvaluated { get; set; }
     public List<EvaluationTextCommentModal> EvaluationComments { get; set; }
-    public List<GeneralCommentModal> GeneralCommentS { get; set; }
+    public List<GeneralCommentModal> GeneralComments { get; set; }
     public DateTime AssignDate { get; set; } 
 }
