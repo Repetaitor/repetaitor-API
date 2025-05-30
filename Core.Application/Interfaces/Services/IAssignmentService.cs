@@ -9,34 +9,34 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IAssignmentService
 {
-    Task<AssignmentBaseModal?> CreateNewAssignment(int userId, CreateNewAssignmentsRequest request);
+    Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, CreateNewAssignmentsRequest request);
 
-    Task<AssignmentBaseModal?> UpdateAssignment(int userId, UpdateAssignmentRequest request);
+    Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request);
 
-    Task<CountedResponse<List<AssignmentBaseModal>>?> GetGroupAssignments(int userId, int groupId,
+    Task<ResponseView<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId, int groupId,
         int? offset, int? limit);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId, string statusName,
-        bool IsAIAssignment,int? offset, int? limit);
+    Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId, string statusName,
+        bool IsAIAssignment, int? offset, int? limit);
 
-    Task<ResultResponse> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request);
-    Task<UserAssignmentModal?> GetUserAssignment(int callerId, int userId, int assignmentId);
+    Task<ResponseView<ResultResponse>> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request);
+    Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId, int assignmentId);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserNotSeenEvaluatedAssignments(
+    Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(
         int userId, int? offset, int? limit);
 
-    Task<List<StatusBaseModal>?> GetEvaluationTextStatuses();
+    Task<ResponseView<List<StatusBaseModal>>> GetEvaluationTextStatuses();
 
-    Task<List<StatusBaseModal>?> GetAssignmentStatuses();
+    Task<ResponseView<List<StatusBaseModal>>> GetAssignmentStatuses();
 
-    Task<ResultResponse> EvaluateAssignments(int teacherId, EvaluateAssignmentRequest request);
+    Task<ResponseView<ResultResponse>> EvaluateAssignments(int teacherId, EvaluateAssignmentRequest request);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetTeacherAssignments(int userId,
+    Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(int userId,
         int? offset, int? limit);
 
-    Task<AssignmentBaseModal?> GetAssignmentBaseInfoById(int assignmentId);
+    Task<ResponseView<AssignmentBaseModal>> GetAssignmentBaseInfoById(int assignmentId);
 
-    Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(int userId, int assignmentId,
+    Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId, int assignmentId,
         string statusName, int? offset, int? limit);
-    Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count);
+    Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
 }

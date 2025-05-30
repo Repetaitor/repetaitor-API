@@ -1,4 +1,5 @@
 using Core.Application.Interfaces.Repositories;
+using Core.Application.Models;
 using Core.Domain.Data;
 using Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
 {
     private ApplicationContext _context = context;
 
-    public async Task<string> CreateAuthCode(string code, string email, int userId)
+    public async Task<ResponseView<string>> CreateAuthCode(string code, string email, int userId)
     {
         try
         {
@@ -25,46 +26,106 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
             };
             await _context.AuthCodes.AddAsync(auth);
             await _context.SaveChangesAsync();
-            return newGuid.ToString();
+            return new ResponseView<string>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = newGuid.ToString(),
+                Message = "Authentication code created successfully."
+            };
         }
         catch (Exception ex)
         {
-            return "";
+            return new ResponseView<string>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<bool> CheckAuthCode(string guid, string email, string code)
+    public async Task<ResponseView<bool>> CheckAuthCode(string guid, string email, string code)
     {
         try
         {
             var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
                 x.Guid == guid && x.Email == email && x.IsVerified == false);
-            if (cd == null || cd.Email != email || cd.Code != code ||
-                (DateTime.Now - cd.CreateDate).TotalMinutes > 10)
+            if (cd == null || cd.Email != email || cd.Code != code)
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "Invalid authentication code.",
+                    Data = false
+                };
+            if((DateTime.Now - cd.CreateDate).TotalMinutes > 10)
             {
-                return false;
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "Expired authentication code.",
+                    Data = false
+                };
             }
 
             cd.IsVerified = true;
             await _context.SaveChangesAsync();
-            return await userRepository.ActivateUser(cd.UserId);
+            var res = await userRepository.ActivateUser(cd.UserId);
+            return new ResponseView<bool>()
+            {
+                Code = res.Code,
+                Message = res.Message,
+                Data = res.Data
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<bool> EmailIsVerified(string guid, string email)
+    public async Task<ResponseView<bool>> EmailIsVerified(string guid, string email)
     {
         try
         {
             var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
-            return cd is { IsVerified: true };
+            if (cd == null)
+            {
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Authentication code not found.",
+                    Data = false
+                };
+            }
+            if (cd.IsVerified)
+            {
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Success,
+                    Message = "Email is verified.",
+                    Data = true
+                };
+            }
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "Email is not verified.",
+                Data = false
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 }

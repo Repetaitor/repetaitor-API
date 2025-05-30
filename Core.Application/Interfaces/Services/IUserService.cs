@@ -5,5 +5,5 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IUserService
 {
-    Task<UserModal?> GetUserDefaultInfoAsync(int userId);
+    Task<ResponseView<UserModal>> GetUserDefaultInfoAsync(int userId);
 }

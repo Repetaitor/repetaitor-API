@@ -27,61 +27,104 @@ public class UserAuthorizationService(
         return builder.ToString();
     }
 
-    public async Task<string?> SendVerificationCode(string email, int userId)
+    public async Task<ResponseView<string>> SendVerificationCode(string email, int userId)
     {
         var generatedCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
         var result = await mailService.SendAuthMail(email, "Authentication Code", generatedCode);
         if (!result)
-            return null;
+            return new ResponseView<string>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "Failed to send verification code.",
+                Data = null
+            };
         var guid = await authCodesRepository.CreateAuthCode(generatedCode, email, userId);
         return guid;
     }
 
-    public async Task<VerifyEmailResponse?> VerifyEmail(string guid, string email, string code)
+    public async Task<ResponseView<VerifyEmailResponse>> VerifyEmail(string guid, string email, string code)
     {
-        var verified = await authCodesRepository.CheckAuthCode(guid, email, code);
-        return new VerifyEmailResponse()
+        var res = await authCodesRepository.CheckAuthCode(guid, email, code);
+        return new ResponseView<VerifyEmailResponse>
         {
-            Verified = verified
+            Code = res.Code,
+            Data = new VerifyEmailResponse
+            {
+                Verified = res.Data
+            }
         };
     }
 
-    public async Task<SendVerificationCodeResponse?> SignUpUser(SignUpUserRequest request)
+    public async Task<ResponseView<SendVerificationCodeResponse>> SignUpUser(SignUpUserRequest request)
     {
-        if (await userRepository.EmailExists(request.Email))
-            return null;
+        var isEmailExist = await userRepository.EmailExists(request.Email);
+        if (isEmailExist.Data)
+            return new ResponseView<SendVerificationCodeResponse>()
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "Email already exists.",
+                Data = null
+            };
         if (request.Role != "Student" && request.Role != "Teacher")
-            return null;
+            return new ResponseView<SendVerificationCodeResponse>()
+            {
+                Code = StatusCodesEnum.BadRequest,
+                Message = "Invalid role specified.",
+                Data = null
+            };
         var result = await userRepository.AddUser(request.FirstName, request.LastName, request.Email,
             GetHashedPassword(request.Password), request.Role);
-        if (result == -1)
-            return null;
-        var guid = await SendVerificationCode(request.Email, result);
-        if (guid != null)
+        if (result.Code != StatusCodesEnum.Success || result.Data == -1)
+            return new ResponseView<SendVerificationCodeResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = result.Message,
+                Data = null
+            };
+        var guid = await SendVerificationCode(request.Email, result.Data);
+        if (guid is { Code: 0, Data: not null })
         {
-            return new SendVerificationCodeResponse()
-            { 
-                Guid = guid,
+            return new ResponseView<SendVerificationCodeResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "Verification code sent successfully.",
+                Data = new SendVerificationCodeResponse
+                {
+                    Guid = guid.Data
+                }
             };
         }
-
-        return null;
+        return new ResponseView<SendVerificationCodeResponse>()
+        {
+            Code = StatusCodesEnum.InternalServerError,
+            Message = "Failed to send verification code.",
+            Data = null
+        };
     }
 
-    public async Task<UserSignInResponse?> MakeUserSignIn(string identification, string password)
+    public async Task<ResponseView<UserSignInResponse>> MakeUserSignIn(string identification, string password)
     {
         var result = await userRepository.CheckIfUser(identification, GetHashedPassword(password));
-        if (result == null) return null;
-        var claims = new List<Claim> {  new("email", result.Email), 
-            new(ClaimTypes.NameIdentifier, result.Id.ToString()),
-            new(ClaimTypes.Role, result.Role)};
-        var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-        return new UserSignInResponse()
+        if (result.Code != StatusCodesEnum.Success || result.Data is null) return new ResponseView<UserSignInResponse>()
         {
-                
-            User = result,
-            ClaimsIdentity = claimsIdentity
+            Code = StatusCodesEnum.NotFound,
+            Message = "User not found or invalid credentials.",
+            Data = null
         };
+        var claims = new List<Claim> {  new("email", result.Data!.Email), 
+            new(ClaimTypes.NameIdentifier, result.Data!.Id.ToString()),
+            new(ClaimTypes.Role, result.Data!.Role)};
+        var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+        return new ResponseView<UserSignInResponse>()
+        {
+            Code = StatusCodesEnum.Success,
+            Message = "User signed in successfully.",
+            Data = new UserSignInResponse()
+            {
 
+                User = result.Data,
+                ClaimsIdentity = claimsIdentity
+            }
+        };
     }
 }

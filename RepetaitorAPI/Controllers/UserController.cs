@@ -20,7 +20,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     public async Task<IResult> SignUp([FromBody] SignUpUserRequest request)
     {
         var resp = await userAuthorizationService.SignUpUser(request);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpPost("[Action]")]
@@ -28,7 +28,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     public async Task<IResult> VerifyAuthCode([FromBody] VerifyEmailRequest request)
     {
         var resp= await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpPost("[Action]")]
@@ -36,11 +36,11 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     public async Task<IResult> SignIn([FromBody] UserSignInRequest request)
     {
         var resp = await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
-        if(resp == null)
-            return Results.Problem();
+        if(resp.Code != StatusCodesEnum.Success || resp.Data == null)
+            return Results.NotFound();
         await httpContextAccessor.HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(resp.ClaimsIdentity))!;
-        return Results.Ok(resp.User);
+            new ClaimsPrincipal(resp.Data.ClaimsIdentity))!;
+        return Results.Ok(resp.Data.User);
     }
     [Authorize]
     [HttpPost("[Action]")]
@@ -62,6 +62,6 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await userService.GetUserDefaultInfoAsync(userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }

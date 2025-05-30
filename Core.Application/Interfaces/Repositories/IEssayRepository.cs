@@ -4,12 +4,12 @@ namespace Core.Application.Interfaces.Repositories;
 
 public interface IEssayRepository
 {
-    Task<EssayModal?> CreateNewEssay(string essayTitle, string essayDescription, int expectedWordCount, int creatorId);
-    Task<bool> DeleteEssay(int essayId, int byUser);
+    Task<ResponseView<EssayModal>> CreateNewEssay(string essayTitle, string essayDescription, int expectedWordCount, int creatorId);
+    Task<ResponseView<bool>> DeleteEssay(int essayId, int byUser);
 
-    Task<EssayModal?> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount,
+    Task<ResponseView<EssayModal>> UpdateEssay(int essayId, string essayTitle, string essayDescription, int expectedWordCount,
         int byUser);
 
-    Task<List<EssayModal>?> GetUserEssays(int userId);
-    Task<EssayModal?> GetEssay(int essayId);
+    Task<ResponseView<List<EssayModal>>> GetUserEssays(int userId);
+    Task<ResponseView<EssayModal>> GetEssay(int essayId);
 }

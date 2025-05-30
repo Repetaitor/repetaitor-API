@@ -1,4 +1,3 @@
-using Azure.Core;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
@@ -10,128 +9,166 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
 {
-    public async Task<AssignmentBaseModal?> CreateNewAssignment(
+    public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(
         int userId, CreateNewAssignmentsRequest request)
     {
-        return await assignmentRepository.CreateNewAssignment(userId,
+        var res = await assignmentRepository.CreateNewAssignment(userId,
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
+        if (res.Code != 0)
+        {
+            return res;
+        }
+        var assignToStudentsResult = await assignmentRepository.AssignToAllStudentsInGroup(res.Data!.Id, res.Data.GroupId);
+        if (assignToStudentsResult.Code != StatusCodesEnum.Success)
+        {
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = assignToStudentsResult.Code,
+                Message = assignToStudentsResult.Message,
+                Data = null
+            };
+        }
+        return res;
     }
 
-    public async Task<AssignmentBaseModal?> UpdateAssignment(int userId, UpdateAssignmentRequest request)
+    public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request)
     {
         return await assignmentRepository.UpdateAssignment(userId, request.AssignmentId,
             request.Instructions, request.EssayId, request.DueDate);
     }
 
-    public async Task<CountedResponse<List<AssignmentBaseModal>>?> GetGroupAssignments(int userId,
+    public async Task<ResponseView<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId,
         int groupId, int? offset, int? limit)
     {
-        var (res, count) = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
-        return res != null
-            ? new CountedResponse<List<AssignmentBaseModal>>()
-            {
-                Result = res,
-                TotalCount = count
-            }
-            : null;
-    }
-
-    public async Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetUserAssignments(int userId,
-        string statusName,  bool IsAIAssignment,int? offset, int? limit)
-    {
-        var (res, count) = await assignmentRepository.GetUserAssignments(userId, statusName, IsAIAssignment, offset, limit);
-        return res != null
-            ? new CountedResponse<List<UserAssignmentBaseModal>>()
-            {
-                Result = res,
-                TotalCount = count
-            }
-            : null;
-    }
-
-    public async Task<ResultResponse> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request)
-    {
-        var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
-            request.WordCount, request.IsSubmitted);
-        return new ResultResponse()
+        var res = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
+        return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
         {
-            Result = res
+            Code = res.Code,
+            Message = res.Message,
+            Data = new CountedResponse<List<AssignmentBaseModal>>()
+            {
+                Result = res.Data.Item1,
+                TotalCount = res.Data.Item2
+            }
         };
     }
 
-    public async Task<UserAssignmentModal?> GetUserAssignment(int callerId, int userId,
+    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
+        string statusName, bool IsAIAssignment, int? offset, int? limit)
+    {
+        var res = await assignmentRepository.GetUserAssignments(userId, statusName, IsAIAssignment, offset, limit);
+        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            {
+                Result = res.Data.Item1,
+                TotalCount = res.Data.Item2
+            }
+        };
+    }
+
+    public async Task<ResponseView<ResultResponse>> SaveOrSubmitAssignment(int userId,
+        SaveOrSubmitAssignmentRequest request)
+    {
+        var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
+            request.WordCount, request.IsSubmitted);
+        return new ResponseView<ResultResponse>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse() { Result = res.Data }
+        };
+    }
+
+    public async Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId,
         int assignmentId)
     {
         return await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
     }
 
-    public async Task<CountedResponse<List<UserAssignmentBaseModal>>?>
-        GetUserNotSeenEvaluatedAssignments(int userId, int? offset, int? limit)
+    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(
+        int userId, int? offset, int? limit)
     {
-        var (res, count) = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
-        return res != null
-            ? new CountedResponse<List<UserAssignmentBaseModal>>()
+        var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
+        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
             {
-                Result = res,
-                TotalCount = count
+                Result = res.Data.Item1,
+                TotalCount = res.Data.Item2
             }
-            : null;
+        };
     }
 
-    public async Task<List<StatusBaseModal>?> GetEvaluationTextStatuses()
+    public async Task<ResponseView<List<StatusBaseModal>>> GetEvaluationTextStatuses()
     {
         return await assignmentRepository.GetEvaluationStatuses();
     }
 
-    public async Task<List<StatusBaseModal>?> GetAssignmentStatuses()
+    public async Task<ResponseView<List<StatusBaseModal>>> GetAssignmentStatuses()
     {
         return await assignmentRepository.GetAssignmentStatuses();
     }
 
-    public async Task<ResultResponse> EvaluateAssignments(int teacherId, EvaluateAssignmentRequest request)
+    public async Task<ResponseView<ResultResponse>> EvaluateAssignments(int teacherId,
+        EvaluateAssignmentRequest request)
     {
         var res = await assignmentRepository.EvaluateAssignment(teacherId, request.UserId, request.AssignmentId,
             request.FluencyScore, request.GrammarScore, request.EvaluationTextComments, request.GeneralComments);
-        return new ResultResponse() { Result = res };
+        return new ResponseView<ResultResponse>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse() { Result = res.Data }
+        };
     }
 
-    public async Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetTeacherAssignments(
+    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(
         int userId, int? offset, int? limit)
     {
-        var (res, count) = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
-        return res != null
-            ? new CountedResponse<List<UserAssignmentBaseModal>>()
+        var res = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
+        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
             {
-                Result = res,
-                TotalCount = count
+                Result = res.Data.Item1,
+                TotalCount = res.Data.Item2
             }
-            : null;
+        };
     }
 
-    public async Task<AssignmentBaseModal?> GetAssignmentBaseInfoById(int assignmentId)
+    public async Task<ResponseView<AssignmentBaseModal>> GetAssignmentBaseInfoById(int assignmentId)
     {
         return await assignmentRepository.GetAssignmentById(assignmentId);
     }
 
-    public async Task<CountedResponse<List<UserAssignmentBaseModal>>?> GetAssigmentUsersTasks(
-        int userId,
+    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId,
         int assignmentId,
         string statusName, int? offset, int? limit)
     {
-        var (res, count) =
-            await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, offset, limit);
-        return res != null
-            ? new CountedResponse<List<UserAssignmentBaseModal>>()
+        var res = await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, offset, limit);
+        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        {
+            Code = res.Code,
+            Message = res.Message,
+            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
             {
-                Result = res,
-                TotalCount = count
+                Result = res.Data.Item1,
+                TotalCount = res.Data.Item2
             }
-            : null;
+        };
     }
 
-    public async Task<List<UserAssignmentViewForAI>?> GetUserAssignmentViewForAI(int aiTeacherId, int count)
+    public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId,
+        int count)
     {
-       var res = await assignmentRepository.GetUserAssignmentViewForAI(aiTeacherId, count);
-       return res;
+        var res = await assignmentRepository.GetUserAssignmentViewForAI(aiTeacherId, count);
+        return res;
     }
 }

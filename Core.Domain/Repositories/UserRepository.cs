@@ -11,32 +11,57 @@ namespace Core.Domain.Repositories;
 public class UserRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IUserRepository
 {
     private IGroupRepository GroupRepository => _serviceProvider.GetRequiredService<IGroupRepository>();
-    public async Task<bool> EmailExists(string email)
+    public async Task<ResponseView<bool>> EmailExists(string email)
     {
         try
         {
-            return await context.Users.AnyAsync(x => x.Email == email && x.isActive);
+            var res = await context.Users.AnyAsync(x => x.Email == email && x.isActive);
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res,
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<UserModal?> CheckIfUser(string email, string password)
+    public async Task<ResponseView<UserModal>> CheckIfUser(string email, string password)
     {
         try
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Email == email && x.Password == password);
-            return user == null ? null : UserMapper.ToUserModal(user);
+            if (user == null) return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "User not found or invalid credentials",
+                Data = null
+            };
+            return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = UserMapper.ToUserModal(user)
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<int> AddUser(string firstName, string lastName, string email, string password, string role)
+    public async Task<ResponseView<int>> AddUser(string firstName, string lastName, string email, string password, string role)
     {
         try
         {
@@ -50,41 +75,81 @@ public class UserRepository(ApplicationContext context, IServiceProvider _servic
             };
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
-            return user.Id;
+            return new ResponseView<int>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = user.Id,
+                Message = "User added successfully"
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return -1;
+            return new ResponseView<int>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = -1
+            };
         }
     }
 
-    public async Task<bool> ActivateUser(int userId)
+    public async Task<ResponseView<bool>> ActivateUser(int userId)
     {
         try
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
-            if (user == null) return false;
+            if (user == null) return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "User not found",
+                Data = false
+            };
             user.isActive = true;
             await GroupRepository.AddUserToGroup(userId, "$$$$$");
             await context.SaveChangesAsync();
-            return true;
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = true,
+                Message = "User activated successfully"
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<UserModal?> GetUserInfo(int userId)
+    public async Task<ResponseView<UserModal>> GetUserInfo(int userId)
     {
         try
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
-            return user == null ? null : UserMapper.ToUserModal(user);
+            if(user == null) return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "User not found",
+                Data = null
+            };
+            return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = UserMapper.ToUserModal(user)
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<UserModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 }

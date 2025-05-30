@@ -12,7 +12,7 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
 {
     private IAssignmentRepository AssignmentRepository => _serviceProvider.GetRequiredService<IAssignmentRepository>();
 
-    public async Task<GroupBaseModal?> CreateGroup(string groupName, string groupCode, int ownerId)
+    public async Task<ResponseView<GroupBaseModal>> CreateGroup(string groupName, string groupCode, int ownerId)
     {
         try
         {
@@ -26,47 +26,99 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
             };
             await context.AddAsync(group);
             await context.SaveChangesAsync();
-            return GroupMapper.ToGroupModal(group, 0);
+            return new ResponseView<GroupBaseModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = GroupMapper.ToGroupModal(group, 0)
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<bool> DeleteGroup(int userId, int groupId)
+    public async Task<ResponseView<bool>> DeleteGroup(int userId, int groupId)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null || group.OwnerId != userId) return false;
+            if (group == null)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = false
+                };
+
+            if (group.OwnerId != userId)
+            {
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not the owner of this group",
+                    Data = false
+                };
+            }
+
             context.Groups.Remove(group);
             await context.SaveChangesAsync();
-            return true;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "Group deleted successfully",
+                Data = true
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<GroupBaseModal?> GetStudentGroup(int userId)
+    public async Task<ResponseView<GroupBaseModal>> GetStudentGroup(int userId)
     {
         try
         {
             var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
-            var group = await context.Groups.FirstOrDefaultAsync(x => groupIds.Contains(x.Id));
-            return group != null
-                ? GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
-                : null;
+            var group = await context.Groups.FirstOrDefaultAsync(x => x.IsAIGroup == false && groupIds.Contains(x.Id));
+            if(group == null) 
+            {
+                return new ResponseView<GroupBaseModal>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not a member of any teacher group",
+                    Data = null
+                };
+            }
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId)
+    public async Task<ResponseView<List<GroupBaseModal>>> GetTeacherGroups(int userId)
     {
         try
         {
@@ -74,55 +126,103 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 .OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
                 .ToListAsync();
-            return groups;
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = groups
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle)
+    public async Task<ResponseView<GroupBaseModal>> UpdateGroupTitle(int userId, int groupId, string groupTitle)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return null;
+            if (group == null) return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "Group not found",
+                Data = null
+            };
             group.GroupName = groupTitle;
             await context.SaveChangesAsync();
-            return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<bool> UpdateGroupCode(int userId, int groupId, string groupCode)
+    public async Task<ResponseView<bool>> UpdateGroupCode(int userId, int groupId, string groupCode)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return false;
+            if (group == null) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "Group not found",
+                Data = false
+            };
             group.GroupCode = groupCode;
             await context.SaveChangesAsync();
-            return true;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "Group code updated successfully",
+                Data = true
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<bool> AddUserToGroup(int userId, string groupCode)
+    public async Task<ResponseView<bool>> AddUserToGroup(int userId, string groupCode)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
-            if (group == null) return false;
+            if (group == null) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "Group not found",
+                Data = false
+            };
             var haveRealStudGroup = await context.UserGroups.Include(g => g.Group)
                 .AnyAsync(u => u.UserId == userId && !u.Group.IsAIGroup);
-            if (haveRealStudGroup) return false;
+            if (haveRealStudGroup) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "You are already a member of a real student group",
+                Data = false
+            };
             var userGroup = new UserGroups()
             {
                 GroupId = group.Id,
@@ -130,76 +230,159 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
             };
             await context.UserGroups.AddAsync(userGroup);
             var rs = await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
-            if (!rs) return false;
+            if (!rs.Data) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "Failed to assign assignments to user",
+                Data = false
+            };
             await context.SaveChangesAsync();
-            return true;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "User added to group successfully",
+                Data = true
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<bool> RemoveUserFromGroup(int callerId, int groupId, int userId)
+    public async Task<ResponseView<bool>> RemoveUserFromGroup(int callerId, int groupId, int userId)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if(callerId != group?.OwnerId && callerId != userId) return false;
+            if (callerId != group?.OwnerId && callerId != userId) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "You are not allowed to remove this user from the group",
+                Data = false
+            };
             var userGroup =
                 await context.UserGroups.FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == userId);
-            if (userGroup == null) return false;
+            if (userGroup == null) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "User is not a member of this group",
+                Data = false
+            };
             var res = await AssignmentRepository.RemoveGroupAssignmentsForUser(userId, groupId);
-            if (!res) return false;
+            if (!res.Data) return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "Failed to remove assignments for user",
+                Data = false
+            };
             context.UserGroups.Remove(userGroup);
             await context.SaveChangesAsync();
-            return true;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "User removed from group successfully",
+                Data = true
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return new ResponseView<bool>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = false
+            };
         }
     }
 
-    public async Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId)
+    public async Task<ResponseView<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null || (group.OwnerId != userId &&
-                                  context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id))) return null;
-            return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+            if (group == null) return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "Group not found",
+                Data = null
+            };  
+            if(group.OwnerId != userId &&
+                                  context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id)) 
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Conflict,
+                Message = "You are not owner or member of this group",
+                Data = null
+            };   
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id))
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
         }
     }
 
-    public async Task<List<GroupBaseModal>> SearchGroup(string groupName)
+    public async Task<ResponseView<List<GroupBaseModal>>> SearchGroup(string groupName)
     {
         try
         {
             var groups = await context.Groups
-                .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%")).OrderByDescending(x => x.CreateDate).Select(x =>
+                .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%"))
+                .OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
                 .ToListAsync();
-            return groups;
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = groups
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return [];
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = []
+            };
         }
     }
 
-    public async Task<List<UserModal>?> GetGroupUsers(int userId, int groupId)
+    public async Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId)
     {
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null || group.OwnerId != userId) return null;
+            if (group == null) return new ResponseView<List<UserModal>>
+            {
+                Code = StatusCodesEnum.NotFound,
+                Message = "Group not found",
+                Data = null
+            };  
+            if(group.OwnerId != userId) 
+                return new ResponseView<List<UserModal>>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not owner of this group",
+                    Data = null
+                };   
             var userIds = context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId);
-            return await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()
+            var res =await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -207,10 +390,20 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 Email = x.Email,
                 Role = x.Role
             }).ToListAsync();
+            return new ResponseView<List<UserModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return new ResponseView<List<UserModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = []
+            };
         }
     }
 }

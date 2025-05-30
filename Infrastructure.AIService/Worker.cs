@@ -20,34 +20,40 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
 
             using (var scope = scopeFactory.CreateScope())
             {
-                var assignmentService = scope.ServiceProvider.GetRequiredService<IAssignmentService>();
-                var aiService = scope.ServiceProvider.GetRequiredService<IAICommunicateService>();
-                var assignments = await assignmentService.GetUserAssignmentViewForAI(1019, 5);
-                if (assignments != null && assignments.Count != 0)
+                try
                 {
-                    foreach (var assignment in assignments)
+                    var assignmentService = scope.ServiceProvider.GetRequiredService<IAssignmentService>();
+                    var aiService = scope.ServiceProvider.GetRequiredService<IAICommunicateService>();
+                    var assignments = await assignmentService.GetUserAssignmentViewForAI(1019, 5);
+                    if (assignments.Code == 0 && assignments.Data != null && assignments.Data.Count != 0)
                     {
-                        var result = await aiService.GetAIResponse(assignment.EssayTitle, assignment.EssayText,
-                            assignment.ExpectedWordCount);
-                        if (result == null) continue;
-                        var res = await assignmentService.EvaluateAssignments(1019, new EvaluateAssignmentRequest()
+                        foreach (var assignment in assignments.Data)
                         {
-                            UserId = assignment.UserId,
-                            AssignmentId = assignment.AssignmentId,
-                            FluencyScore = result.FluencyScore,
-                            GrammarScore = result.GrammarScore,
-                            EvaluationTextComments = result.EvaluationTextComments,
-                            GeneralComments = result.GeneralComments
-                        });
-                        if (!res.Result)
-                        {
-                            Console.WriteLine(
-                                $"Something went wrong while evaluating assignment for {assignment.UserId} assignment {assignment.AssignmentId}");
+                            var result = await aiService.GetAIResponse(assignment.EssayTitle, assignment.EssayText,
+                                assignment.ExpectedWordCount);
+                            if (result == null) continue;
+                            var res = await assignmentService.EvaluateAssignments(1019, new EvaluateAssignmentRequest()
+                            {
+                                UserId = assignment.UserId,
+                                AssignmentId = assignment.AssignmentId,
+                                FluencyScore = result.FluencyScore,
+                                GrammarScore = result.GrammarScore,
+                                EvaluationTextComments = result.EvaluationTextComments,
+                                GeneralComments = result.GeneralComments
+                            });
+                            if (res.Code != 0 || !res.Data!.Result)
+                            {
+                                Console.WriteLine(
+                                    $"Something went wrong while evaluating assignment for {assignment.UserId} assignment {assignment.AssignmentId}");
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while processing assignments.");
+                }
             }
-
             await Task.Delay(1000, stoppingToken);
         }
     }

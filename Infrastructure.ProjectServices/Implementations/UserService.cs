@@ -6,7 +6,7 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class UserService(IUserRepository userRepository) : IUserService
 {
-    public async Task<UserModal?> GetUserDefaultInfoAsync(int userId)
+    public async Task<ResponseView<UserModal>> GetUserDefaultInfoAsync(int userId)
     {
         return await Task.Run(() => userRepository.GetUserInfo(userId));
     }

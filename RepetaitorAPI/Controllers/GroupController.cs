@@ -25,7 +25,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.CreateGroup(request.GroupName, userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -34,7 +34,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.DeleteGroup(userId, groupId);
-        return resp.Result ? Results.Ok() : Results.Problem();
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpPost("[Action]")]
@@ -42,7 +42,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.AddUserToGroup(userId, request.GroupCode);
-        return resp.Result ? Results.Ok() : Results.Problem();
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpDelete("[Action]")]
@@ -51,7 +51,7 @@ public class GroupController(
     {
         var callerId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.RemoveUserFromGroup(callerId, groupId, userId);
-        return resp.Result ? Results.Ok() : Results.Problem();
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[Action]")]
@@ -60,7 +60,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetStudentGroup(userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -71,7 +71,7 @@ public class GroupController(
         var userId =
             int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetTeacherGroups(userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -81,7 +81,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.UpdateGroupTitle(userId, request.GroupId, request.GroupTitle);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -91,7 +91,7 @@ public class GroupController(
         [FromBody] RegenerateGroupCodeRequest request)
     {
         var resp = await groupService.RegenerateGroupCode(request.UserId, request.GroupId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -101,7 +101,7 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetGroupUsers(userId, groupId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -110,7 +110,7 @@ public class GroupController(
     public async Task<IResult> SearchGroup([FromQuery] string groupName)
     {
         var resp = await groupService.SearchGroup(groupName);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[Action]")]
@@ -119,6 +119,6 @@ public class GroupController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await groupService.GetGroupBaseInfoById(userId, groupId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }

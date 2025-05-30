@@ -17,77 +17,97 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
             .Select(s => s[Random.Next(s.Length)]).ToArray());
     }
 
-    public async Task<GroupBaseModal?> CreateGroup(string groupName, int ownerId)
+    public async Task<ResponseView<GroupBaseModal>> CreateGroup(string groupName, int ownerId)
     {
         var newGroupCode = GenerateClassCode();
         return await groupRepository.CreateGroup(groupName, newGroupCode, ownerId);
     }
 
-    public async Task<ResultResponse> DeleteGroup(int userId, int groupId)
+    public async Task<ResponseView<ResultResponse>> DeleteGroup(int userId, int groupId)
     {
         var res = await groupRepository.DeleteGroup(userId, groupId);
 
-        return new ResultResponse()
+        return new ResponseView<ResultResponse>
         {
-            Result = res
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse
+            {
+                Result = res.Data
+            }
         };
     }
 
-    public async Task<GroupBaseModal?> GetStudentGroup(int userId)
+    public async Task<ResponseView<GroupBaseModal>> GetStudentGroup(int userId)
     {
-        var res = await groupRepository.GetStudentGroup(userId);
-        return res is { Id: 0 } ? null : res;
+        return await groupRepository.GetStudentGroup(userId);
     }
 
-    public async Task<List<GroupBaseModal>?> GetTeacherGroups(int userId)
+    public async Task<ResponseView<List<GroupBaseModal>>> GetTeacherGroups(int userId)
     {
         return await groupRepository.GetTeacherGroups(userId);
     }
 
-    public async Task<GroupBaseModal?> UpdateGroupTitle(int userId, int groupId, string groupTitle)
+    public async Task<ResponseView<GroupBaseModal>> UpdateGroupTitle(int userId, int groupId, string groupTitle)
     {
         return await groupRepository.UpdateGroupTitle(userId, groupId, groupTitle);
     }
 
-    public async Task<NewGroupCodeResponse?> RegenerateGroupCode(int userId, int groupId)
+    public async Task<ResponseView<NewGroupCodeResponse>> RegenerateGroupCode(int userId, int groupId)
     {
         var newGroupCode = GenerateClassCode();
         var res = await groupRepository.UpdateGroupCode(userId, groupId, newGroupCode);
-        return new NewGroupCodeResponse()
+        return new ResponseView<NewGroupCodeResponse>
         {
-            GroupCode = res ? newGroupCode : ""
+            Code = res.Code,
+            Message = res.Message,
+            Data = new NewGroupCodeResponse
+            {
+                GroupCode = newGroupCode
+                
+            }
         };
     }
 
-    public async Task<ResultResponse> AddUserToGroup(int userId, string groupCode)
+    public async Task<ResponseView<ResultResponse>> AddUserToGroup(int userId, string groupCode)
     {
         var res = await groupRepository.AddUserToGroup(userId, groupCode);
-        return new ResultResponse()
+        return new ResponseView<ResultResponse>
         {
-            Result = res
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse
+            {
+                Result = res.Data
+            }
         };
     }
 
-    public async Task<ResultResponse> RemoveUserFromGroup(int callerId, int groupId, int userId)
+    public async Task<ResponseView<ResultResponse>> RemoveUserFromGroup(int callerId, int groupId, int userId)
     {
         var res = await groupRepository.RemoveUserFromGroup(callerId, groupId, userId);
-        return new ResultResponse()
+        return new ResponseView<ResultResponse>
         {
-            Result = res
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse
+            {
+                Result = res.Data
+            }
         };
     }
 
-    public async Task<List<UserModal>?> GetGroupUsers(int userId, int groupId)
+    public async Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId)
     {
         return await groupRepository.GetGroupUsers(userId, groupId);
     }
 
-    public async Task<List<GroupBaseModal>?> SearchGroup(string groupName)
+    public async Task<ResponseView<List<GroupBaseModal>>> SearchGroup(string groupName)
     {
         return await groupRepository.SearchGroup(groupName);
     }
 
-    public async Task<GroupBaseModal?> GetGroupBaseInfoById(int userId, int groupId)
+    public async Task<ResponseView<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId)
     {
         return await groupRepository.GetGroupBaseInfoById(userId, groupId);
     }

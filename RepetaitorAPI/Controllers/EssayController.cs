@@ -26,7 +26,7 @@ public class EssayController(
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -35,7 +35,7 @@ public class EssayController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.DeleteEssay(essayId, userId);
-        return resp is not { Result: true } ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -46,7 +46,7 @@ public class EssayController(
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -56,7 +56,7 @@ public class EssayController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.GetUserEssays(userId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[Action]")]
@@ -64,6 +64,6 @@ public class EssayController(
     public async Task<IResult> GetEssayById([FromQuery] int essayId)
     {
         var resp = await essayService.GetEssayById(essayId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }

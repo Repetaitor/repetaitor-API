@@ -7,34 +7,39 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class EssayService(IEssayRepository essayRepository) : IEssayService
 {
-    public async Task<EssayModal?> CreateNewEssay(string essayTitle, string essayDescription,
+    public async Task<ResponseView<EssayModal>> CreateNewEssay(string essayTitle, string essayDescription,
         int expectedWordCount, int creatorId)
     {
         return await essayRepository.CreateNewEssay(essayTitle, essayDescription, expectedWordCount, creatorId);
     }
 
-    public async Task<ResultResponse?> DeleteEssay(int essayId, int byUser)
+    public async Task<ResponseView<ResultResponse>> DeleteEssay(int essayId, int byUser)
     {
         var res = await essayRepository.DeleteEssay(essayId, byUser);
-        return new ResultResponse()
+        return new ResponseView<ResultResponse>
         {
-            Result = res
+            Code = res.Code,
+            Message = res.Message,
+            Data = new ResultResponse
+            {
+                Result = res.Data
+            }
         };
     }
 
-    public async Task<EssayModal?> UpdateEssay(int essayId, string essayTitle,
+    public async Task<ResponseView<EssayModal>> UpdateEssay(int essayId, string essayTitle,
         string essayDescription,
         int expectedWordCount, int byUser)
     {
         return await essayRepository.UpdateEssay(essayId, essayTitle, essayDescription, expectedWordCount, byUser);
     }
 
-    public async Task<List<EssayModal>?> GetUserEssays(int userId)
+    public async Task<ResponseView<List<EssayModal>>> GetUserEssays(int userId)
     {
         return await essayRepository.GetUserEssays(userId);
     }
 
-    public async Task<EssayModal?> GetEssayById(int essayId)
+    public async Task<ResponseView<EssayModal>> GetEssayById(int essayId)
     {
         return await essayRepository.GetEssay(essayId);
     }

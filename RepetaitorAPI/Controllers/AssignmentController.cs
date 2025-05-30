@@ -49,7 +49,7 @@ public class AssignmentController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.SaveOrSubmitAssignment(userId, request);
-        return resp.Result ? Results.Ok() : Results.Problem();
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -61,7 +61,7 @@ public class AssignmentController(
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetGroupAssignments(userId, request.GroupId, request.Offset,
             request.Limit);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -74,7 +74,7 @@ public class AssignmentController(
             request.IsAIAssignment,
             request.Offset,
             request.Limit);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -86,7 +86,7 @@ public class AssignmentController(
         var resp = await assignmentService.GetUserAssignment(
             curUserId, userId,
             assignmentId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -98,7 +98,7 @@ public class AssignmentController(
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetUserNotSeenEvaluatedAssignments(userId, request.Offset,
             request.Limit);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -106,7 +106,7 @@ public class AssignmentController(
     public async Task<IResult> GetEvaluationTextStatuses()
     {
         var resp = await assignmentService.GetEvaluationTextStatuses();
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -114,7 +114,7 @@ public class AssignmentController(
     public async Task<IResult> GetAssignmentStatuses()
     {
         var resp = await assignmentService.GetAssignmentStatuses();
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -125,7 +125,7 @@ public class AssignmentController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.EvaluateAssignments(userId, request);
-        return resp.Result ? Results.Ok() : Results.Problem();
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -136,7 +136,7 @@ public class AssignmentController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetTeacherAssignments(userId, request.Offset, request.Limit);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
@@ -145,7 +145,7 @@ public class AssignmentController(
         [FromQuery] int assignmentId)
     {
         var resp = await assignmentService.GetAssignmentBaseInfoById(assignmentId);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -158,6 +158,6 @@ public class AssignmentController(
         var resp = await assignmentService.GetAssigmentUsersTasks(userId, request.AssignmentId, request.StatusName,
             request.Offset,
             request.Limit);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }
