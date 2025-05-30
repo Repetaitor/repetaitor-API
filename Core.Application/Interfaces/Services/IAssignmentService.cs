@@ -17,7 +17,7 @@ public interface IAssignmentService
         int? offset, int? limit);
 
     Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId, string statusName,
-        bool IsAIAssignment, int? offset, int? limit);
+        bool isAIAssignment, int? offset, int? limit);
 
     Task<ResponseView<ResultResponse>> SaveOrSubmitAssignment(int userId, SaveOrSubmitAssignmentRequest request);
     Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId, int assignmentId);

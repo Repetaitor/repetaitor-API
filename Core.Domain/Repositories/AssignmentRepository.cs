@@ -37,7 +37,7 @@ public class AssignmentRepository(
             {
                 await context.UserAssignments.AddAsync(userAssgn);
             }
-
+            await context.SaveChangesAsync();
             return new ResponseView<bool>()
             {
                 Code = StatusCodesEnum.Success,

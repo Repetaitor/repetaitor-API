@@ -14,7 +14,7 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     {
         var res = await assignmentRepository.CreateNewAssignment(userId,
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
-        if (res.Code != 0)
+        if (res.Code != StatusCodesEnum.Success)
         {
             return res;
         }
@@ -54,9 +54,9 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     }
 
     public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
-        string statusName, bool IsAIAssignment, int? offset, int? limit)
+        string statusName, bool isAIAssignment, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetUserAssignments(userId, statusName, IsAIAssignment, offset, limit);
+        var res = await assignmentRepository.GetUserAssignments(userId, statusName, isAIAssignment, offset, limit);
         return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
         {
             Code = res.Code,
