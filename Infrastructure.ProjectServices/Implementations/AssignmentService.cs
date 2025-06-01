@@ -12,23 +12,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(
         int userId, CreateNewAssignmentsRequest request)
     {
-        var res = await assignmentRepository.CreateNewAssignment(userId,
+        return await assignmentRepository.CreateNewAssignment(userId,
             request.Instructions, request.GroupId, request.EssayId, request.DueDate);
-        if (res.Code != StatusCodesEnum.Success)
-        {
-            return res;
-        }
-        var assignToStudentsResult = await assignmentRepository.AssignToAllStudentsInGroup(res.Data!.Id, res.Data.GroupId);
-        if (assignToStudentsResult.Code != StatusCodesEnum.Success)
-        {
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = assignToStudentsResult.Code,
-                Message = assignToStudentsResult.Message,
-                Data = null
-            };
-        }
-        return res;
     }
 
     public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request)

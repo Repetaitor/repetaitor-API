@@ -1,3 +1,4 @@
+using System.Data;
 using System.Runtime.Intrinsics.X86;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
@@ -5,6 +6,7 @@ using Core.Application.Models.DTO;
 using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Domain.Repositories;
@@ -15,91 +17,6 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
-    public async Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId)
-    {
-        var userIds = await context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId)
-            .ToListAsync();
-        try
-        {
-            foreach (var userAssgn in userIds.Select(userId => new UserAssignment()
-                     {
-                         AssignmentId = assignmentId,
-                         UserId = userId,
-                         StatusId = 3,
-                         Text = "",
-                         WordCount = 0,
-                         GrammarScore = 0,
-                         FluencyScore = 0,
-                         FeedbackSeen = false,
-                         IsEvaluated = false,
-                         AssignDate = DateTime.Now,
-                     }))
-            {
-                await context.UserAssignments.AddAsync(userAssgn);
-            }
-            await context.SaveChangesAsync();
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = true
-            };
-        }
-    }
-
-    public async Task<ResponseView<bool>> AssignToStudentAllGroupAssignments(int userId, int groupId)
-    {
-        var curUserAssignIds = await context.UserAssignments
-            .Where(x => x.UserId == userId).Select(x => x.AssignmentId).ToListAsync();
-        var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId && !curUserAssignIds.Contains(x.Id))
-            .Select(x => x.Id)
-            .ToListAsync();
-        try
-        {
-            foreach (var userAssgn in assgnIds.Select(assgnId => new UserAssignment()
-                     {
-                         AssignmentId = assgnId,
-                         UserId = userId,
-                         StatusId = 3,
-                         Text = "",
-                         WordCount = 0,
-                         GrammarScore = 0,
-                         FluencyScore = 0,
-                         FeedbackSeen = false,
-                         IsEvaluated = false,
-                         AssignDate = DateTime.Now,
-                     }))
-            {
-                await context.UserAssignments.AddAsync(userAssgn);
-            }
-
-            await context.SaveChangesAsync();
-            return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = true
-            };
-            ;
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = true
-            };
-        }
-    }
-
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
@@ -109,49 +26,36 @@ public class AssignmentRepository(
                 return new ResponseView<AssignmentBaseModal>()
                 {
                     Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this group",
+                    Message = "You are not the owner of this group or group does not exist",
                     Data = null
                 };
             if (!context.Essays.Any(x => x.Id == essayId && x.CreatorId == userId))
                 return new ResponseView<AssignmentBaseModal>()
                 {
                     Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this essay",
+                    Message = "You are not the owner of this essay or essay does not exist",
                     Data = null
                 };
-            var assgn = new Assignment
+            await using var conn = new SqlConnection(context.Database.GetConnectionString());
+            await using var cmd = new SqlCommand("CreateNewAssignment", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@instructions", instructions);
+            cmd.Parameters.AddWithValue("@group", groupId);
+            cmd.Parameters.AddWithValue("@essay", essayId);
+            cmd.Parameters.AddWithValue("@dueDate", dueDate);
+            cmd.Parameters.AddWithValue("@creator", userId);
+            var outputParam = new SqlParameter("@newAssignmentId", SqlDbType.Int)
             {
-                Instructions = instructions,
-                GroupId = groupId,
-                EssayId = essayId,
-                DueDate = dueDate,
-                CreatorId = userId
+                Direction = ParameterDirection.Output
             };
-            await context.Assignments.AddAsync(assgn);
-            await context.SaveChangesAsync();
-            assgn = await context.Assignments.Include(assignment => assignment.Creator)
-                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assgn.Id);
-            if (assgn == null)
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Assignment not found",
-                    Data = null
-                };
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new AssignmentBaseModal()
-                {
-                    Id = assgn.Id,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = UserMapper.ToUserModal(assgn.Creator),
-                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
-                }
-            };
+            cmd.Parameters.Add(outputParam);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+
+            var newAssignmentId = (int)outputParam.Value;
+            return await GetAssignmentById(newAssignmentId);
         }
         catch (Exception ex)
         {
@@ -796,34 +700,6 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<bool>> RemoveGroupAssignmentsForUser(int userId, int groupId)
-    {
-        try
-        {
-            var groupAssignmentsIds =
-                await context.Assignments.Where(x => x.GroupId == groupId).Select(x => x.Id).ToListAsync();
-            var userAssignmentsInGroup = await context.UserAssignments
-                .Where(x => x.UserId == userId && x.StatusId == 3 && groupAssignmentsIds.Contains(x.AssignmentId))
-                .ToListAsync();
-            context.UserAssignments.RemoveRange(userAssignmentsInGroup);
-            await context.SaveChangesAsync();
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = false
-            };
-        }
-    }
-
     public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count)
     {
         try
@@ -855,4 +731,114 @@ public class AssignmentRepository(
             };
         }
     }
+    // public async Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId)
+    // {
+    //     var userIds = await context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId)
+    //         .ToListAsync();
+    //     try
+    //     {
+    //         foreach (var userAssgn in userIds.Select(userId => new UserAssignment()
+    //                  {
+    //                      AssignmentId = assignmentId,
+    //                      UserId = userId,
+    //                      StatusId = 3,
+    //                      Text = "",
+    //                      WordCount = 0,
+    //                      GrammarScore = 0,
+    //                      FluencyScore = 0,
+    //                      FeedbackSeen = false,
+    //                      IsEvaluated = false,
+    //                      AssignDate = DateTime.Now,
+    //                  }))
+    //         {
+    //             await context.UserAssignments.AddAsync(userAssgn);
+    //         }
+    //         await context.SaveChangesAsync();
+    //         return new ResponseView<bool>()
+    //         {
+    //             Code = StatusCodesEnum.Success,
+    //             Data = true
+    //         };
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return new ResponseView<bool>()
+    //         {
+    //             Code = StatusCodesEnum.InternalServerError,
+    //             Message = ex.Message,
+    //             Data = true
+    //         };
+    //     }
+    // }
+    // public async Task<ResponseView<bool>> AssignToStudentAllGroupAssignments(int userId, int groupId)
+    // {
+    //     var curUserAssignIds = await context.UserAssignments
+    //         .Where(x => x.UserId == userId).Select(x => x.AssignmentId).ToListAsync();
+    //     var assgnIds = await context.Assignments.Where(x => x.GroupId == groupId && !curUserAssignIds.Contains(x.Id))
+    //         .Select(x => x.Id)
+    //         .ToListAsync();
+    //     try
+    //     {
+    //         foreach (var userAssgn in assgnIds.Select(assgnId => new UserAssignment()
+    //                  {
+    //                      AssignmentId = assgnId,
+    //                      UserId = userId,
+    //                      StatusId = 3,
+    //                      Text = "",
+    //                      WordCount = 0,
+    //                      GrammarScore = 0,
+    //                      FluencyScore = 0,
+    //                      FeedbackSeen = false,
+    //                      IsEvaluated = false,
+    //                      AssignDate = DateTime.Now,
+    //                  }))
+    //         {
+    //             await context.UserAssignments.AddAsync(userAssgn);
+    //         }
+    //
+    //         await context.SaveChangesAsync();
+    //         return new ResponseView<bool>
+    //         {
+    //             Code = StatusCodesEnum.Success,
+    //             Data = true
+    //         };
+    //         ;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return new ResponseView<bool>
+    //         {
+    //             Code = StatusCodesEnum.InternalServerError,
+    //             Message = ex.Message,
+    //             Data = true
+    //         };
+    //     }
+    // }
+    // public async Task<ResponseView<bool>> RemoveGroupAssignmentsForUser(int userId, int groupId)
+    // {
+    //     try
+    //     {
+    //         var groupAssignmentsIds =
+    //             await context.Assignments.Where(x => x.GroupId == groupId).Select(x => x.Id).ToListAsync();
+    //         var userAssignmentsInGroup = await context.UserAssignments
+    //             .Where(x => x.UserId == userId && x.StatusId == 3 && groupAssignmentsIds.Contains(x.AssignmentId))
+    //             .ToListAsync();
+    //         context.UserAssignments.RemoveRange(userAssignmentsInGroup);
+    //         await context.SaveChangesAsync();
+    //         return new ResponseView<bool>()
+    //         {
+    //             Code = StatusCodesEnum.Success,
+    //             Data = true
+    //         };
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return new ResponseView<bool>()
+    //         {
+    //             Code = StatusCodesEnum.InternalServerError,
+    //             Message = ex.Message,
+    //             Data = false
+    //         };
+    //     }
+    // }
 }

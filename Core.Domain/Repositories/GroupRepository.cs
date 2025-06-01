@@ -1,16 +1,17 @@
+using System.Data;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Domain.Repositories;
 
-public class GroupRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IGroupRepository
+public class GroupRepository(ApplicationContext context) : IGroupRepository
 {
-    private IAssignmentRepository AssignmentRepository => _serviceProvider.GetRequiredService<IAssignmentRepository>();
 
     public async Task<ResponseView<GroupBaseModal>> CreateGroup(string groupName, string groupCode, int ownerId)
     {
@@ -229,13 +230,18 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 UserId = userId
             };
             await context.UserGroups.AddAsync(userGroup);
-            var rs = await AssignmentRepository.AssignToStudentAllGroupAssignments(userId, group.Id);
-            if (!rs.Data) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = "Failed to assign assignments to user",
-                Data = false
-            };
+            await using var conn = new SqlConnection(context.Database.GetConnectionString());
+            await using var cmd = new SqlCommand("AssignToStudentGroupsAssignments", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@groupId", group.Id);
+            
+            
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            
+            
             await context.SaveChangesAsync();
             return new ResponseView<bool>
             {
@@ -260,6 +266,15 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null)
+            {
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = false
+                };
+            }
             if (callerId != group?.OwnerId && callerId != userId) return new ResponseView<bool>
             {
                 Code = StatusCodesEnum.Conflict,
@@ -274,13 +289,16 @@ public class GroupRepository(ApplicationContext context, IServiceProvider _servi
                 Message = "User is not a member of this group",
                 Data = false
             };
-            var res = await AssignmentRepository.RemoveGroupAssignmentsForUser(userId, groupId);
-            if (!res.Data) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = "Failed to remove assignments for user",
-                Data = false
-            };
+            await using var conn = new SqlConnection(context.Database.GetConnectionString());
+            await using var cmd = new SqlCommand("DeletePendingAssignmentsOfStudents", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@groupId", group!.Id);
+            
+            conn.Open();
+            cmd.ExecuteNonQuery();
+
             context.UserGroups.Remove(userGroup);
             await context.SaveChangesAsync();
             return new ResponseView<bool>

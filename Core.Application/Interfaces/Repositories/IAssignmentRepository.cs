@@ -5,8 +5,6 @@ namespace Core.Application.Interfaces.Repositories;
 
 public interface IAssignmentRepository
 {
-    Task<ResponseView<bool>> AssignToStudentAllGroupAssignments(int userId, int groupId);
-    Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId);
     Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions, int groupId,
         int essayId, DateTime dueDate);
 
@@ -29,6 +27,5 @@ public interface IAssignmentRepository
 
     Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId, int assignmentId, string statusName, int? offset,
         int? limit);
-    Task<ResponseView<bool>> RemoveGroupAssignmentsForUser(int userId, int groupId);
     Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
 }
