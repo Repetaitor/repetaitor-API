@@ -28,7 +28,7 @@ public class AssignmentController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.CreateNewAssignment(userId, request);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -39,7 +39,7 @@ public class AssignmentController(
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.UpdateAssignment(userId, request);
-        return resp == null ? Results.Problem() : Results.Ok(resp);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpPost("[action]")]
