@@ -3,6 +3,7 @@ using System.Runtime.Intrinsics.X86;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
+using Core.Application.Models.DTO.Essays;
 using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
@@ -17,6 +18,78 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
+    public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
+    {
+        try
+        {
+            var assgn = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+            if (assgn == null)
+            {
+                return new ResponseView<ResultResponse>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Assignment not found",
+                    Data = null
+                };
+            }
+            if (assgn.CreatorId != userId)
+            {
+                return new ResponseView<ResultResponse>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not the owner of this assignment",
+                    Data = null
+                };
+            }
+
+            context.Assignments.Remove(assgn);
+            await context.SaveChangesAsync();
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Message = "Assignment deleted successfully",
+                Data = new ResultResponse() { Result = true }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
+    public async Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate,
+        DateTime? endDate)
+    {
+        try
+        {
+            var res = context.UserAssignments.Where(x =>
+                x.UserId == userId && ((startDate == null && endDate == null) ||
+                                       (x.SubmitDate >= startDate && x.SubmitDate <= endDate)));
+            return new ResponseView<UserScoresStatsModel>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new UserScoresStatsModel()
+                {
+                    AvgTotalScore = await res.AverageAsync(x => x.FluencyScore + x.GrammarScore),
+                    AvgGrammarScore = await res.AverageAsync(x => x.GrammarScore),
+                    AvgFluencyScore = await res.AverageAsync(x => x.FluencyScore)
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<UserScoresStatsModel>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
@@ -85,15 +158,15 @@ public class AssignmentRepository(
             {
                 Code = StatusCodesEnum.Accepted,
                 Data = new AssignmentBaseModal
-                    {
-                        Id = assgn.Id,
-                        Instructions = assgn.Instructions,
-                        GroupId = assgn.GroupId,
-                        Creator = UserMapper.ToUserModal(assgn.Creator),
-                        Essay = EssayMapper.ToEssayModal(assgn.Essay),
-                        DueDate = assgn.DueDate,
-                        CreationTime = assgn.CreationTime,
-                    }
+                {
+                    Id = assgn.Id,
+                    Instructions = assgn.Instructions,
+                    GroupId = assgn.GroupId,
+                    Creator = UserMapper.ToUserModal(assgn.Creator),
+                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
+                    DueDate = assgn.DueDate,
+                    CreationTime = assgn.CreationTime,
+                }
             };
         }
         catch (Exception ex)
@@ -107,25 +180,28 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, int assignmentId, string instructions,
+    public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, int assignmentId,
+        string instructions,
         int essayId, DateTime dueDate)
     {
         try
         {
-            if (!await context.Essays.AnyAsync(x => x.Id == essayId)) return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Essay not found",
-                Data = null
-            };
+            if (!await context.Essays.AnyAsync(x => x.Id == essayId))
+                return new ResponseView<AssignmentBaseModal>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Essay not found",
+                    Data = null
+                };
             var assgn = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assgn == null) return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Assignment not found",
-                Data = null
-            };
+            if (assgn == null)
+                return new ResponseView<AssignmentBaseModal>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Assignment not found",
+                    Data = null
+                };
             assgn.Instructions = instructions;
             assgn.EssayId = essayId;
             assgn.DueDate = dueDate;
@@ -156,28 +232,31 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<bool>> EvaluateAssignment(int teacherId, int userId, int assignmentId, int fluencyScore,
+    public async Task<ResponseView<bool>> EvaluateAssignment(int teacherId, int userId, int assignmentId,
+        int fluencyScore,
         int grammarScore,
         List<EvaluationTextCommentModal> evaluationTextComments, List<GeneralCommentModal> generalComments)
     {
         try
         {
             var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assignment == null || assignment.CreatorId != teacherId) return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You are not the owner of this assignment",
-                Data = false
-            };
+            if (assignment == null || assignment.CreatorId != teacherId)
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not the owner of this assignment",
+                    Data = false
+                };
             var userAssgn =
                 await context.UserAssignments.FirstOrDefaultAsync(x =>
                     x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn is not { StatusId: 1 }) return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "This assignment is not submitted",
-                Data = false
-            };
+            if (userAssgn is not { StatusId: 1 })
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "This assignment is not submitted",
+                    Data = false
+                };
             userAssgn.FluencyScore = fluencyScore;
             userAssgn.GrammarScore = grammarScore;
             userAssgn.IsEvaluated = true;
@@ -215,18 +294,20 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<(List<AssignmentBaseModal>?, int)>> GetGroupAssignments(int userId, int groupId, int? offset,
+    public async Task<ResponseView<(List<AssignmentBaseModal>?, int)>> GetGroupAssignments(int userId, int groupId,
+        int? offset,
         int? limit)
     {
         try
         {
             var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
-            if (!group) return new ResponseView<(List<AssignmentBaseModal>?, int)>
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You are not the owner of this group",
-                Data = (null, 0)
-            };
+            if (!group)
+                return new ResponseView<(List<AssignmentBaseModal>?, int)>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not the owner of this group",
+                    Data = (null, 0)
+                };
             var assignments = await context.Assignments
                 .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
                 .Take(limit ?? 5)
@@ -275,7 +356,7 @@ public class AssignmentRepository(
                 Data = res
             };
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new ResponseView<List<StatusBaseModal>>()
             {
@@ -286,7 +367,8 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<bool>> SaveOrSubmitAssignment(int userId, int assignmentId, string text, int wordCount,
+    public async Task<ResponseView<bool>> SaveOrSubmitAssignment(int userId, int assignmentId, string text,
+        int wordCount,
         bool isSubmitted)
     {
         try
@@ -294,12 +376,13 @@ public class AssignmentRepository(
             var userAssgn =
                 await context.UserAssignments.FirstOrDefaultAsync(x =>
                     x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn == null || userAssgn.StatusId == 1) return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You have already submitted this assignment",
-                Data = false
-            };
+            if (userAssgn == null || userAssgn.StatusId == 1)
+                return new ResponseView<bool>()
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You have already submitted this assignment",
+                    Data = false
+                };
             userAssgn.Text = text;
             userAssgn.WordCount = wordCount;
             userAssgn.StatusId = isSubmitted ? 1 : 2;
@@ -384,7 +467,8 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserAssignments(int userId, string statusName,
+    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserAssignments(int userId,
+        string statusName,
         bool IsAIAssignment, int? offset,
         int? limit)
     {
@@ -437,25 +521,28 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserNotSeenEvaluatedAssignments(int userId, int? offset,
+    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserNotSeenEvaluatedAssignments(
+        int userId, int? offset,
         int? limit)
     {
         try
         {
             var user = await userRepository.GetUserInfo(userId);
-            if (user.Code != 0 || user.Data == null) return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "User not found",
-                Data = (null, 0)
-            });
+            if (user.Code != 0 || user.Data == null)
+                return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "User not found",
+                    Data = (null, 0)
+                });
             var group = await groupRepository.GetStudentGroup(userId);
-            if (group.Data == null) return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = (null, 0)
-            });
+            if (group.Data == null)
+                return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = (null, 0)
+                });
             var assignmentIds =
                 await context.Assignments.Where(x => x.GroupId == group.Data.Id).Select(x => x.Id).ToListAsync();
 
@@ -550,12 +637,13 @@ public class AssignmentRepository(
         {
             var assgn = await context.UserAssignments
                 .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
-            if (assgn == null) return new ResponseView<UserAssignmentModal>()
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Assignment not found",
-                Data = null
-            };
+            if (assgn == null)
+                return new ResponseView<UserAssignmentModal>()
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Assignment not found",
+                    Data = null
+                };
             if (callerId == assgn.UserId && assgn.IsEvaluated)
             {
                 assgn.FeedbackSeen = true;
@@ -593,7 +681,8 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetTeacherAssignments(int userId, int? offset, int? limit)
+    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetTeacherAssignments(int userId,
+        int? offset, int? limit)
     {
         try
         {
@@ -631,7 +720,8 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId, int assignmentId,
+    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId,
+        int assignmentId,
         string statusName,
         int? offset,
         int? limit)
@@ -700,7 +790,8 @@ public class AssignmentRepository(
         }
     }
 
-    public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count)
+    public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId,
+        int count)
     {
         try
         {

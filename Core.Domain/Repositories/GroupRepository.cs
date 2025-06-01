@@ -12,7 +12,6 @@ namespace Core.Domain.Repositories;
 
 public class GroupRepository(ApplicationContext context) : IGroupRepository
 {
-
     public async Task<ResponseView<GroupBaseModal>> CreateGroup(string groupName, string groupCode, int ownerId)
     {
         try
@@ -27,11 +26,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
             };
             await context.AddAsync(group);
             await context.SaveChangesAsync();
-            return new ResponseView<GroupBaseModal>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = GroupMapper.ToGroupModal(group, 0)
-            };
+            return await GetGroupBaseInfoById(ownerId, group.Id);
         }
         catch (Exception ex)
         {
@@ -92,8 +87,9 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var groupIds = context.UserGroups.Where(x => x.UserId == userId).Select(x => x.GroupId);
-            var group = await context.Groups.FirstOrDefaultAsync(x => x.IsAIGroup == false && groupIds.Contains(x.Id));
-            if(group == null) 
+            var group = await context.Groups.Include(x => x.Owner)
+                .FirstOrDefaultAsync(x => x.IsAIGroup == false && groupIds.Contains(x.Id));
+            if (group == null)
             {
                 return new ResponseView<GroupBaseModal>
                 {
@@ -102,6 +98,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
                     Data = null
                 };
             }
+
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.Success,
@@ -123,7 +120,8 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var groups = await context.Groups.Where(x => x.OwnerId == userId)
+            var groups = await context.Groups.Include(x => x.Owner)
+                .Where(x => x.OwnerId == userId)
                 .OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
                 .ToListAsync();
@@ -148,13 +146,14 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return new ResponseView<GroupBaseModal>
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = null
-            };
+            var group = await context.Groups.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null)
+                return new ResponseView<GroupBaseModal>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = null
+                };
             group.GroupName = groupTitle;
             await context.SaveChangesAsync();
             return new ResponseView<GroupBaseModal>
@@ -179,12 +178,13 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = false
-            };
+            if (group == null)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = false
+                };
             group.GroupCode = groupCode;
             await context.SaveChangesAsync();
             return new ResponseView<bool>
@@ -210,20 +210,22 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
-            if (group == null) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = false
-            };
+            if (group == null)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = false
+                };
             var haveRealStudGroup = await context.UserGroups.Include(g => g.Group)
                 .AnyAsync(u => u.UserId == userId && !u.Group.IsAIGroup);
-            if (haveRealStudGroup) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You are already a member of a real student group",
-                Data = false
-            };
+            if (haveRealStudGroup)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are already a member of a real student group",
+                    Data = false
+                };
             var userGroup = new UserGroups()
             {
                 GroupId = group.Id,
@@ -236,12 +238,12 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
 
             cmd.Parameters.AddWithValue("@userId", userId);
             cmd.Parameters.AddWithValue("@groupId", group.Id);
-            
-            
+
+
             conn.Open();
             cmd.ExecuteNonQuery();
-            
-            
+
+
             await context.SaveChangesAsync();
             return new ResponseView<bool>
             {
@@ -275,27 +277,30 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
                     Data = false
                 };
             }
-            if (callerId != group?.OwnerId && callerId != userId) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You are not allowed to remove this user from the group",
-                Data = false
-            };
+
+            if (callerId != group?.OwnerId && callerId != userId)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not allowed to remove this user from the group",
+                    Data = false
+                };
             var userGroup =
                 await context.UserGroups.FirstOrDefaultAsync(x => x.GroupId == groupId && x.UserId == userId);
-            if (userGroup == null) return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "User is not a member of this group",
-                Data = false
-            };
+            if (userGroup == null)
+                return new ResponseView<bool>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "User is not a member of this group",
+                    Data = false
+                };
             await using var conn = new SqlConnection(context.Database.GetConnectionString());
             await using var cmd = new SqlCommand("DeletePendingAssignmentsOfStudents", conn);
             cmd.CommandType = CommandType.StoredProcedure;
 
             cmd.Parameters.AddWithValue("@userId", userId);
             cmd.Parameters.AddWithValue("@groupId", group!.Id);
-            
+
             conn.Open();
             cmd.ExecuteNonQuery();
 
@@ -323,21 +328,22 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
     {
         try
         {
-            var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return new ResponseView<GroupBaseModal>
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = null
-            };  
-            if(group.OwnerId != userId &&
-                                  context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id)) 
-            return new ResponseView<GroupBaseModal>
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "You are not owner or member of this group",
-                Data = null
-            };   
+            var group = await context.Groups.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == groupId);
+            if (group == null)
+                return new ResponseView<GroupBaseModal>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = null
+                };
+            if (group.OwnerId != userId &&
+                context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id))
+                return new ResponseView<GroupBaseModal>
+                {
+                    Code = StatusCodesEnum.Conflict,
+                    Message = "You are not owner or member of this group",
+                    Data = null
+                };
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.Success,
@@ -360,6 +366,7 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var groups = await context.Groups
+                .Include(x => x.Owner)
                 .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%"))
                 .OrderByDescending(x => x.CreateDate).Select(x =>
                     GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
@@ -386,21 +393,22 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         try
         {
             var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
-            if (group == null) return new ResponseView<List<UserModal>>
-            {
-                Code = StatusCodesEnum.NotFound,
-                Message = "Group not found",
-                Data = null
-            };  
-            if(group.OwnerId != userId) 
+            if (group == null)
+                return new ResponseView<List<UserModal>>
+                {
+                    Code = StatusCodesEnum.NotFound,
+                    Message = "Group not found",
+                    Data = null
+                };
+            if (group.OwnerId != userId)
                 return new ResponseView<List<UserModal>>
                 {
                     Code = StatusCodesEnum.Conflict,
                     Message = "You are not owner of this group",
                     Data = null
-                };   
+                };
             var userIds = context.UserGroups.Where(x => x.GroupId == groupId).Select(x => x.UserId);
-            var res =await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()
+            var res = await context.Users.Where(x => userIds.Contains(x.Id)).Select(x => new UserModal()
             {
                 Id = x.Id,
                 FirstName = x.FirstName,

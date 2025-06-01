@@ -160,4 +160,14 @@ public class AssignmentController(
             request.Limit);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+    [Authorize(Roles = "Teacher")]
+    [HttpDelete("[action]")]
+    [ProducesResponseType(typeof(AssignmentBaseModal), 200)]
+    public async Task<IResult> DeleteAssignment([FromQuery] int assignmentId)
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.DeleteAssignment(userId, assignmentId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+
 }

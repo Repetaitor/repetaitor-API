@@ -104,7 +104,6 @@ public class GroupController(
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
-    [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(List<GroupBaseModal>), 200)]
     public async Task<IResult> SearchGroup([FromQuery] string groupName)

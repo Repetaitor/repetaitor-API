@@ -64,4 +64,11 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetUserDefaultInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(UserModal), 200)]
+    public async Task<IResult> GetUserInfoById(int userId)
+    {
+        var resp = await userService.GetUserDefaultInfoAsync(userId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
 }

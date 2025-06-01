@@ -1,10 +1,13 @@
 using Core.Application.Models;
 using Core.Application.Models.DTO;
+using Core.Application.Models.DTO.Essays;
 
 namespace Core.Application.Interfaces.Repositories;
 
 public interface IAssignmentRepository
 {
+    Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId);
+    Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate, DateTime? endDate);
     Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions, int groupId,
         int essayId, DateTime dueDate);
 

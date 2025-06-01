@@ -9,6 +9,7 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IAssignmentService
 {
+    Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId);
     Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, CreateNewAssignmentsRequest request);
 
     Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request);

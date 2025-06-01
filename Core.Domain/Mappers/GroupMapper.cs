@@ -11,7 +11,7 @@ public class GroupMapper
         return new GroupBaseModal()
         {
             Id = group.Id,
-            OwnerId = group.OwnerId,
+            Owner = UserMapper.ToUserModal(group.Owner),
             CreateDate = group.CreateDate,
             GroupName = group.GroupName,
             StudentsCount = studentsCount,

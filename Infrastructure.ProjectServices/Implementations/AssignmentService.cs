@@ -9,6 +9,11 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
 {
+    public Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
+    {
+        return assignmentRepository.DeleteAssignment(userId, assignmentId);
+    }
+
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(
         int userId, CreateNewAssignmentsRequest request)
     {
