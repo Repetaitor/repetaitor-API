@@ -388,6 +388,52 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         }
     }
 
+    public async Task<ResponseView<int>> TeacherGroupsCount(int teacherId)
+    {
+        try
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = await context.Groups.CountAsync(x => x.OwnerId == teacherId && !x.IsAIGroup)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = -1
+            };
+        }
+    }
+
+    public async Task<ResponseView<int>> TeacherGroupsEnrolledStudentsCount(int teacherId)
+    {
+        try
+        {
+            var studentsCount = await context.UserGroups
+                .Include(x => x.Group)
+                .Where(x => x.Group.OwnerId == teacherId)
+                .CountAsync();
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = studentsCount
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = -1
+            };
+        }
+    }
+
     public async Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId)
     {
         try

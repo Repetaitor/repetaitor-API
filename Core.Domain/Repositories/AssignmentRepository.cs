@@ -26,7 +26,8 @@ public class AssignmentRepository(
         {
             var userGroupedCompletedAssignments = await context.UserAssignments
                 .Where(x => x.UserId == userId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
-                                              (x.SubmitDate >= fromDate && x.SubmitDate <= toDate))).GroupBy(x =>
+                                                                    (x.SubmitDate >= fromDate &&
+                                                                     x.SubmitDate <= toDate))).GroupBy(x =>
                     new { x.SubmitDate.Year, x.SubmitDate.Month })
                 .Select(g => new PerformanceStat()
                 {
@@ -148,6 +149,7 @@ public class AssignmentRepository(
                     }
                 };
             }
+
             return new ResponseView<UserScoresStatsModel>
             {
                 Code = StatusCodesEnum.Success,
@@ -899,6 +901,92 @@ public class AssignmentRepository(
                 Code = StatusCodesEnum.InternalServerError,
                 Message = ex.Message,
                 Data = []
+            };
+        }
+    }
+
+    public async Task<ResponseView<int>> GetTeacherCreatedAssignmentsCount(int teacherId)
+    {
+        try
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = await context.Assignments.CountAsync(x => x.CreatorId == teacherId)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = -1
+            };
+        }
+    }
+
+    public async Task<ResponseView<int>> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId)
+    {
+        try
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = await context.UserAssignments
+                    .Include(x => x.Assignment)
+                    .CountAsync(x => x.Assignment.CreatorId == teacherId && !x.IsEvaluated && x.StatusId == 1)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<int>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = -1
+            };
+        }
+    }
+
+    public async Task<ResponseView<GroupsPerformance>> GetTeacherGroupsPerformanceByDate(int teacherId,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
+    {
+        try
+        {
+            var groupsStats = await context.UserAssignments
+                .Include(x => x.Assignment)
+                .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated &&
+                            ((fromDate == null && toDate == null) ||
+                             (x.SubmitDate >= fromDate && x.SubmitDate <= toDate)))
+                .GroupBy(x => x.Assignment.GroupId)
+                .Select(x =>
+                    new GroupPerformanceStat()
+                    {
+                        Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(g => g.Id == x.Key)!,
+                            context.UserGroups.Count(t => t.GroupId == x.Key)),
+                        TotalScoreAvg = double.Round(x.Average(y => y.FluencyScore + y.GrammarScore), 2),
+                        GrammarScoreAvg = double.Round(x.Average(y => y.GrammarScore), 2),
+                        FluencyScoreAvg = double.Round(x.Average(y => y.FluencyScore), 2)
+                    }
+                ).ToListAsync();
+            return new ResponseView<GroupsPerformance>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new GroupsPerformance()
+                {
+                    GroupPerformanceStats = groupsStats
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<GroupsPerformance>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
             };
         }
     }

@@ -16,4 +16,6 @@ public interface IGroupRepository
     Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId);
     Task<ResponseView<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId);
     Task<ResponseView<List<GroupBaseModal>>> SearchGroup(string groupName);
+    Task<ResponseView<int>> TeacherGroupsCount(int teacherId);
+    Task<ResponseView<int>> TeacherGroupsEnrolledStudentsCount(int teacherId);
 }

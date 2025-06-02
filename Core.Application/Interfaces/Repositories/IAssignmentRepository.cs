@@ -35,4 +35,7 @@ public interface IAssignmentRepository
     Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId, int assignmentId, string statusName, int? offset,
         int? limit);
     Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
+    Task<ResponseView<int>> GetTeacherCreatedAssignmentsCount(int teacherId);
+    Task<ResponseView<int>> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId);
+    Task<ResponseView<GroupsPerformance>> GetTeacherGroupsPerformanceByDate(int teacherId, DateTime? fromDate = null, DateTime? toDate = null);
 }

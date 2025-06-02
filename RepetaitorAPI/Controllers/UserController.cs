@@ -85,4 +85,22 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetUserPerformanceAsync(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+    [Authorize(Roles = "Teacher")]
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(TeacherDashboardBaseInfo), 200)]
+    public async Task<IResult> GetTeacherDashboardInfo()
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await userService.GetTeacherDashboardHeaderInfoAsync(userId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [Authorize(Roles = "Teacher")]
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(GroupsPerformance), 200)]
+    public async Task<IResult> GetTeacherGroupsPerformanceByDate(DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await userService.GetTeacherGroupsPerformanceByDate(userId, fromDate, toDate);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
 }
