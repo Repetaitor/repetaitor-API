@@ -6,8 +6,12 @@ namespace Core.Application.Interfaces.Repositories;
 
 public interface IAssignmentRepository
 {
+    Task<ResponseView<UserPerformanceViewModel>> GetUserPerformance(int userId,  DateTime? fromDate = null, DateTime? toDate = null);
+    Task<ResponseView<UserAssignmentsStatusesStats>> GetUserAssignmentsStatusStat(int userId);
     Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId);
-    Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate, DateTime? endDate);
+
+    Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate = null,
+        DateTime? endDate = null);
     Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions, int groupId,
         int essayId, DateTime dueDate);
 

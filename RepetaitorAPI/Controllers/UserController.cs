@@ -71,4 +71,18 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetUserDefaultInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(StudentDashboardHeaderInfoViewModel), 200)]
+    public async Task<IResult> GetStudentDashboardInfo(int userId)
+    {
+        var resp = await userService.GetStudentDashboardHeaderInfoAsync(userId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(UserPerformanceViewModel), 200)]
+    public async Task<IResult> GetStudentPerformanceInfoByDate(int userId, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var resp = await userService.GetUserPerformanceAsync(userId, fromDate, toDate);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
 }

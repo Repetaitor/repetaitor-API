@@ -9,6 +9,7 @@ using Core.Domain.Entities;
 using Core.Domain.Mappers;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Domain.Repositories;
 
@@ -18,6 +19,69 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
+    public async Task<ResponseView<UserPerformanceViewModel>> GetUserPerformance(int userId, DateTime? fromDate = null,
+        DateTime? toDate = null)
+    {
+        try
+        {
+            var userGroupedCompletedAssignments = await context.UserAssignments
+                .Where(x => x.UserId == userId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
+                                              (x.SubmitDate >= fromDate && x.SubmitDate <= toDate))).GroupBy(x =>
+                    new { x.SubmitDate.Year, x.SubmitDate.Month })
+                .Select(g => new PerformanceStat()
+                {
+                    DateTime = new DateTime(g.Key.Year, g.Key.Month, 1),
+                    TotalScoreAvg = double.Round(g.Average(x => x.FluencyScore + x.GrammarScore), 2),
+                    GrammarScoreAvg = double.Round(g.Average(x => x.GrammarScore), 2),
+                    FluencyScoreAvg = double.Round(g.Average(x => x.FluencyScore), 2)
+                }).ToListAsync();
+            return new ResponseView<UserPerformanceViewModel>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new UserPerformanceViewModel()
+                {
+                    PerformanceStats = userGroupedCompletedAssignments
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<UserPerformanceViewModel>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
+
+    public async Task<ResponseView<UserAssignmentsStatusesStats>> GetUserAssignmentsStatusStat(int userId)
+    {
+        try
+        {
+            var userAssignments = context.UserAssignments.Where(x => x.UserId == userId);
+            return new ResponseView<UserAssignmentsStatusesStats>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new UserAssignmentsStatusesStats()
+                {
+                    CompletedAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 1),
+                    InProgressAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 2),
+                    PendingAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 3)
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<UserAssignmentsStatusesStats>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
+
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
         try
@@ -32,6 +96,7 @@ public class AssignmentRepository(
                     Data = null
                 };
             }
+
             if (assgn.CreatorId != userId)
             {
                 return new ResponseView<ResultResponse>()
@@ -61,22 +126,36 @@ public class AssignmentRepository(
             };
         }
     }
-    public async Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate,
-        DateTime? endDate)
+
+    public async Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         try
         {
             var res = context.UserAssignments.Where(x =>
-                x.UserId == userId && ((startDate == null && endDate == null) ||
-                                       (x.SubmitDate >= startDate && x.SubmitDate <= endDate)));
+                x.UserId == userId && x.IsEvaluated == true);
+            if (res.IsNullOrEmpty())
+            {
+                return new ResponseView<UserScoresStatsModel>()
+                {
+                    Code = StatusCodesEnum.Success,
+                    Data = new UserScoresStatsModel()
+                    {
+                        AvgTotalScore = 0,
+                        AvgGrammarScore = 0,
+                        AvgFluencyScore = 0,
+                    }
+                };
+            }
             return new ResponseView<UserScoresStatsModel>
             {
                 Code = StatusCodesEnum.Success,
                 Data = new UserScoresStatsModel()
                 {
-                    AvgTotalScore = await res.AverageAsync(x => x.FluencyScore + x.GrammarScore),
-                    AvgGrammarScore = await res.AverageAsync(x => x.GrammarScore),
-                    AvgFluencyScore = await res.AverageAsync(x => x.FluencyScore)
+                    AvgTotalScore = double.Round(await res.AverageAsync(x => x.FluencyScore + x.GrammarScore), 2),
+                    AvgGrammarScore = double.Round(await res.AverageAsync(x => x.GrammarScore), 2),
+                    AvgFluencyScore = double.Round(await res.AverageAsync(x => x.FluencyScore), 2)
                 }
             };
         }
@@ -90,6 +169,7 @@ public class AssignmentRepository(
             };
         }
     }
+
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
