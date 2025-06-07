@@ -87,8 +87,8 @@ public class AssignmentRepository(
     {
         try
         {
-            var assgn = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assgn == null)
+            var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+            if (assignment == null)
             {
                 return new ResponseView<ResultResponse>()
                 {
@@ -98,7 +98,7 @@ public class AssignmentRepository(
                 };
             }
 
-            if (assgn.CreatorId != userId)
+            if (assignment.CreatorId != userId)
             {
                 return new ResponseView<ResultResponse>()
                 {
@@ -108,7 +108,7 @@ public class AssignmentRepository(
                 };
             }
 
-            context.Assignments.Remove(assgn);
+            context.Assignments.Remove(assignment);
             await context.SaveChangesAsync();
             return new ResponseView<ResultResponse>()
             {
@@ -227,9 +227,9 @@ public class AssignmentRepository(
     {
         try
         {
-            var assgn = await context.Assignments.Include(assignment => assignment.Creator)
+            var assignment = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assgn == null)
+            if (assignment == null)
                 return new ResponseView<AssignmentBaseModal>()
                 {
                     Code = StatusCodesEnum.NotFound,
@@ -238,16 +238,16 @@ public class AssignmentRepository(
                 };
             return new ResponseView<AssignmentBaseModal>()
             {
-                Code = StatusCodesEnum.Accepted,
+                Code = StatusCodesEnum.Success,
                 Data = new AssignmentBaseModal
                 {
-                    Id = assgn.Id,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = UserMapper.ToUserModal(assgn.Creator),
-                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
+                    Id = assignment.Id,
+                    Instructions = assignment.Instructions,
+                    GroupId = assignment.GroupId,
+                    Creator = UserMapper.ToUserModal(assignment.Creator),
+                    Essay = EssayMapper.ToEssayModal(assignment.Essay),
+                    DueDate = assignment.DueDate,
+                    CreationTime = assignment.CreationTime,
                 }
             };
         }
@@ -275,31 +275,31 @@ public class AssignmentRepository(
                     Message = "Essay not found",
                     Data = null
                 };
-            var assgn = await context.Assignments.Include(assignment => assignment.Creator)
+            var assignment = await context.Assignments.Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assgn == null)
+            if (assignment == null)
                 return new ResponseView<AssignmentBaseModal>()
                 {
                     Code = StatusCodesEnum.NotFound,
                     Message = "Assignment not found",
                     Data = null
                 };
-            assgn.Instructions = instructions;
-            assgn.EssayId = essayId;
-            assgn.DueDate = dueDate;
+            assignment.Instructions = instructions;
+            assignment.EssayId = essayId;
+            assignment.DueDate = dueDate;
             await context.SaveChangesAsync();
             return new ResponseView<AssignmentBaseModal>()
             {
                 Code = StatusCodesEnum.Success,
                 Data = new AssignmentBaseModal
                 {
-                    Id = assgn.Id,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = UserMapper.ToUserModal(assgn.Creator),
-                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
+                    Id = assignment.Id,
+                    Instructions = assignment.Instructions,
+                    GroupId = assignment.GroupId,
+                    Creator = UserMapper.ToUserModal(assignment.Creator),
+                    Essay = EssayMapper.ToEssayModal(assignment.Essay),
+                    DueDate = assignment.DueDate,
+                    CreationTime = assignment.CreationTime,
                 }
             };
         }

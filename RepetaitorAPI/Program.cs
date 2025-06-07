@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RepetaitorAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,83 +32,12 @@ builder.Services.AddScoped<IAICommunicateService, AICommunicateService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "RepetaitorApi", Version = "v1" });
-
-    c.AddSecurityDefinition("Cookies", new OpenApiSecurityScheme
-    {
-        Description =
-            "Cookie-based authentication. The authentication cookie will be sent automatically by the browser.",
-        Name = ".AspNetCore.Cookies",
-        In = ParameterLocation.Cookie,
-        Type = SecuritySchemeType.ApiKey
-    });
-
-    var securityScheme = new OpenApiSecurityScheme
-    {
-        Reference = new OpenApiReference
-        {
-            Type = ReferenceType.SecurityScheme,
-            Id = "Cookies"
-        }
-    };
-
-    var securityRequirement = new OpenApiSecurityRequirement
-    {
-        { securityScheme, Array.Empty<string>() }
-    };
-
-    c.AddSecurityRequirement(securityRequirement);
-});
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie("Cookies", options =>
-{
-    options.LoginPath = "/api/User/SignIn";
-    options.Cookie.Name = ".AspNetCore.Cookies";
-    options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.Path = "/";
-    options.Cookie.HttpOnly = true; 
-    options.Cookie.MaxAge = TimeSpan.FromDays(7);
-    options.SlidingExpiration = false;
-    options.Events = new CookieAuthenticationEvents
-    {
-        OnRedirectToLogin = ctx =>
-        {
-            if (ctx.Request.Path.StartsWithSegments("/api"))
-            {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
-            else
-            {
-                ctx.Response.Redirect(ctx.RedirectUri);
-            }
-            return Task.CompletedTask;
-        },
-        OnRedirectToAccessDenied = ctx =>
-        {
-            if (ctx.Request.Path.StartsWithSegments("/api"))
-            {
-                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-            }
-            else
-            {
-                ctx.Response.Redirect(ctx.RedirectUri);
-            }
-            return Task.CompletedTask;
-        }
-    };
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: "_myAllowSpecificOrigins",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://repetaitor.netlify.app").AllowCredentials().AllowAnyMethod().AllowAnyHeader();
-        });
-});
+builder.Services.ConfigureSwaggGen();
+builder.Services.ConfigureAuthorization();
+builder.Services.ConfigureCors();
 builder.Services.AddControllers();
+
+
 var app = builder.Build();
 app.UseCors("_myAllowSpecificOrigins");
 app.UseStaticFiles();
@@ -119,6 +49,5 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-
+app.MapControllers();
 app.Run();
