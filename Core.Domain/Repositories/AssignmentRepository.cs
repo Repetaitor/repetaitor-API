@@ -960,23 +960,28 @@ public class AssignmentRepository(
                 .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated &&
                             ((fromDate == null && toDate == null) ||
                              (x.SubmitDate >= fromDate && x.SubmitDate <= toDate)))
-                .GroupBy(x => x.Assignment.GroupId)
+                .GroupBy(x => new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month})
                 .Select(x =>
-                    new GroupPerformanceStat()
+                    new GroupByDatePerformanceStat()
                     {
-                        Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(g => g.Id == x.Key)!,
-                            context.UserGroups.Count(t => t.GroupId == x.Key)),
-                        TotalScoreAvg = double.Round(x.Average(y => y.FluencyScore + y.GrammarScore), 2),
-                        GrammarScoreAvg = double.Round(x.Average(y => y.GrammarScore), 2),
-                        FluencyScoreAvg = double.Round(x.Average(y => y.FluencyScore), 2)
+                        DateTime = new DateTime(x.Key.Year, x.Key.Month, 1),
+                        GroupsPerformanceStats = x.GroupBy(t => t.Assignment.GroupId)
+                            .Select(g => new GroupPerformanceStat()
+                            {
+                                Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(v => v.Id == g.Key)!,
+                                    context.UserGroups.Count(v => v.GroupId == g.Key)),
+                                TotalScoreAvg = double.Round(g.Average(y => y.FluencyScore + y.GrammarScore), 2),
+                                GrammarScoreAvg = double.Round(g.Average(y => y.GrammarScore), 2),
+                                FluencyScoreAvg = double.Round(g.Average(y => y.FluencyScore), 2)
+                            }).ToList()
                     }
-                ).ToListAsync();
+                ).OrderBy(x => x.DateTime).ToListAsync();
             return new ResponseView<GroupsPerformance>
             {
                 Code = StatusCodesEnum.Success,
                 Data = new GroupsPerformance()
                 {
-                    GroupPerformanceStats = groupsStats
+                    GroupsPerformanceStatsByDate = groupsStats
                 }
             };
         }

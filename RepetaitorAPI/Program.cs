@@ -122,15 +122,3 @@ app.UseSwaggerUI();
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 app.Run();
-
-public partial class MyProgram
-{
-}
-
-public static class AuthOptions
-{
-    public const string ISSUER = "RepetaitorManager";
-    public const string AUDIENCE = "RepetaitorClient";
-    const string KEY = "mysupersecret_secretsecretsecretkey!123";
-    public static SymmetricSecurityKey GetSymmetricSecurityKey() => new(Encoding.UTF8.GetBytes(KEY));
-}
