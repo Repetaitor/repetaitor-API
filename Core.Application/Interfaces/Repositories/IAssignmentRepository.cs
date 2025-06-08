@@ -6,36 +6,39 @@ namespace Core.Application.Interfaces.Repositories;
 
 public interface IAssignmentRepository
 {
-    Task<ResponseView<UserPerformanceViewModel>> GetUserPerformance(int userId,  DateTime? fromDate = null, DateTime? toDate = null);
-    Task<ResponseView<UserAssignmentsStatusesStats>> GetUserAssignmentsStatusStat(int userId);
-    Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId);
+    Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null, DateTime? toDate = null);
+    Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId);
+    Task<ResultResponse> DeleteAssignment(int userId, int assignmentId);
 
-    Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId, DateTime? startDate = null,
+    Task<UserScoresStatsModel> GetAverageUserScoreByDate(int userId, DateTime? startDate = null,
         DateTime? endDate = null);
-    Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions, int groupId,
+
+    Task<AssignmentBaseModal> CreateNewAssignment(int userId, string instructions, int groupId,
         int essayId, DateTime dueDate);
 
-    Task<ResponseView<(List<AssignmentBaseModal>?, int)>> GetGroupAssignments(int userId, int groupId, int? offset, int? limit);
-    Task<ResponseView<List<StatusBaseModal>>> GetAssignmentStatuses();
-    Task<ResponseView<bool>> SaveOrSubmitAssignment(int userId, int assignmentId, string text, int wordCount, bool isSubmitted);
-    Task<ResponseView<List<StatusBaseModal>>> GetEvaluationStatuses();
-    Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserAssignments(int userId, string statusName, bool IsAIAssignment, int? offset, int? limit);
-    Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserNotSeenEvaluatedAssignments(int userId, int? offset, int? limit);
-    Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId, int assignmentId);
-    Task<ResponseView<AssignmentBaseModal>> GetAssignmentById(int assignmentId);
+    Task<(List<AssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId, int? offset, int? limit);
+    Task<List<StatusBaseModal>> GetAssignmentStatuses();
+    Task<bool> SaveOrSubmitAssignment(int userId, int assignmentId, string text, int wordCount, bool isSubmitted);
+    Task<List<StatusBaseModal>> GetEvaluationStatuses();
 
-    Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, int assignmentId, string instructions, int essayId,
+    Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId, string statusName, bool IsAIAssignment, int? offset, int? limit);
+    Task<(List<UserAssignmentBaseModal>?, int)> GetUserNotSeenEvaluatedAssignments(int userId, int? offset, int? limit);
+    Task<UserAssignmentModal> GetUserAssignment(int callerId, int userId, int assignmentId);
+    Task<AssignmentBaseModal> GetAssignmentById(int assignmentId);
+
+    Task<AssignmentBaseModal> UpdateAssignment(int userId, int assignmentId, string instructions, int essayId,
         DateTime dueDate);
 
-    Task<ResponseView<bool>> EvaluateAssignment(int teacherId, int userId, int assignmentId, int fluencyScore, int grammarScore,
+    Task<bool> EvaluateAssignment(int teacherId, int userId, int assignmentId, int fluencyScore, int grammarScore,
         List<EvaluationTextCommentModal> evaluationTextComments, List<GeneralCommentModal> generalComments);
 
-    Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetTeacherAssignments(int userId, int? offset, int? limit);
+    Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId, int? offset, int? limit);
 
-    Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId, int assignmentId, string statusName, int? offset,
+    Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId, int assignmentId, string statusName, int? offset,
         int? limit);
-    Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
-    Task<ResponseView<int>> GetTeacherCreatedAssignmentsCount(int teacherId);
-    Task<ResponseView<int>> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId);
-    Task<ResponseView<GroupsPerformance>> GetTeacherGroupsPerformanceByDate(int teacherId, DateTime? fromDate = null, DateTime? toDate = null);
+
+    Task<List<UserAssignmentViewForAI>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
+    Task<int> GetTeacherCreatedAssignmentsCount(int teacherId);
+    Task<int> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId);
+    Task<GroupsPerformance> GetTeacherGroupsPerformanceByDate(int teacherId, DateTime? fromDate = null, DateTime? toDate = null);
 }

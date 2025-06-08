@@ -19,981 +19,531 @@ public class AssignmentRepository(
     IUserRepository userRepository,
     IGroupRepository groupRepository) : IAssignmentRepository
 {
-    public async Task<ResponseView<UserPerformanceViewModel>> GetUserPerformance(int userId, DateTime? fromDate = null,
+    public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
     {
-        try
-        {
-            var userGroupedCompletedAssignments = await context.UserAssignments
-                .Where(x => x.UserId == userId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
-                                                                    (x.SubmitDate >= fromDate &&
-                                                                     x.SubmitDate <= toDate))).GroupBy(x =>
-                    new { x.SubmitDate.Year, x.SubmitDate.Month })
-                .Select(g => new PerformanceStat()
-                {
-                    DateTime = new DateTime(g.Key.Year, g.Key.Month, 1),
-                    TotalScoreAvg = double.Round(g.Average(x => x.FluencyScore + x.GrammarScore), 2),
-                    GrammarScoreAvg = double.Round(g.Average(x => x.GrammarScore), 2),
-                    FluencyScoreAvg = double.Round(g.Average(x => x.FluencyScore), 2)
-                }).ToListAsync();
-            return new ResponseView<UserPerformanceViewModel>()
+        var userGroupedCompletedAssignments = await context.UserAssignments
+            .Where(x => x.UserId == userId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
+                                                                (x.SubmitDate >= fromDate &&
+                                                                 x.SubmitDate <= toDate))).GroupBy(x =>
+                new { x.SubmitDate.Year, x.SubmitDate.Month })
+            .Select(g => new PerformanceStat()
             {
-                Code = StatusCodesEnum.Success,
-                Data = new UserPerformanceViewModel()
-                {
-                    PerformanceStats = userGroupedCompletedAssignments
-                }
-            };
-        }
-        catch (Exception ex)
+                DateTime = new DateTime(g.Key.Year, g.Key.Month, 1),
+                TotalScoreAvg = double.Round(g.Average(x => x.FluencyScore + x.GrammarScore), 2),
+                GrammarScoreAvg = double.Round(g.Average(x => x.GrammarScore), 2),
+                FluencyScoreAvg = double.Round(g.Average(x => x.FluencyScore), 2)
+            }).ToListAsync();
+        return new UserPerformanceViewModel()
         {
-            return new ResponseView<UserPerformanceViewModel>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            PerformanceStats = userGroupedCompletedAssignments
+        };
     }
 
-    public async Task<ResponseView<UserAssignmentsStatusesStats>> GetUserAssignmentsStatusStat(int userId)
+    public async Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId)
     {
-        try
+        var userAssignments = context.UserAssignments.Where(x => x.UserId == userId);
+        return new UserAssignmentsStatusesStats()
         {
-            var userAssignments = context.UserAssignments.Where(x => x.UserId == userId);
-            return new ResponseView<UserAssignmentsStatusesStats>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new UserAssignmentsStatusesStats()
-                {
-                    CompletedAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 1),
-                    InProgressAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 2),
-                    PendingAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 3)
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<UserAssignmentsStatusesStats>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            CompletedAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 1),
+            InProgressAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 2),
+            PendingAssignmentsCount = await userAssignments.CountAsync(x => x.StatusId == 3)
+        };
     }
 
-    public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
+    public async Task<ResultResponse> DeleteAssignment(int userId, int assignmentId)
     {
-        try
+        var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if (assignment == null)
         {
-            var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assignment == null)
-            {
-                return new ResponseView<ResultResponse>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Assignment not found",
-                    Data = null
-                };
-            }
-
-            if (assignment.CreatorId != userId)
-            {
-                return new ResponseView<ResultResponse>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this assignment",
-                    Data = null
-                };
-            }
-
-            context.Assignments.Remove(assignment);
-            await context.SaveChangesAsync();
-            return new ResponseView<ResultResponse>()
-            {
-                Code = StatusCodesEnum.Success,
-                Message = "Assignment deleted successfully",
-                Data = new ResultResponse() { Result = true }
-            };
+            throw new Exception("Assignment not found");
         }
-        catch (Exception ex)
+
+        if (assignment.CreatorId != userId)
         {
-            return new ResponseView<ResultResponse>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
+            throw new Exception("You are not the owner of this assignment");
         }
+
+        context.Assignments.Remove(assignment);
+        await context.SaveChangesAsync();
+        return new ResultResponse()
+        {
+            Result = true
+        };
     }
 
-    public async Task<ResponseView<UserScoresStatsModel>> GetAverageUserScoreByDate(int userId,
+    public async Task<UserScoresStatsModel> GetAverageUserScoreByDate(int userId,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
-        try
+        var res = context.UserAssignments.Where(x =>
+            x.UserId == userId && x.IsEvaluated == true);
+        if (res.IsNullOrEmpty())
         {
-            var res = context.UserAssignments.Where(x =>
-                x.UserId == userId && x.IsEvaluated == true);
-            if (res.IsNullOrEmpty())
+            return new UserScoresStatsModel()
             {
-                return new ResponseView<UserScoresStatsModel>()
-                {
-                    Code = StatusCodesEnum.Success,
-                    Data = new UserScoresStatsModel()
-                    {
-                        AvgTotalScore = 0,
-                        AvgGrammarScore = 0,
-                        AvgFluencyScore = 0,
-                    }
-                };
-            }
+                AvgTotalScore = 0,
+                AvgGrammarScore = 0,
+                AvgFluencyScore = 0,
+            };
+        }
 
-            return new ResponseView<UserScoresStatsModel>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new UserScoresStatsModel()
-                {
-                    AvgTotalScore = double.Round(await res.AverageAsync(x => x.FluencyScore + x.GrammarScore), 2),
-                    AvgGrammarScore = double.Round(await res.AverageAsync(x => x.GrammarScore), 2),
-                    AvgFluencyScore = double.Round(await res.AverageAsync(x => x.FluencyScore), 2)
-                }
-            };
-        }
-        catch (Exception ex)
+        return new UserScoresStatsModel()
         {
-            return new ResponseView<UserScoresStatsModel>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            AvgTotalScore = double.Round(await res.AverageAsync(x => x.FluencyScore + x.GrammarScore), 2),
+            AvgGrammarScore = double.Round(await res.AverageAsync(x => x.GrammarScore), 2),
+            AvgFluencyScore = double.Round(await res.AverageAsync(x => x.FluencyScore), 2)
+        };
     }
 
-    public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, string instructions,
+    public async Task<AssignmentBaseModal> CreateNewAssignment(int userId, string instructions,
         int groupId, int essayId, DateTime dueDate)
     {
-        try
+        if (!context.Groups.Any(x => x.OwnerId == userId && x.Id == groupId))
+            throw new Exception("You are not the owner of this group");
+        if (!context.Essays.Any(x => x.Id == essayId && x.CreatorId == userId))
+            throw new Exception("Essay not found or you are not the owner of this essay");
+        await using var conn = new SqlConnection(context.Database.GetConnectionString());
+        await using var cmd = new SqlCommand("CreateNewAssignment", conn);
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        cmd.Parameters.AddWithValue("@instructions", instructions);
+        cmd.Parameters.AddWithValue("@group", groupId);
+        cmd.Parameters.AddWithValue("@essay", essayId);
+        cmd.Parameters.AddWithValue("@dueDate", dueDate);
+        cmd.Parameters.AddWithValue("@creator", userId);
+        var outputParam = new SqlParameter("@newAssignmentId", SqlDbType.Int)
         {
-            if (!context.Groups.Any(x => x.OwnerId == userId && x.Id == groupId))
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this group or group does not exist",
-                    Data = null
-                };
-            if (!context.Essays.Any(x => x.Id == essayId && x.CreatorId == userId))
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this essay or essay does not exist",
-                    Data = null
-                };
-            await using var conn = new SqlConnection(context.Database.GetConnectionString());
-            await using var cmd = new SqlCommand("CreateNewAssignment", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
+            Direction = ParameterDirection.Output
+        };
+        cmd.Parameters.Add(outputParam);
 
-            cmd.Parameters.AddWithValue("@instructions", instructions);
-            cmd.Parameters.AddWithValue("@group", groupId);
-            cmd.Parameters.AddWithValue("@essay", essayId);
-            cmd.Parameters.AddWithValue("@dueDate", dueDate);
-            cmd.Parameters.AddWithValue("@creator", userId);
-            var outputParam = new SqlParameter("@newAssignmentId", SqlDbType.Int)
-            {
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(outputParam);
+        conn.Open();
+        cmd.ExecuteNonQuery();
 
-            conn.Open();
-            cmd.ExecuteNonQuery();
-
-            var newAssignmentId = (int)outputParam.Value;
-            return await GetAssignmentById(newAssignmentId);
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+        var newAssignmentId = (int)outputParam.Value;
+        return await GetAssignmentById(newAssignmentId);
     }
 
-    public async Task<ResponseView<AssignmentBaseModal>> GetAssignmentById(int assignmentId)
+    public async Task<AssignmentBaseModal> GetAssignmentById(int assignmentId)
     {
-        try
+        var assignment = await context.Assignments.Include(assignment => assignment.Creator)
+            .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if (assignment == null)
+            throw new Exception("Assignment not found");
+        return new AssignmentBaseModal
         {
-            var assignment = await context.Assignments.Include(assignment => assignment.Creator)
-                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assignment == null)
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Assignment not found",
-                    Data = null
-                };
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new AssignmentBaseModal
-                {
-                    Id = assignment.Id,
-                    Instructions = assignment.Instructions,
-                    GroupId = assignment.GroupId,
-                    Creator = UserMapper.ToUserModal(assignment.Creator),
-                    Essay = EssayMapper.ToEssayModal(assignment.Essay),
-                    DueDate = assignment.DueDate,
-                    CreationTime = assignment.CreationTime,
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            Id = assignment.Id,
+            Instructions = assignment.Instructions,
+            GroupId = assignment.GroupId,
+            Creator = UserMapper.ToUserModal(assignment.Creator),
+            Essay = EssayMapper.ToEssayModal(assignment.Essay),
+            DueDate = assignment.DueDate,
+            CreationTime = assignment.CreationTime,
+        };
     }
 
-    public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, int assignmentId,
+    public async Task<AssignmentBaseModal> UpdateAssignment(int userId, int assignmentId,
         string instructions,
         int essayId, DateTime dueDate)
     {
-        try
+        if (!await context.Essays.AnyAsync(x => x.Id == essayId))
+            throw new Exception("Essay not found");
+        var assignment = await context.Assignments.Include(assignment => assignment.Creator)
+            .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if (assignment == null)
+            throw new Exception("Assignment not found");
+        assignment.Instructions = instructions;
+        assignment.EssayId = essayId;
+        assignment.DueDate = dueDate;
+        await context.SaveChangesAsync();
+        return new AssignmentBaseModal
         {
-            if (!await context.Essays.AnyAsync(x => x.Id == essayId))
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Essay not found",
-                    Data = null
-                };
-            var assignment = await context.Assignments.Include(assignment => assignment.Creator)
-                .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assignment == null)
-                return new ResponseView<AssignmentBaseModal>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Assignment not found",
-                    Data = null
-                };
-            assignment.Instructions = instructions;
-            assignment.EssayId = essayId;
-            assignment.DueDate = dueDate;
-            await context.SaveChangesAsync();
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new AssignmentBaseModal
-                {
-                    Id = assignment.Id,
-                    Instructions = assignment.Instructions,
-                    GroupId = assignment.GroupId,
-                    Creator = UserMapper.ToUserModal(assignment.Creator),
-                    Essay = EssayMapper.ToEssayModal(assignment.Essay),
-                    DueDate = assignment.DueDate,
-                    CreationTime = assignment.CreationTime,
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<AssignmentBaseModal>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            Id = assignment.Id,
+            Instructions = assignment.Instructions,
+            GroupId = assignment.GroupId,
+            Creator = UserMapper.ToUserModal(assignment.Creator),
+            Essay = EssayMapper.ToEssayModal(assignment.Essay),
+            DueDate = assignment.DueDate,
+            CreationTime = assignment.CreationTime,
+        };
     }
 
-    public async Task<ResponseView<bool>> EvaluateAssignment(int teacherId, int userId, int assignmentId,
+    public async Task<bool> EvaluateAssignment(int teacherId, int userId, int assignmentId,
         int fluencyScore,
         int grammarScore,
         List<EvaluationTextCommentModal> evaluationTextComments, List<GeneralCommentModal> generalComments)
     {
-        try
+        var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if (assignment == null || assignment.CreatorId != teacherId)
+            throw new Exception("You are not the owner of this assignment");
+        var userAssgn =
+            await context.UserAssignments.FirstOrDefaultAsync(x =>
+                x.AssignmentId == assignmentId && x.UserId == userId);
+        if (userAssgn is not { StatusId: 1 })
+            throw new Exception("You can only evaluate submitted assignments");
+        userAssgn.FluencyScore = fluencyScore;
+        userAssgn.GrammarScore = grammarScore;
+        userAssgn.IsEvaluated = true;
+        var textComments = evaluationTextComments.Select(x => new EvaluationTextComment()
         {
-            var assignment = await context.Assignments.FirstOrDefaultAsync(x => x.Id == assignmentId);
-            if (assignment == null || assignment.CreatorId != teacherId)
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this assignment",
-                    Data = false
-                };
-            var userAssgn =
-                await context.UserAssignments.FirstOrDefaultAsync(x =>
-                    x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn is not { StatusId: 1 })
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "This assignment is not submitted",
-                    Data = false
-                };
-            userAssgn.FluencyScore = fluencyScore;
-            userAssgn.GrammarScore = grammarScore;
-            userAssgn.IsEvaluated = true;
-            var textComments = evaluationTextComments.Select(x => new EvaluationTextComment()
-            {
-                UserAssignmentId = userAssgn.Id,
-                StatusId = x.StatusId,
-                StartIndex = x.StartIndex,
-                EndIndex = x.EndIndex,
-                Comment = x.Comment,
-            }).ToList();
-            var generalCommentList = generalComments.Select(x => new GeneralComment()
-            {
-                UserAssignmentId = userAssgn.Id,
-                StatusId = x.StatusId,
-                Comment = x.Comment,
-            }).ToList();
-            await context.EvaluationTextComments.AddRangeAsync(textComments);
-            await context.GeneralComments.AddRangeAsync(generalCommentList);
-            await context.SaveChangesAsync();
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = true
-            };
-        }
-        catch (Exception ex)
+            UserAssignmentId = userAssgn.Id,
+            StatusId = x.StatusId,
+            StartIndex = x.StartIndex,
+            EndIndex = x.EndIndex,
+            Comment = x.Comment,
+        }).ToList();
+        var generalCommentList = generalComments.Select(x => new GeneralComment()
         {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = false
-            };
-        }
+            UserAssignmentId = userAssgn.Id,
+            StatusId = x.StatusId,
+            Comment = x.Comment,
+        }).ToList();
+        await context.EvaluationTextComments.AddRangeAsync(textComments);
+        await context.GeneralComments.AddRangeAsync(generalCommentList);
+        await context.SaveChangesAsync();
+        return true;
     }
 
-    public async Task<ResponseView<(List<AssignmentBaseModal>?, int)>> GetGroupAssignments(int userId, int groupId,
+    public async Task<(List<AssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId,
         int? offset,
         int? limit)
     {
-        try
-        {
-            var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
-            if (!group)
-                return new ResponseView<(List<AssignmentBaseModal>?, int)>
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this group",
-                    Data = (null, 0)
-                };
-            var assignments = await context.Assignments
-                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
-                .Take(limit ?? 5)
-                .Include(assignment => assignment.Creator)
-                .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
-                {
-                    Id = assgn.Id,
-                    Instructions = assgn.Instructions,
-                    GroupId = assgn.GroupId,
-                    Creator = UserMapper.ToUserModal(assgn.Creator),
-                    Essay = EssayMapper.ToEssayModal(assgn.Essay),
-                    DueDate = assgn.DueDate,
-                    CreationTime = assgn.CreationTime,
-                }).ToListAsync();
-            var cnt = await context.Assignments
-                .CountAsync(x => x.GroupId == groupId);
-            return new ResponseView<(List<AssignmentBaseModal>?, int)>
+        var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
+        if (!group)
+            throw new Exception("You are not the owner of this group");
+        var assignments = await context.Assignments
+            .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
+            .Take(limit ?? 5)
+            .Include(assignment => assignment.Creator)
+            .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
             {
-                Code = StatusCodesEnum.Success,
-                Data = (assignments, cnt)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<(List<AssignmentBaseModal>?, int)>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = (null, 0)
-            };
-        }
+                Id = assgn.Id,
+                Instructions = assgn.Instructions,
+                GroupId = assgn.GroupId,
+                Creator = UserMapper.ToUserModal(assgn.Creator),
+                Essay = EssayMapper.ToEssayModal(assgn.Essay),
+                DueDate = assgn.DueDate,
+                CreationTime = assgn.CreationTime,
+            }).ToListAsync();
+        var cnt = await context.Assignments
+            .CountAsync(x => x.GroupId == groupId);
+        return (assignments, cnt);
     }
 
-    public async Task<ResponseView<List<StatusBaseModal>>> GetAssignmentStatuses()
+    public async Task<List<StatusBaseModal>> GetAssignmentStatuses()
     {
-        try
+        return await context.AssignmentStatuses.Select(s => new StatusBaseModal()
         {
-            var res = await context.AssignmentStatuses.Select(s => new StatusBaseModal()
-            {
-                Id = s.Id,
-                Name = s.Name,
-            }).OrderBy(x => x.Name).ToListAsync();
-            return new ResponseView<List<StatusBaseModal>>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = res
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<List<StatusBaseModal>>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = []
-            };
-        }
+            Id = s.Id,
+            Name = s.Name,
+        }).OrderBy(x => x.Name).ToListAsync();
     }
 
-    public async Task<ResponseView<bool>> SaveOrSubmitAssignment(int userId, int assignmentId, string text,
+    public async Task<bool> SaveOrSubmitAssignment(int userId, int assignmentId, string text,
         int wordCount,
         bool isSubmitted)
     {
-        try
-        {
-            var userAssgn =
-                await context.UserAssignments.FirstOrDefaultAsync(x =>
-                    x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn == null || userAssgn.StatusId == 1)
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You have already submitted this assignment",
-                    Data = false
-                };
-            userAssgn.Text = text;
-            userAssgn.WordCount = wordCount;
-            userAssgn.StatusId = isSubmitted ? 1 : 2;
-            userAssgn.SubmitDate = isSubmitted ? DateTime.Now : default;
-            await context.SaveChangesAsync();
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = false
-            };
-        }
+        var userAssgn =
+            await context.UserAssignments.FirstOrDefaultAsync(x =>
+                x.AssignmentId == assignmentId && x.UserId == userId);
+        if (userAssgn == null || userAssgn.StatusId == 1)
+            throw new Exception("You can only save or submit assignments that are in progress");
+        userAssgn.Text = text;
+        userAssgn.WordCount = wordCount;
+        userAssgn.StatusId = isSubmitted ? 1 : 2;
+        userAssgn.SubmitDate = isSubmitted ? DateTime.Now : default;
+        await context.SaveChangesAsync();
+        return true;
     }
 
-    public async Task<ResponseView<List<StatusBaseModal>>> GetEvaluationStatuses()
+    public async Task<List<StatusBaseModal>> GetEvaluationStatuses()
     {
-        try
+        return await context.EvaluationCommentsStatuses.Select(s => new StatusBaseModal()
         {
-            var res = await context.EvaluationCommentsStatuses.Select(s => new StatusBaseModal()
-            {
-                Id = s.Id,
-                Name = s.Name,
-            }).OrderBy(x => x.Name).ToListAsync();
-            return new ResponseView<List<StatusBaseModal>>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = res
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<List<StatusBaseModal>>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = []
-            };
-        }
+            Id = s.Id,
+            Name = s.Name,
+        }).OrderBy(x => x.Name).ToListAsync();
     }
 
     private async Task<StatusBaseModal?> GetAssignmentStatusById(int statusId)
     {
-        try
+        var status = await context.AssignmentStatuses.FirstOrDefaultAsync(x => x.Id == statusId);
+        if (status == null) return null;
+        return new StatusBaseModal()
         {
-            var status = await context.AssignmentStatuses.FirstOrDefaultAsync(x => x.Id == statusId);
-            if (status == null) return null;
-            return new StatusBaseModal()
-            {
-                Id = status.Id,
-                Name = status.Name,
-            };
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+            Id = status.Id,
+            Name = status.Name,
+        };
     }
 
     private async Task<StatusBaseModal?> GetEvaluationStatusById(int statusId)
     {
-        try
+        var status = await context.AssignmentStatuses.FirstOrDefaultAsync(x => x.Id == statusId);
+        if (status == null) return null;
+        return new StatusBaseModal()
         {
-            var status = await context.AssignmentStatuses.FirstOrDefaultAsync(x => x.Id == statusId);
-            if (status == null) return null;
-            return new StatusBaseModal()
-            {
-                Id = status.Id,
-                Name = status.Name,
-            };
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+            Id = status.Id,
+            Name = status.Name,
+        };
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserAssignments(int userId,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId,
         string statusName,
         bool IsAIAssignment, int? offset,
         int? limit)
     {
-        try
-        {
-            var userAssgns =
-                await context.UserAssignments
-                    .Include(x => x.Status)
-                    .Include(x => x.Assignment)
-                    .ThenInclude(a => a.Creator)
-                    .Include(x => x.Assignment)
-                    .ThenInclude(a => a.Essay)
-                    .Include(x => x.Assignment)
-                    .ThenInclude(a => a.Group)
-                    .Include(userAssignment => userAssignment.User)
-                    .Where(x => x.UserId == userId &&
-                                (statusName == string.Empty || x.Status.Name == statusName) &&
-                                x.Assignment.Group.IsAIGroup == IsAIAssignment)
-                    .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
-                    .Take(limit ?? 5).Select(x =>
-                        new UserAssignmentBaseModal()
-                        {
-                            Student = UserMapper.ToUserModal(x.User),
-                            Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
-                            Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
-                            IsEvaluated = x.IsEvaluated,
-                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
-                            ActualWordCount = x.WordCount,
-                            SubmitDate = x.SubmitDate,
-                        }).ToListAsync();
-            var cnt = await context.UserAssignments.Include(x => x.Status)
-                .CountAsync(x =>
-                    x.UserId == userId &&
-                    (statusName == string.Empty ||
-                     x.Status.Name == statusName));
-            return new ResponseView<(List<UserAssignmentBaseModal>?, int)>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = (userAssgns, cnt)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<(List<UserAssignmentBaseModal>?, int)>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = (null, 0)
-            };
-        }
-    }
-
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetUserNotSeenEvaluatedAssignments(
-        int userId, int? offset,
-        int? limit)
-    {
-        try
-        {
-            var user = await userRepository.GetUserInfo(userId);
-            if (user.Code != 0 || user.Data == null)
-                return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "User not found",
-                    Data = (null, 0)
-                });
-            var group = await groupRepository.GetStudentGroup(userId);
-            if (group.Data == null)
-                return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Group not found",
-                    Data = (null, 0)
-                });
-            var assignmentIds =
-                await context.Assignments.Where(x => x.GroupId == group.Data.Id).Select(x => x.Id).ToListAsync();
-
-            var assignments = await context.UserAssignments
-                .Where(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
-                            !x.FeedbackSeen).Skip(offset ?? 0).Take(limit ?? 5).Include(x => x.User)
+        var userAssgns =
+            await context.UserAssignments
+                .Include(x => x.Status)
                 .Include(x => x.Assignment)
                 .ThenInclude(a => a.Creator)
                 .Include(x => x.Assignment)
-                .ThenInclude(a => a.Essay).Include(x => x.Status)
-                .Select(x => new UserAssignmentBaseModal()
-                {
-                    Student = UserMapper.ToUserModal(x.User),
-                    Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
-                    Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
-                    TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
-                    IsEvaluated = x.IsEvaluated,
-                    ActualWordCount = x.WordCount,
-                    SubmitDate = x.SubmitDate
-                }).ToListAsync();
-            var cnt = await context.UserAssignments
-                .CountAsync(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
-                                 !x.FeedbackSeen);
+                .ThenInclude(a => a.Essay)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Group)
+                .Include(userAssignment => userAssignment.User)
+                .Where(x => x.UserId == userId &&
+                            (statusName == string.Empty || x.Status.Name == statusName) &&
+                            x.Assignment.Group.IsAIGroup == IsAIAssignment)
+                .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
+                .Take(limit ?? 5).Select(x =>
+                    new UserAssignmentBaseModal()
+                    {
+                        Student = UserMapper.ToUserModal(x.User),
+                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                        IsEvaluated = x.IsEvaluated,
+                        TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                        ActualWordCount = x.WordCount,
+                        SubmitDate = x.SubmitDate,
+                    }).ToListAsync();
+        var cnt = await context.UserAssignments.Include(x => x.Status)
+            .CountAsync(x =>
+                x.UserId == userId &&
+                (statusName == string.Empty ||
+                 x.Status.Name == statusName));
+        return (userAssgns, cnt);
+    }
 
-            return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserNotSeenEvaluatedAssignments(
+        int userId, int? offset,
+        int? limit)
+    {
+        var user = await userRepository.GetUserInfo(userId);
+        if (user == null)
+            throw new Exception("User not found");
+        var group = await groupRepository.GetStudentGroup(userId);
+        var assignmentIds =
+            await context.Assignments.Where(x => x.GroupId == group.Id).Select(x => x.Id).ToListAsync();
+
+        var assignments = await context.UserAssignments
+            .Where(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
+                        !x.FeedbackSeen).Skip(offset ?? 0).Take(limit ?? 5).Include(x => x.User)
+            .Include(x => x.Assignment)
+            .ThenInclude(a => a.Creator)
+            .Include(x => x.Assignment)
+            .ThenInclude(a => a.Essay).Include(x => x.Status)
+            .Select(x => new UserAssignmentBaseModal()
             {
-                Code = StatusCodesEnum.Success,
-                Data = (assignments, cnt)
-            });
-        }
-        catch (Exception ex)
-        {
-            return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = (null, 0)
-            });
-        }
+                Student = UserMapper.ToUserModal(x.User),
+                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                IsEvaluated = x.IsEvaluated,
+                ActualWordCount = x.WordCount,
+                SubmitDate = x.SubmitDate
+            }).ToListAsync();
+        var cnt = await context.UserAssignments
+            .CountAsync(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
+                             !x.FeedbackSeen);
+
+        return (assignments, cnt);
     }
 
     private async Task<List<GeneralCommentModal>?> GetGeneralComments(int userId, int assignmentId)
     {
-        try
-        {
-            var userAssgn =
-                await context.UserAssignments.FirstOrDefaultAsync(x =>
-                    x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn == null) return [];
-            var genComets = await context.GeneralComments.Where(x => x.UserAssignmentId == userAssgn.Id).Select(x =>
-                new GeneralCommentModal()
-                {
-                    Comment = x.Comment,
-                    StatusId = x.StatusId,
-                }).ToListAsync();
-            return genComets;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        var userAssgn =
+            await context.UserAssignments.FirstOrDefaultAsync(x =>
+                x.AssignmentId == assignmentId && x.UserId == userId);
+        if (userAssgn == null) return [];
+        var genComets = await context.GeneralComments.Where(x => x.UserAssignmentId == userAssgn.Id).Select(x =>
+            new GeneralCommentModal()
+            {
+                Comment = x.Comment,
+                StatusId = x.StatusId,
+            }).ToListAsync();
+        return genComets;
     }
 
     private async Task<List<EvaluationTextCommentModal>?> GetEvaluationTextComments(int userId, int assignmentId)
     {
-        try
-        {
-            var userAssgn =
-                await context.UserAssignments.FirstOrDefaultAsync(x =>
-                    x.AssignmentId == assignmentId && x.UserId == userId);
-            if (userAssgn == null) return [];
-            var evalTextComets = await context.EvaluationTextComments.Where(x => x.UserAssignmentId == userAssgn.Id)
-                .Select(x =>
-                    new EvaluationTextCommentModal()
-                    {
-                        StartIndex = x.StartIndex,
-                        EndIndex = x.EndIndex,
-                        Comment = x.Comment,
-                        StatusId = x.StatusId,
-                    }).ToListAsync();
-            return evalTextComets;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        var userAssgn =
+            await context.UserAssignments.FirstOrDefaultAsync(x =>
+                x.AssignmentId == assignmentId && x.UserId == userId);
+        if (userAssgn == null) return [];
+        var evalTextComets = await context.EvaluationTextComments.Where(x => x.UserAssignmentId == userAssgn.Id)
+            .Select(x =>
+                new EvaluationTextCommentModal()
+                {
+                    StartIndex = x.StartIndex,
+                    EndIndex = x.EndIndex,
+                    Comment = x.Comment,
+                    StatusId = x.StatusId,
+                }).ToListAsync();
+        return evalTextComets;
     }
 
-    public async Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId, int assignmentId)
+    public async Task<UserAssignmentModal> GetUserAssignment(int callerId, int userId, int assignmentId)
     {
-        try
+        var assgn = await context.UserAssignments
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
+        if (assgn == null)
+            throw new Exception("Assignment not found for this user");
+        if (callerId == assgn.UserId && assgn.IsEvaluated)
         {
-            var assgn = await context.UserAssignments
-                .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
-            if (assgn == null)
-                return new ResponseView<UserAssignmentModal>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Assignment not found",
-                    Data = null
-                };
-            if (callerId == assgn.UserId && assgn.IsEvaluated)
-            {
-                assgn.FeedbackSeen = true;
-                await context.SaveChangesAsync();
-            }
+            assgn.FeedbackSeen = true;
+            await context.SaveChangesAsync();
+        }
 
-            return new ResponseView<UserAssignmentModal>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new UserAssignmentModal()
-                {
-                    AssignDate = assgn.AssignDate,
-                    FeedbackSeen = assgn.FeedbackSeen,
-                    FluencyScore = assgn.FluencyScore,
-                    GrammarScore = assgn.GrammarScore,
-                    AssignmentId = assgn.AssignmentId,
-                    Status = await GetAssignmentStatusById(assgn.StatusId),
-                    Text = assgn.Text,
-                    WordCount = assgn.WordCount,
-                    UserId = assgn.UserId,
-                    IsEvaluated = assgn.IsEvaluated,
-                    GeneralComments = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
-                    EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? []
-                }
-            };
-        }
-        catch (Exception ex)
+        return new UserAssignmentModal()
         {
-            return new ResponseView<UserAssignmentModal>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            AssignDate = assgn.AssignDate,
+            FeedbackSeen = assgn.FeedbackSeen,
+            FluencyScore = assgn.FluencyScore,
+            GrammarScore = assgn.GrammarScore,
+            AssignmentId = assgn.AssignmentId,
+            Status = await GetAssignmentStatusById(assgn.StatusId),
+            Text = assgn.Text,
+            WordCount = assgn.WordCount,
+            UserId = assgn.UserId,
+            IsEvaluated = assgn.IsEvaluated,
+            GeneralComments = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
+            EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? []
+        };
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetTeacherAssignments(int userId,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId,
         int? offset, int? limit)
     {
-        try
-        {
-            var studentsSubmitAssignments = await context.UserAssignments.Include(x => x.User)
-                .Include(x => x.Assignment).ThenInclude(x => x.Creator)
-                .Include(x => x.Assignment)
-                .ThenInclude(a => a.Essay)
-                .Include(x => x.Status)
-                .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId).Skip(offset ?? 0)
-                .Take(limit ?? 5).Select(x => new UserAssignmentBaseModal()
-                {
-                    Student = UserMapper.ToUserModal(x.User),
-                    Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
-                    Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
-                    TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
-                    ActualWordCount = x.WordCount,
-                    SubmitDate = x.SubmitDate
-                }).ToListAsync();
-            var cnt = await context.UserAssignments
-                .CountAsync(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId);
-            return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
+        var studentsSubmitAssignments = await context.UserAssignments.Include(x => x.User)
+            .Include(x => x.Assignment).ThenInclude(x => x.Creator)
+            .Include(x => x.Assignment)
+            .ThenInclude(a => a.Essay)
+            .Include(x => x.Status)
+            .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId).Skip(offset ?? 0)
+            .Take(limit ?? 5).Select(x => new UserAssignmentBaseModal()
             {
-                Code = StatusCodesEnum.Success,
-                Data = (studentsSubmitAssignments, cnt)
-            });
-        }
-        catch (Exception ex)
-        {
-            return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = (null, 0)
-            });
-        }
+                Student = UserMapper.ToUserModal(x.User),
+                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                ActualWordCount = x.WordCount,
+                SubmitDate = x.SubmitDate
+            }).ToListAsync();
+        var cnt = await context.UserAssignments
+            .CountAsync(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId);
+        return (studentsSubmitAssignments, cnt);
     }
 
-    public async Task<ResponseView<(List<UserAssignmentBaseModal>?, int)>> GetAssigmentUsersTasks(int userId,
+    public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId,
         int assignmentId,
         string statusName,
         int? offset,
         int? limit)
     {
-        try
-        {
-            if (!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId))
-                return (new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "You are not the owner of this assignment",
-                    Data = (null, 0)
-                });
-            var userAssgns =
-                await context.UserAssignments.Include(userAssignment => userAssignment.User)
-                    .Include(x => x.Assignment)
-                    .ThenInclude(a => a.Creator)
-                    .Include(x => x.Assignment)
-                    .ThenInclude(a => a.Essay)
-                    .Include(userAssignment => userAssignment.Status).Where(x =>
-                        x.AssignmentId == assignmentId &&
-                        (statusName == string.Empty || x.Status.Name == statusName.ToLower()))
-                    .OrderBy(x => x.StatusId).Skip(offset ?? 0)
-                    .Take(limit ?? 10).Select(x =>
-                        new UserAssignmentBaseModal()
-                        {
-                            Student = UserMapper.ToUserModal(x.User),
-                            Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
-                            Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
-                            IsEvaluated = x.IsEvaluated,
-                            TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
-                            ActualWordCount = x.WordCount,
-                            SubmitDate = x.SubmitDate,
-                        }).ToListAsync();
-            var cnt = await context.UserAssignments.CountAsync(x =>
-                x.AssignmentId == assignmentId &&
-                (statusName == string.Empty || x.Status.Name == statusName.ToLower()));
-            return new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = (userAssgns, cnt)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<(List<UserAssignmentBaseModal>?, int)>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = (null, 0)
-            };
-        }
+        if (!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId))
+            throw new Exception("You are not the owner of this assignment");
+        var userAssgns =
+            await context.UserAssignments.Include(userAssignment => userAssignment.User)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Creator)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Essay)
+                .Include(userAssignment => userAssignment.Status).Where(x =>
+                    x.AssignmentId == assignmentId &&
+                    (statusName == string.Empty || x.Status.Name == statusName.ToLower()))
+                .OrderBy(x => x.StatusId).Skip(offset ?? 0)
+                .Take(limit ?? 10).Select(x =>
+                    new UserAssignmentBaseModal()
+                    {
+                        Student = UserMapper.ToUserModal(x.User),
+                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                        IsEvaluated = x.IsEvaluated,
+                        TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                        ActualWordCount = x.WordCount,
+                        SubmitDate = x.SubmitDate,
+                    }).ToListAsync();
+        var cnt = await context.UserAssignments.CountAsync(x =>
+            x.AssignmentId == assignmentId &&
+            (statusName == string.Empty || x.Status.Name == statusName.ToLower()));
+        return (userAssgns, cnt);
     }
 
     public bool DeleteAllAssignments()
     {
-        try
-        {
-            context.Assignments.RemoveRange(context.Assignments);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            return false;
-        }
+        context.Assignments.RemoveRange(context.Assignments);
+        return true;
     }
 
-    public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId,
+    public async Task<List<UserAssignmentViewForAI>> GetUserAssignmentViewForAI(int aiTeacherId,
         int count)
     {
-        try
-        {
-            var userAssgns = await context.UserAssignments.Include(u => u.Assignment)
-                .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1)
-                .Take(count)
-                .Select(x => new UserAssignmentViewForAI()
-                {
-                    UserId = x.UserId,
-                    AssignmentId = x.AssignmentId,
-                    EssayTitle = x.Assignment.Essay.EssayTitle,
-                    EssayText = x.Text,
-                    ExpectedWordCount = x.Assignment.Essay.ExpectedWordCount
-                }).ToListAsync();
-            return new ResponseView<List<UserAssignmentViewForAI>>()
+        return await context.UserAssignments.Include(u => u.Assignment)
+            .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1)
+            .Take(count)
+            .Select(x => new UserAssignmentViewForAI()
             {
-                Code = StatusCodesEnum.Success,
-                Data = userAssgns
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<List<UserAssignmentViewForAI>>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = []
-            };
-        }
+                UserId = x.UserId,
+                AssignmentId = x.AssignmentId,
+                EssayTitle = x.Assignment.Essay.EssayTitle,
+                EssayText = x.Text,
+                ExpectedWordCount = x.Assignment.Essay.ExpectedWordCount
+            }).ToListAsync();
     }
 
-    public async Task<ResponseView<int>> GetTeacherCreatedAssignmentsCount(int teacherId)
+    public async Task<int> GetTeacherCreatedAssignmentsCount(int teacherId)
     {
-        try
-        {
-            return new ResponseView<int>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = await context.Assignments.CountAsync(x => x.CreatorId == teacherId)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<int>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = -1
-            };
-        }
+        return await context.Assignments.CountAsync(x => x.CreatorId == teacherId);
     }
 
-    public async Task<ResponseView<int>> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId)
+    public async Task<int> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId)
     {
-        try
-        {
-            return new ResponseView<int>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = await context.UserAssignments
-                    .Include(x => x.Assignment)
-                    .CountAsync(x => x.Assignment.CreatorId == teacherId && !x.IsEvaluated && x.StatusId == 1)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<int>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = -1
-            };
-        }
+        return await context.UserAssignments
+            .Include(x => x.Assignment)
+            .CountAsync(x => x.Assignment.CreatorId == teacherId && !x.IsEvaluated && x.StatusId == 1);
     }
 
-    public async Task<ResponseView<GroupsPerformance>> GetTeacherGroupsPerformanceByDate(int teacherId,
+    public async Task<GroupsPerformance> GetTeacherGroupsPerformanceByDate(int teacherId,
         DateTime? fromDate = null,
         DateTime? toDate = null)
     {
-        try
-        {
-            var groupsStats = await context.UserAssignments
-                .Include(x => x.Assignment)
-                .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated &&
-                            ((fromDate == null && toDate == null) ||
-                             (x.SubmitDate >= fromDate && x.SubmitDate <= toDate)))
-                .GroupBy(x => new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month})
-                .Select(x =>
-                    new GroupByDatePerformanceStat()
-                    {
-                        DateTime = new DateTime(x.Key.Year, x.Key.Month, 1),
-                        GroupsPerformanceStats = x.GroupBy(t => t.Assignment.GroupId)
-                            .Select(g => new GroupPerformanceStat()
-                            {
-                                Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(v => v.Id == g.Key)!,
-                                    context.UserGroups.Count(v => v.GroupId == g.Key)),
-                                TotalScoreAvg = double.Round(g.Average(y => y.FluencyScore + y.GrammarScore), 2),
-                                GrammarScoreAvg = double.Round(g.Average(y => y.GrammarScore), 2),
-                                FluencyScoreAvg = double.Round(g.Average(y => y.FluencyScore), 2)
-                            }).ToList()
-                    }
-                ).OrderBy(x => x.DateTime).ToListAsync();
-            return new ResponseView<GroupsPerformance>
-            {
-                Code = StatusCodesEnum.Success,
-                Data = new GroupsPerformance()
+        var groupsStats = await context.UserAssignments
+            .Include(x => x.Assignment)
+            .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated &&
+                        ((fromDate == null && toDate == null) ||
+                         (x.SubmitDate >= fromDate && x.SubmitDate <= toDate)))
+            .GroupBy(x => new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month })
+            .Select(x =>
+                new GroupByDatePerformanceStat()
                 {
-                    GroupsPerformanceStatsByDate = groupsStats
+                    DateTime = new DateTime(x.Key.Year, x.Key.Month, 1),
+                    GroupsPerformanceStats = x.GroupBy(t => t.Assignment.GroupId)
+                        .Select(g => new GroupPerformanceStat()
+                        {
+                            Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(v => v.Id == g.Key)!,
+                                context.UserGroups.Count(v => v.GroupId == g.Key)),
+                            TotalScoreAvg = double.Round(g.Average(y => y.FluencyScore + y.GrammarScore), 2),
+                            GrammarScoreAvg = double.Round(g.Average(y => y.GrammarScore), 2),
+                            FluencyScoreAvg = double.Round(g.Average(y => y.FluencyScore), 2)
+                        }).ToList()
                 }
-            };
-        }
-        catch (Exception ex)
+            ).OrderBy(x => x.DateTime).ToListAsync();
+        return new GroupsPerformance()
         {
-            return new ResponseView<GroupsPerformance>
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            GroupsPerformanceStatsByDate = groupsStats
+        };
     }
     // public async Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId)
     // {

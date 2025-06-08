@@ -9,156 +9,385 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
 {
-    public Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
+    public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
-        return assignmentRepository.DeleteAssignment(userId, assignmentId);
+        try
+        {
+            var res = await assignmentRepository.DeleteAssignment(userId, assignmentId);
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while deleting the assignment: " + ex.Message,
+                Data = new ResultResponse() { Result = false }
+            };
+        }
     }
 
     public async Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(
         int userId, CreateNewAssignmentsRequest request)
     {
-        return await assignmentRepository.CreateNewAssignment(userId,
-            request.Instructions, request.GroupId, request.EssayId, request.DueDate);
+        try
+        {
+            
+            var res = await assignmentRepository.CreateNewAssignment(userId,
+                request.Instructions, request.GroupId, request.EssayId, request.DueDate);
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while creating a new assignment: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request)
     {
-        return await assignmentRepository.UpdateAssignment(userId, request.AssignmentId,
-            request.Instructions, request.EssayId, request.DueDate);
+        try
+        {
+            var res = await assignmentRepository.UpdateAssignment(userId, request.AssignmentId,
+                request.Instructions, request.EssayId, request.DueDate);
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while updating the assignment: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId,
         int groupId, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
-        return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new CountedResponse<List<AssignmentBaseModal>>()
+            var res = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
+            return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
             {
-                Result = res.Data.Item1,
-                TotalCount = res.Data.Item2
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new CountedResponse<List<AssignmentBaseModal>>()
+                {
+                    Result = res.Item1,
+                    TotalCount = res.Item2
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching group assignments: " + ex.Message,
+                Data = new CountedResponse<List<AssignmentBaseModal>>()
+                {
+                    Result = null,
+                    TotalCount = 0
+                }
+            };
+        }
     }
 
     public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
         string statusName, bool isAIAssignment, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetUserAssignments(userId, statusName, isAIAssignment, offset, limit);
-        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            var res = await assignmentRepository.GetUserAssignments(userId, statusName, isAIAssignment, offset, limit);
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
-                Result = res.Data.Item1,
-                TotalCount = res.Data.Item2
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = res.Item1,
+                    TotalCount = res.Item2
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching user assignments: " + ex.Message,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = null,
+                    TotalCount = 0
+                }
+            };
+        }
     }
 
     public async Task<ResponseView<ResultResponse>> SaveOrSubmitAssignment(int userId,
         SaveOrSubmitAssignmentRequest request)
     {
-        var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
-            request.WordCount, request.IsSubmitted);
-        return new ResponseView<ResultResponse>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new ResultResponse() { Result = res.Data }
-        };
+            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
+                request.WordCount, request.IsSubmitted);
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new ResultResponse() { Result = res }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while saving or submitting the assignment: " + ex.Message,
+                Data = new ResultResponse() { Result = false }
+            };
+        }
     }
 
     public async Task<ResponseView<UserAssignmentModal>> GetUserAssignment(int callerId, int userId,
         int assignmentId)
     {
-        return await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
+        try
+        {
+            var res = await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
+            return new ResponseView<UserAssignmentModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<UserAssignmentModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching the user assignment: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(
         int userId, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
-        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
-                Result = res.Data.Item1,
-                TotalCount = res.Data.Item2
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = res.Item1,
+                    TotalCount = res.Item2
+                }
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching user not seen evaluated assignments: " + ex.Message,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = null,
+                    TotalCount = 0
+                }
+            };
+        }
     }
 
     public async Task<ResponseView<List<StatusBaseModal>>> GetEvaluationTextStatuses()
     {
-        return await assignmentRepository.GetEvaluationStatuses();
+        try
+        {
+            var res = await assignmentRepository.GetEvaluationStatuses();
+            return new ResponseView<List<StatusBaseModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<StatusBaseModal>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching evaluation statuses: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<List<StatusBaseModal>>> GetAssignmentStatuses()
     {
-        return await assignmentRepository.GetAssignmentStatuses();
+        try
+        {
+            var res = await assignmentRepository.GetAssignmentStatuses();
+            return new ResponseView<List<StatusBaseModal>>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<StatusBaseModal>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching assignment statuses: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<ResultResponse>> EvaluateAssignments(int teacherId,
         EvaluateAssignmentRequest request)
     {
-        var res = await assignmentRepository.EvaluateAssignment(teacherId, request.UserId, request.AssignmentId,
-            request.FluencyScore, request.GrammarScore, request.EvaluationTextComments, request.GeneralComments);
-        return new ResponseView<ResultResponse>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new ResultResponse() { Result = res.Data }
-        };
+            var res = await assignmentRepository.EvaluateAssignment(teacherId, request.UserId, request.AssignmentId,
+                request.FluencyScore, request.GrammarScore, request.EvaluationTextComments, request.GeneralComments);
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = new ResultResponse() { Result = res }
+            };
+        } 
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while evaluating the assignment: " + ex.Message,
+                Data = new ResultResponse() { Result = false }
+            };
+        }
     }
 
     public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(
         int userId, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
-        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            var res = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
-                Result = res.Data.Item1,
-                TotalCount = res.Data.Item2
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = res.Item1,
+                    TotalCount = res.Item2
+                }
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching teacher assignments: " + ex.Message,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = null,
+                    TotalCount = 0
+                }
+            };
+        }
     }
 
     public async Task<ResponseView<AssignmentBaseModal>> GetAssignmentBaseInfoById(int assignmentId)
     {
-        return await assignmentRepository.GetAssignmentById(assignmentId);
+        try
+        {
+            var res = await assignmentRepository.GetAssignmentById(assignmentId);
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<AssignmentBaseModal>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching assignment info: " + ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId,
         int assignmentId,
         string statusName, int? offset, int? limit)
     {
-        var res = await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, offset, limit);
-        return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+            var res = await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, offset,
+                limit);
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
-                Result = res.Data.Item1,
-                TotalCount = res.Data.Item2
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = res.Item1,
+                    TotalCount = res.Item2
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching assignment users tasks: " + ex.Message,
+                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
+                {
+                    Result = null,
+                    TotalCount = 0
+                }
+            };
+        }
     }
 
     public async Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId,
         int count)
     {
-        var res = await assignmentRepository.GetUserAssignmentViewForAI(aiTeacherId, count);
-        return res;
+        try
+        {
+            var res = await assignmentRepository.GetUserAssignmentViewForAI(aiTeacherId, count);
+            return new ResponseView<List<UserAssignmentViewForAI>>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<UserAssignmentViewForAI>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching user assignment view for AI: " + ex.Message,
+                Data = null
+            };
+        }
     }
 }

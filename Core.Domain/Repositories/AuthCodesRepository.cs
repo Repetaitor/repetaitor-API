@@ -11,121 +11,47 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
 {
     private ApplicationContext _context = context;
 
-    public async Task<ResponseView<string>> CreateAuthCode(string code, string email, int userId)
+    public async Task<string> CreateAuthCode(string code, string email, int userId)
     {
-        try
+        var newGuid = Guid.NewGuid();
+        var auth = new AuthenticationCodes()
         {
-            var newGuid = Guid.NewGuid();
-            var auth = new AuthenticationCodes()
-            {
-                UserId = userId,
-                Code = code,
-                Guid = newGuid.ToString(),
-                Email = email,
-                IsVerified = false
-            };
-            await _context.AuthCodes.AddAsync(auth);
-            await _context.SaveChangesAsync();
-            return new ResponseView<string>()
-            {
-                Code = StatusCodesEnum.Success,
-                Data = newGuid.ToString(),
-                Message = "Authentication code created successfully."
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<string>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = null
-            };
-        }
+            UserId = userId,
+            Code = code,
+            Guid = newGuid.ToString(),
+            Email = email,
+            IsVerified = false
+        };
+        await _context.AuthCodes.AddAsync(auth);
+        await _context.SaveChangesAsync();
+        return newGuid.ToString();
     }
 
-    public async Task<ResponseView<bool>> CheckAuthCode(string guid, string email, string code)
+    public async Task<bool> CheckAuthCode(string guid, string email, string code)
     {
-        try
+        var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
+            x.Guid == guid && x.Email == email && x.IsVerified == false);
+        if (cd == null || cd.Email != email || cd.Code != code)
+            throw new Exception("Invalid authentication code or email.");
+        if ((DateTime.Now - cd.CreateDate).TotalMinutes > 10)
         {
-            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
-                x.Guid == guid && x.Email == email && x.IsVerified == false);
-            if (cd == null || cd.Email != email || cd.Code != code)
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "Invalid authentication code.",
-                    Data = false
-                };
-            if((DateTime.Now - cd.CreateDate).TotalMinutes > 10)
-            {
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Conflict,
-                    Message = "Expired authentication code.",
-                    Data = false
-                };
-            }
+            throw new Exception("Authentication code has expired.");
+        }
 
-            cd.IsVerified = true;
-            await _context.SaveChangesAsync();
-            var res = await userRepository.ActivateUser(cd.UserId);
-            return new ResponseView<bool>()
-            {
-                Code = res.Code,
-                Message = res.Message,
-                Data = res.Data
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = false
-            };
-        }
+        cd.IsVerified = true;
+        await _context.SaveChangesAsync();
+        var res = await userRepository.ActivateUser(cd.UserId);
+        return res;
     }
 
-    public async Task<ResponseView<bool>> EmailIsVerified(string guid, string email)
+    public async Task<bool> EmailIsVerified(string guid, string email)
     {
-        try
+        var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
+        if (cd == null)
         {
-            var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
-            if (cd == null)
-            {
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.NotFound,
-                    Message = "Authentication code not found.",
-                    Data = false
-                };
-            }
-            if (cd.IsVerified)
-            {
-                return new ResponseView<bool>()
-                {
-                    Code = StatusCodesEnum.Success,
-                    Message = "Email is verified.",
-                    Data = true
-                };
-            }
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.Conflict,
-                Message = "Email is not verified.",
-                Data = false
-            };
+            throw new Exception("Authentication code not found for the provided email.");
         }
-        catch (Exception ex)
-        {
-            return new ResponseView<bool>()
-            {
-                Code = StatusCodesEnum.InternalServerError,
-                Message = ex.Message,
-                Data = false
-            };
-        }
+
+        return cd.IsVerified;
     }
 }

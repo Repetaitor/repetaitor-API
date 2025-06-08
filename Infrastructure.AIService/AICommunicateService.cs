@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -9,10 +10,10 @@ namespace AIService;
 
 public class AICommunicateService : IAICommunicateService
 {
-    private readonly string apiKey = "AIzaSyBVdAnFMvH9fXt9E5uiRYg3EmeW18GHMR0";
+    private readonly string apiKey = "AIzaSyDKaIkRaedr7v-K69fm1W5eD2KA-nmbvlE";
 
     private readonly string endpoint =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key=";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-03-25:generateContent?key=";
 
     public async Task<AIReturnViewModel?> GetAIResponse(string essayTitle, string essayText, int expectedWordCount)
     

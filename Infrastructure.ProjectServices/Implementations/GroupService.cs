@@ -19,96 +19,251 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
     public async Task<ResponseView<GroupBaseModal>> CreateGroup(string groupName, int ownerId)
     {
-        var newGroupCode = GenerateClassCode();
-        return await groupRepository.CreateGroup(groupName, newGroupCode, ownerId);
+        try
+        {
+            var newGroupCode = GenerateClassCode();
+            var res = await groupRepository.CreateGroup(groupName, newGroupCode, ownerId);
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<ResultResponse>> DeleteGroup(int userId, int groupId)
     {
-        var res = await groupRepository.DeleteGroup(userId, groupId);
-
-        return new ResponseView<ResultResponse>
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new ResultResponse
+            var res = await groupRepository.DeleteGroup(userId, groupId);
+
+            return new ResponseView<ResultResponse>
             {
-                Result = res.Data
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new ResultResponse
+                {
+                    Result = res
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<GroupBaseModal>> GetStudentGroup(int userId)
     {
-        return await groupRepository.GetStudentGroup(userId);
+        try
+        {
+            var res = await groupRepository.GetStudentGroup(userId);
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<List<GroupBaseModal>>> GetTeacherGroups(int userId)
     {
-        return await groupRepository.GetTeacherGroups(userId);
+        try
+        {
+            var res = await groupRepository.GetTeacherGroups(userId);
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<GroupBaseModal>> UpdateGroupTitle(int userId, int groupId, string groupTitle)
     {
-        return await groupRepository.UpdateGroupTitle(userId, groupId, groupTitle);
+        try
+        {
+            var res = await groupRepository.UpdateGroupTitle(userId, groupId, groupTitle);
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<NewGroupCodeResponse>> RegenerateGroupCode(int userId, int groupId)
     {
-        var newGroupCode = GenerateClassCode();
-        var res = await groupRepository.UpdateGroupCode(userId, groupId, newGroupCode);
-        return new ResponseView<NewGroupCodeResponse>
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new NewGroupCodeResponse
+            var newGroupCode = GenerateClassCode();
+            await groupRepository.UpdateGroupCode(userId, groupId, newGroupCode);
+            return new ResponseView<NewGroupCodeResponse>
             {
-                GroupCode = newGroupCode
-                
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new NewGroupCodeResponse
+                {
+                    GroupCode = newGroupCode
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<NewGroupCodeResponse>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<ResultResponse>> AddUserToGroup(int userId, string groupCode)
     {
-        var res = await groupRepository.AddUserToGroup(userId, groupCode);
-        return new ResponseView<ResultResponse>
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new ResultResponse
+            var res = await groupRepository.AddUserToGroup(userId, groupCode);
+            return new ResponseView<ResultResponse>
             {
-                Result = res.Data
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new ResultResponse
+                {
+                    Result = res
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<ResultResponse>> RemoveUserFromGroup(int callerId, int groupId, int userId)
     {
-        var res = await groupRepository.RemoveUserFromGroup(callerId, groupId, userId);
-        return new ResponseView<ResultResponse>
+        try
         {
-            Code = res.Code,
-            Message = res.Message,
-            Data = new ResultResponse
+            var res = await groupRepository.RemoveUserFromGroup(callerId, groupId, userId);
+            return new ResponseView<ResultResponse>
             {
-                Result = res.Data
-            }
-        };
+                Code = StatusCodesEnum.Success,
+                Data = new ResultResponse
+                {
+                    Result = res
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId)
     {
-        return await groupRepository.GetGroupUsers(userId, groupId);
+        try {
+            var res = await groupRepository.GetGroupUsers(userId, groupId);
+            return new ResponseView<List<UserModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        } catch (Exception ex) {
+            return new ResponseView<List<UserModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<List<GroupBaseModal>>> SearchGroup(string groupName)
     {
-        return await groupRepository.SearchGroup(groupName);
+        try {
+            var res = await groupRepository.SearchGroup(groupName);
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<GroupBaseModal>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 
     public async Task<ResponseView<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId)
     {
-        return await groupRepository.GetGroupBaseInfoById(userId, groupId);
+        try {
+            var res = await groupRepository.GetGroupBaseInfoById(userId, groupId);
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<GroupBaseModal>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
     }
 }
