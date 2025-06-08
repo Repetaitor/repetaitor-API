@@ -34,4 +34,10 @@
       <ProjectReference Include="..\Infrastructure.ProjectServices\Infrastructure.ProjectServices.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="message.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

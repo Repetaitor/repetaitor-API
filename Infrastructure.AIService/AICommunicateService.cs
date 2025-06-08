@@ -19,7 +19,7 @@ public class AICommunicateService : IAICommunicateService
     
     {
         var content = "";
-        await using (FileStream fstream = File.OpenRead("message.txt"))
+        await using (FileStream fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/message.txt"))
         {
             var buffer = new byte[fstream.Length];
             await fstream.ReadAsync(buffer, 0, buffer.Length);

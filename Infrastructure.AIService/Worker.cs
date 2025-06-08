@@ -1,4 +1,5 @@
 using Core.Application.Interfaces.Services;
+using Core.Application.Models;
 using Core.Application.Models.DTO.Assignments;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +26,7 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
                     var assignmentService = scope.ServiceProvider.GetRequiredService<IAssignmentService>();
                     var aiService = scope.ServiceProvider.GetRequiredService<IAICommunicateService>();
                     var assignments = await assignmentService.GetUserAssignmentViewForAI(1019, 5);
-                    if (assignments.Code == 0 && assignments.Data != null && assignments.Data.Count != 0)
+                    if (assignments.Code == StatusCodesEnum.Success && assignments.Data != null && assignments.Data.Count != 0)
                     {
                         foreach (var assignment in assignments.Data)
                         {

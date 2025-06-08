@@ -322,7 +322,8 @@ public class AssignmentRepository(
             .CountAsync(x =>
                 x.UserId == userId &&
                 (statusName == string.Empty ||
-                 x.Status.Name == statusName));
+                 x.Status.Name == statusName) &&
+                x.Assignment.Group.IsAIGroup == IsAIAssignment);
         return (userAssgns, cnt);
     }
 
@@ -491,7 +492,7 @@ public class AssignmentRepository(
         int count)
     {
         return await context.UserAssignments.Include(u => u.Assignment)
-            .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1)
+            .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1 && !x.IsEvaluated)
             .Take(count)
             .Select(x => new UserAssignmentViewForAI()
             {
