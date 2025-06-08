@@ -18,7 +18,8 @@ namespace RepetaitorAPI.Controllers;
 public class AssignmentController(
     IJWTTokenGenerator tokenGenerator,
     IAssignmentService assignmentService,
-    IHttpContextAccessor httpContextAccessor)
+    IHttpContextAccessor httpContextAccessor,
+    IAICommunicateService aIService) : ControllerBase
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[action]")]
@@ -169,5 +170,30 @@ public class AssignmentController(
         var resp = await assignmentService.DeleteAssignment(userId, assignmentId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
-
+    [HttpPut("[action]")]
+    [ProducesResponseType(typeof(string), 200)]
+    public async Task<IResult> GetTextFromImage(List<String> imagesBase64)
+    {
+        try
+        {
+            var resp = await aIService.GetEssayTextFromImage(imagesBase64);
+            return Results.Ok(resp);
+        } catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(List<FormFile>), 200)]
+    public IResult GetUserAssignmentImages(int userId, int assignmentId)
+    {
+        try
+        {
+            var resp = assignmentService.GetUserAssignmentImages(userId, assignmentId);
+            return Results.Ok(resp);
+        } catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    }
 }
