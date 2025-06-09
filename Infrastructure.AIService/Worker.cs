@@ -33,15 +33,9 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
                             var result = await aiService.GetAIResponse(assignment.EssayTitle, assignment.EssayText,
                                 assignment.ExpectedWordCount);
                             if (result == null) continue;
-                            var res = await assignmentService.EvaluateAssignments(1019, new EvaluateAssignmentRequest()
-                            {
-                                UserId = assignment.UserId,
-                                AssignmentId = assignment.AssignmentId,
-                                FluencyScore = result.FluencyScore,
-                                GrammarScore = result.GrammarScore,
-                                EvaluationTextComments = result.EvaluationTextComments,
-                                GeneralComments = result.GeneralComments
-                            });
+                            result.AssignmentId = assignment.AssignmentId;
+                            result.UserId = assignment.UserId;
+                            var res = await assignmentService.EvaluateAssignments(1019, result);
                             if (res.Code != 0 || !res.Data!.Result)
                             {
                                 Console.WriteLine(
