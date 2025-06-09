@@ -93,7 +93,7 @@ public class UserService(
             var createdAssignmentsCount = await assignmentRepository.GetTeacherCreatedAssignmentsCount(teacherId);
             var needToEvaluateAssignmentsCount =
                 await assignmentRepository.GetTeacherNeedToEvaluateAssignmentsCount(teacherId);
-
+            var usersPerformanse = await assignmentRepository.GetAllUserPerformanceForTeacher(teacherId);
             return new ResponseView<TeacherDashboardBaseInfo>
             {
                 Code = StatusCodesEnum.Success,
@@ -102,7 +102,8 @@ public class UserService(
                     GroupsCount = groupsCount,
                     EnrolledStudentsCount = enrolledStudentsCount,
                     AssignmentsCount = createdAssignmentsCount,
-                    NeedEvaluateAssignmentsCount = needToEvaluateAssignmentsCount
+                    NeedEvaluateAssignmentsCount = needToEvaluateAssignmentsCount,
+                    GroupPerformanceStats = usersPerformanse.PerformanceStats
                 }
             };
         } catch (Exception ex)

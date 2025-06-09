@@ -41,4 +41,7 @@ public interface IAssignmentRepository
     Task<int> GetTeacherCreatedAssignmentsCount(int teacherId);
     Task<int> GetTeacherNeedToEvaluateAssignmentsCount(int teacherId);
     Task<GroupsPerformance> GetTeacherGroupsPerformanceByDate(int teacherId, DateTime? fromDate = null, DateTime? toDate = null);
+
+    Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId, DateTime? fromDate = null,
+        DateTime? toDate = null);
 }

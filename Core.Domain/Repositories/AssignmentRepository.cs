@@ -39,6 +39,26 @@ public class AssignmentRepository(
             PerformanceStats = userGroupedCompletedAssignments
         };
     }
+    public async Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId, DateTime? fromDate = null,
+        DateTime? toDate = null)
+    {
+        var userGroupedCompletedAssignments = await context.UserAssignments
+            .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
+                                                                (x.SubmitDate >= fromDate &&
+                                                                 x.SubmitDate <= toDate))).GroupBy(x =>
+                new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month })
+            .Select(g => new PerformanceStat()
+            {
+                DateTime = new DateTime(g.Key.Year, g.Key.Month, 1),
+                TotalScoreAvg = double.Round(g.Average(x => x.FluencyScore + x.GrammarScore), 2),
+                GrammarScoreAvg = double.Round(g.Average(x => x.GrammarScore), 2),
+                FluencyScoreAvg = double.Round(g.Average(x => x.FluencyScore), 2)
+            }).ToListAsync();
+        return new UserPerformanceViewModel()
+        {
+            PerformanceStats = userGroupedCompletedAssignments
+        };
+    }
 
     public async Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId)
     {
