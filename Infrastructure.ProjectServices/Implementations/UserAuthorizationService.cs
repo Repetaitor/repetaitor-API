@@ -111,7 +111,7 @@ public class UserAuthorizationService(
                     Data = null
                 };
             var guid = await SendVerificationCode(request.Email, result);
-            if (guid is { Code: 0, Data: not null })
+            if (guid is { Code: StatusCodesEnum.Success, Data: not null })
             {
                 return new ResponseView<SendVerificationCodeResponse>()
                 {

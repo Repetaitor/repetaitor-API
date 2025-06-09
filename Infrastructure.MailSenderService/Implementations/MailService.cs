@@ -1,19 +1,16 @@
+using System.Net;
 using System.Net.Mail;
 using Core.Application.Interfaces.Services;
-using Core.Application.Models.Configuration;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 
-namespace infrastructure.MailService.Implementations;
+namespace infrastructure.MailSenderService.Implementations;
 
 public class MailService : IMailService
 {
-    private readonly GmailOptions _options = new()
-    {
-        Email = "eventplannerauthentication@gmail.com",
-        Password = "myhx avws mjpw gaiw",
-        Host = "smtp.gmail.com",
-        Port = 587
-    };
+    private readonly IConfigurationRoot configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json")
+        .Build();
 
     public async Task<bool> SendAuthMail(string to, string subject, string body)
     {
@@ -21,18 +18,19 @@ public class MailService : IMailService
         {
             var mail = new MailMessage()
             {
-                From = new MailAddress(_options.Email),
+                From = new MailAddress(configuration["GmailOptions:Email"]!),
                 Subject = subject,
                 Body = $"your auth code is {body}"
             };
             mail.To.Add(to);
             using (var smtclinet = new SmtpClient())
             {
-                smtclinet.Host = _options.Host;
-                smtclinet.Port = _options.Port;
+                smtclinet.Host = configuration["GmailOptions:Host"]!;
+                smtclinet.Port = int.Parse(configuration["GmailOptions:Port"]!);
                 smtclinet.Timeout = 1000;
                 smtclinet.EnableSsl = true;
-                smtclinet.Credentials = new System.Net.NetworkCredential(_options.Email, _options.Password);
+                smtclinet.Credentials = new NetworkCredential(configuration["GmailOptions:Email"]!,
+                    configuration["GmailOptions:Password"]!);
 
                 await smtclinet.SendMailAsync(mail);
                 return true;

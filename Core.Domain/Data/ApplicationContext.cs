@@ -21,8 +21,7 @@ namespace Core.Domain.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AuthenticationCodes>()
-                .HasIndex(e => e.Email)
-                .IsUnique();
+                .HasIndex(e => e.Email);
             modelBuilder.Entity<EvaluationTextComment>().HasOne(u => u.UserAssignment)
                 .WithMany(a => a.EvaluationTextComments).HasForeignKey(u => u.UserAssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);

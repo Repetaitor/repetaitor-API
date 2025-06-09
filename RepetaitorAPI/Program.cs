@@ -1,15 +1,10 @@
-using System.Text;
 using AIService;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Domain.Data;
 using Core.Domain.Repositories;
-using infrastructure.MailService.Implementations;
+using infrastructure.MailSenderService.Implementations;
 using Infrastructure.ProjectServices.Implementations;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using RepetaitorAPI;
 
 var builder = WebApplication.CreateBuilder(args);
