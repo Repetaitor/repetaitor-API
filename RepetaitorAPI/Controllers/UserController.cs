@@ -103,4 +103,10 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetTeacherGroupsPerformanceByDate(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(GroupsPerformance), 200)]
+    public IResult Test()
+    {
+       return Results.Ok("Test successful");
+    }
 }
