@@ -8,5 +8,5 @@ public class SaveOrSubmitAssignmentRequest
     public string? Text { get; set; } = string.Empty;
     public int WordCount { get; set; }
     public bool IsSubmitted { get; set; }
-    public List<String> Images { get; set; } = [];
+    public List<string> Images { get; set; } = [];
 }

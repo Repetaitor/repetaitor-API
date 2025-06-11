@@ -154,9 +154,9 @@ public class AssignmentService(
                 var rs = await aiCommunicateService.GetEssayTextFromImage(request.Images);
                 request.Text = rs;
             }
-            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
+            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
-            if (res) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
+            if (res && request.Images.Count > 0) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.Success,
@@ -405,19 +405,19 @@ public class AssignmentService(
         }
     }
 
-    public ResponseView<List<FormFile>> GetUserAssignmentImages(int userId, int assignmentId)
+    public ResponseView<List<string>> GetUserAssignmentImages(int userId, int assignmentId)
     {
         try
         {
             var images = imagesStoreService.GetUserAssignmentImages(userId, assignmentId);
-            return new ResponseView<List<FormFile>>()
+            return new ResponseView<List<string>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = images.Select(file => new FormFile(new MemoryStream(File.ReadAllBytes(file.FullName)), 0, file.Length, file.Name, file.Name)).ToList()
+                Data = images
             };
         } catch (Exception ex)
         {
-            return new ResponseView<List<FormFile>>()
+            return new ResponseView<List<string>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching user assignment images: " + ex.Message,

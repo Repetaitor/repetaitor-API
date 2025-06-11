@@ -170,13 +170,13 @@ public class AssignmentController(
         var resp = await assignmentService.DeleteAssignment(userId, assignmentId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
-    [HttpPut("[action]")]
+    [HttpPost("[action]")]
     [ProducesResponseType(typeof(string), 200)]
-    public async Task<IResult> GetTextFromImage(List<String> imagesBase64)
+    public async Task<IResult> GetTextFromImage([FromBody] string[] imagesBase64)
     {
         try
         {
-            var resp = await aIService.GetEssayTextFromImage(imagesBase64);
+            var resp = await aIService.GetEssayTextFromImage([..imagesBase64]);
             return Results.Ok(resp);
         } catch (Exception ex)
         {
@@ -184,7 +184,7 @@ public class AssignmentController(
         }
     }
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(List<FormFile>), 200)]
+    [ProducesResponseType(typeof(List<string>), 200)]
     public IResult GetUserAssignmentImages(int userId, int assignmentId)
     {
         try

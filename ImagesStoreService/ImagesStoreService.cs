@@ -52,12 +52,25 @@ public class ImagesStoreService : IImagesStoreService
         return true;
     }
 
-    public FileInfo[] GetUserAssignmentImages(int userId, int assignmentId)
+    public List<string> GetUserAssignmentImages(int userId, int assignmentId)
     {
         var expectedCatalog = Directory.GetCurrentDirectory() + $"/ImagesStore/{userId}/{assignmentId}";
         if (!Directory.Exists(expectedCatalog))
-            throw new DirectoryNotFoundException($"Directory not found: {expectedCatalog}");
+        {
+            Directory.CreateDirectory(expectedCatalog);
+            return [];
+        }
+
         var directoryInfo = new DirectoryInfo(expectedCatalog);
-        return directoryInfo.GetFiles();
+        var imagesFiles = directoryInfo.GetFiles();
+        var imagesBase64 = new List<string>();
+        foreach (var file in imagesFiles)
+        {
+            if (file.Length <= 0) continue;
+            var imageBytes = File.ReadAllBytes(file.FullName);
+            var base64Image = System.Text.Encoding.UTF8.GetString(imageBytes, 0, imageBytes.Length);
+            imagesBase64.Add(base64Image!);
+        }
+        return imagesBase64;
     }
 }
