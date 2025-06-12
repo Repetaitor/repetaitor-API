@@ -79,4 +79,9 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
 
         return EssayMapper.ToEssayModal(essay);
     }
+
+    public async Task<int> GetEssayCount(int userId)
+    {
+        return await context.Essays.CountAsync(x => x.CreatorId == userId);
+    }
 }

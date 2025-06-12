@@ -12,4 +12,5 @@ public interface IEssayRepository
 
     Task<List<EssayModal>> GetUserEssays(int userId);
     Task<EssayModal> GetEssay(int essayId);
+    Task<int> GetEssayCount(int userId);
 }

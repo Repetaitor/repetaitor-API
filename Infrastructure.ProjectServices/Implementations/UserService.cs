@@ -7,7 +7,8 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class UserService(
     IUserRepository userRepository,
     IAssignmentRepository assignmentRepository,
-    IGroupRepository groupRepository) : IUserService
+    IGroupRepository groupRepository,
+    IEssayRepository essayRepository) : IUserService
 {
     public async Task<ResponseView<UserModal>> GetUserDefaultInfoAsync(int userId)
     {
@@ -94,6 +95,7 @@ public class UserService(
             var needToEvaluateAssignmentsCount =
                 await assignmentRepository.GetTeacherNeedToEvaluateAssignmentsCount(teacherId);
             var usersPerformanse = await assignmentRepository.GetAllUserPerformanceForTeacher(teacherId);
+            var essayCount = await essayRepository.GetEssayCount(teacherId);
             return new ResponseView<TeacherDashboardBaseInfo>
             {
                 Code = StatusCodesEnum.Success,
@@ -103,6 +105,7 @@ public class UserService(
                     EnrolledStudentsCount = enrolledStudentsCount,
                     AssignmentsCount = createdAssignmentsCount,
                     NeedEvaluateAssignmentsCount = needToEvaluateAssignmentsCount,
+                    EssayCount = essayCount,
                     GroupPerformanceStats = usersPerformanse.PerformanceStats
                 }
             };
