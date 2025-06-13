@@ -158,19 +158,21 @@ public class AssignmentService(
             var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId,
                 request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
+            
+            var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
+            var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
+            if (!clear1 || !clear2)
+            {
+                return new ResponseView<ResultResponse>()
+                {
+                    Code = StatusCodesEnum.InternalServerError,
+                    Message = "Failed to clear previous images.",
+                    Data = new ResultResponse() { Result = false }
+                };
+            }
+            
             if (res && request.Images.Count > 0)
             {
-                var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
-                var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
-                if (!clear1 || !clear2)
-                {
-                    return new ResponseView<ResultResponse>()
-                    {
-                        Code = StatusCodesEnum.InternalServerError,
-                        Message = "Failed to clear previous images.",
-                        Data = new ResultResponse() { Result = false }
-                    };
-                }
                 foreach (var imageBase64 in request.Images)
                 {
                     var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId, imageBase64);
