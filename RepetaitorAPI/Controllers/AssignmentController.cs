@@ -197,8 +197,8 @@ public class AssignmentController(
         }
     }
     [HttpPut("[action]")]
-    [ProducesResponseType(typeof(List<ResultResponse>), 200)]
-    public async Task<IResult> MakeUserAssignmentPublicStatus([FromBody] MakeUserAssignmentPublicRequest request)
+    [ProducesResponseType(typeof(ResultResponse), 200)]
+    public async Task<IResult> ChangeUserAssignmentPublicStatus([FromBody] MakeUserAssignmentPublicRequest request)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.MakeUserAssignmentPublic(userId, request.AssignmentId);
@@ -213,7 +213,7 @@ public class AssignmentController(
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(List<UserAssignmentBaseModal>), 200)]
+    [ProducesResponseType(typeof(ResultResponse), 200)]
     public async Task<IResult> IsAssignmentPublic([FromQuery] int assignmentId)
     {
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
