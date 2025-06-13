@@ -17,4 +17,5 @@ public class UserAssignmentModal
     public List<GeneralCommentModal> GeneralComments { get; set; }
     public List<string> Images { get; set; } = [];
     public DateTime AssignDate { get; set; } 
+    public bool IsPublic { get; set; } = false;
 }

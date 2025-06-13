@@ -11,7 +11,7 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class AssignmentService(
     IAssignmentRepository assignmentRepository,
     IAICommunicateService aiCommunicateService,
-    IImagesStoreService imagesStoreService) : IAssignmentService
+    IImagesStoreService imagesStoreService, IImagesStoreService storeService) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
@@ -180,6 +180,7 @@ public class AssignmentService(
         try
         {
             var res = await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
+            res.Images = storeService.GetUserAssignmentImages(userId, assignmentId);;
             return new ResponseView<UserAssignmentModal>()
             {
                 Code = StatusCodesEnum.Success,
@@ -422,6 +423,69 @@ public class AssignmentService(
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching user assignment images: " + ex.Message,
                 Data = null
+            };
+        }
+    }
+
+    public async Task<ResponseView<ResultResponse>> MakeUserAssignmentPublic(int userId, int assignmentId)
+    {
+        try
+        {
+            var res = await assignmentRepository.MakeUserAssignmentPublic(userId, assignmentId);
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res
+            };
+        }catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while making user assignment public: " + ex.Message,
+                Data = new ResultResponse() { Result = false }
+            };
+        }
+    }
+
+    public async Task<ResponseView<List<UserAssignmentBaseModal>>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit)
+    {
+        try
+        {
+            var userAssignments = await assignmentRepository.GetPublicUserAssignments(userId, assignmentId, offset, limit);
+            return new ResponseView<List<UserAssignmentBaseModal>>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = userAssignments
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<List<UserAssignmentBaseModal>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching public user assignments: " + ex.Message,
+                Data = null
+            };
+        }
+    }
+
+    public async Task<ResponseView<ResultResponse>> IsAssignmentPublic(int userId, int assignmentId)
+    {
+        try
+        {
+            var isPublicResult = await assignmentRepository.IsAssignmentPublic(userId, assignmentId);
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = isPublicResult
+            };
+        }   catch (Exception ex)
+        {
+            return new ResponseView<ResultResponse>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while checking if assignment is public: " + ex.Message,
+                Data = new ResultResponse() { Result = false }
             };
         }
     }

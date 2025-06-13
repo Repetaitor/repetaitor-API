@@ -21,6 +21,9 @@ public class UserAssignment
     public DateTime AssignDate { get; set; } = DateTime.Now;
     [DataType("DateTime")]
     public DateTime SubmitDate { get; set; }
+    
+    [DataType("Boolean")]
+    public bool IsPublic { get; set; } = false;
     public virtual User User { get; set; }
     public virtual Assignment Assignment { get; set; }
     public virtual AssignmentStatus Status { get; set; }

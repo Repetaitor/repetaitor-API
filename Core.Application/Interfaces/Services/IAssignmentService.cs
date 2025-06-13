@@ -42,4 +42,9 @@ public interface IAssignmentService
         string statusName, int? offset, int? limit);
     Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
     ResponseView<List<string>> GetUserAssignmentImages(int userId, int assignmentId);
+    
+    Task<ResponseView<ResultResponse>> MakeUserAssignmentPublic(int userId, int assignmentId);
+    
+    Task<ResponseView<List<UserAssignmentBaseModal>>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit);
+    Task<ResponseView<ResultResponse>> IsAssignmentPublic(int userId, int assignmentId);
 }

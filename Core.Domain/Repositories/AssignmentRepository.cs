@@ -18,7 +18,8 @@ public class AssignmentRepository(
     ApplicationContext context,
     IEssayRepository essayRepository,
     IUserRepository userRepository,
-    IGroupRepository groupRepository, IImagesStoreService storeService) : IAssignmentRepository
+    IGroupRepository groupRepository,
+    IImagesStoreService storeService) : IAssignmentRepository
 {
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
@@ -40,13 +41,15 @@ public class AssignmentRepository(
             PerformanceStats = userGroupedCompletedAssignments.OrderBy(x => x.DateTime).ToList()
         };
     }
-    public async Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId, DateTime? fromDate = null,
+
+    public async Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId,
+        DateTime? fromDate = null,
         DateTime? toDate = null)
     {
         var userGroupedCompletedAssignments = await context.UserAssignments
             .Where(x => x.Assignment.CreatorId == teacherId && x.IsEvaluated && ((fromDate == null && toDate == null) ||
-                                                                (x.SubmitDate >= fromDate &&
-                                                                 x.SubmitDate <= toDate))).GroupBy(x =>
+                (x.SubmitDate >= fromDate &&
+                 x.SubmitDate <= toDate))).GroupBy(x =>
                 new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month })
             .Select(g => new PerformanceStat()
             {
@@ -58,6 +61,85 @@ public class AssignmentRepository(
         return new UserPerformanceViewModel()
         {
             PerformanceStats = userGroupedCompletedAssignments
+        };
+    }
+
+    public async Task<ResultResponse> MakeUserAssignmentPublic(int userId, int assignmentId)
+    {
+        var userAssignments = await context.UserAssignments
+            .Include(x => x.Assignment)
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.AssignmentId == assignmentId);
+        if (userAssignments == null)
+        {
+            throw new Exception("User assignment not found");
+        }
+
+        if (userAssignments.Assignment.CreatorId != 1019)
+        {
+            throw new Exception("Its not AI assignment");
+        }
+
+        userAssignments.IsPublic = !userAssignments.IsPublic;
+        await context.SaveChangesAsync();
+        return new ResultResponse()
+        {
+            Result = true
+        };
+    }
+
+    public async Task<List<UserAssignmentBaseModal>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit)
+    {
+        var userAssignment =
+            await context.UserAssignments.FirstOrDefaultAsync(x =>
+                x.AssignmentId == assignmentId && x.UserId == userId);
+        if(userAssignment is not { StatusId: 1 }) {
+            throw new Exception("You are not allowed to see public assignments of this AI Assignment");
+        }
+        var assignment =
+            await context.Assignments.Include(x => x.Creator).Include(x => x.Essay)
+                .FirstOrDefaultAsync(x => x.Id == assignmentId);
+        if(assignment is not { CreatorId: 1019 }) {
+            throw new Exception("This is not AI assignment");
+        }
+        var userAssignments =
+            await context.UserAssignments
+                .Include(x => x.Status)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Creator)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Essay)
+                .Include(x => x.Assignment)
+                .ThenInclude(a => a.Group)
+                .Include(x => x.User)
+                .Where(x => x.AssignmentId == assignmentId &&
+                            x.Assignment.Group.IsAIGroup == true && x.IsPublic)
+                .OrderByDescending(x => x.SubmitDate).Skip(offset ?? 0)
+                .Take(limit ?? 5).Select(x =>
+                    new UserAssignmentBaseModal()
+                    {
+                        Student = UserMapper.ToUserModal(x.User),
+                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
+                        IsEvaluated = x.IsEvaluated,
+                        TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
+                        ActualWordCount = x.WordCount,
+                        SubmitDate = x.SubmitDate,
+                    }).ToListAsync();
+        return userAssignments;
+    }
+
+    public async Task<ResultResponse> IsAssignmentPublic(int userId, int assignmentId)
+    {
+        var userAssignment = await context.UserAssignments.FirstOrDefaultAsync(x =>
+            x.AssignmentId == assignmentId && x.UserId == userId);
+        if (userAssignment == null)
+        {
+            throw new Exception("User assignment not found");
+        }
+
+        return new ResultResponse()
+        {
+            Result = userAssignment.IsPublic
         };
     }
 
@@ -338,6 +420,7 @@ public class AssignmentRepository(
                         TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
                         ActualWordCount = x.WordCount,
                         SubmitDate = x.SubmitDate,
+                        IsPublic = x.IsPublic
                     }).ToListAsync();
         var cnt = await context.UserAssignments.Include(x => x.Status)
             .CountAsync(x =>
@@ -442,7 +525,7 @@ public class AssignmentRepository(
             IsEvaluated = assgn.IsEvaluated,
             GeneralComments = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
             EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? [],
-            Images = storeService.GetUserAssignmentImages(assgn.UserId, assgn.AssignmentId) ?? []
+            IsPublic = assgn.IsPublic,
         };
     }
 
@@ -514,7 +597,8 @@ public class AssignmentRepository(
         int count)
     {
         return await context.UserAssignments.Include(u => u.Assignment)
-            .ThenInclude(a => a.Essay).Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1 && !x.IsEvaluated)
+            .ThenInclude(a => a.Essay)
+            .Where(x => x.Assignment.CreatorId == aiTeacherId && x.StatusId == 1 && !x.IsEvaluated)
             .Take(count)
             .Select(x => new UserAssignmentViewForAI()
             {

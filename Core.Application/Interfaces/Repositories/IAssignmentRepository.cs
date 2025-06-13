@@ -44,4 +44,7 @@ public interface IAssignmentRepository
 
     Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId, DateTime? fromDate = null,
         DateTime? toDate = null);
+    Task<ResultResponse> MakeUserAssignmentPublic(int userId, int assignmentId);
+    Task<List<UserAssignmentBaseModal>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit);
+    Task<ResultResponse> IsAssignmentPublic(int userId, int assignmentId);
 }

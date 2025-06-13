@@ -196,4 +196,28 @@ public class AssignmentController(
             return Results.Problem(ex.Message);
         }
     }
+    [HttpPut("[action]")]
+    [ProducesResponseType(typeof(List<ResultResponse>), 200)]
+    public async Task<IResult> MakeUserAssignmentPublicStatus([FromBody] MakeUserAssignmentPublicRequest request)
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.MakeUserAssignmentPublic(userId, request.AssignmentId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(List<UserAssignmentBaseModal>), 200)]
+    public async Task<IResult> GetPublicUserAssignments([FromQuery] int assignmentId, [FromQuery] int? offset, [FromQuery] int? limit)
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetPublicUserAssignments(userId, assignmentId, offset, limit);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(List<UserAssignmentBaseModal>), 200)]
+    public async Task<IResult> IsAssignmentPublic([FromQuery] int assignmentId)
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.IsAssignmentPublic(userId, assignmentId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
 }

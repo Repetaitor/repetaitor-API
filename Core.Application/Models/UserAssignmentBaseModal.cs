@@ -9,4 +9,5 @@ public class UserAssignmentBaseModal
     public DateTime? SubmitDate { get; set; }
     public int TotalScore { get; set; } = -1;
     public int ActualWordCount { get; set; }
+    public bool IsPublic { get; set; } = false;
 }
