@@ -156,7 +156,7 @@ public class AssignmentService(
             }
             var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
-            if (res && request.Images.Count > 0) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
+            if (res) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.Success,
