@@ -14,4 +14,8 @@
       <ProjectReference Include="..\Core.Application\Core.Application.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Azure.Storage.Blobs" Version="12.24.1" />
+    </ItemGroup>
+
 </Project>

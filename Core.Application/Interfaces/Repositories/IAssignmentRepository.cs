@@ -47,4 +47,7 @@ public interface IAssignmentRepository
     Task<ResultResponse> MakeUserAssignmentPublic(int userId, int assignmentId);
     Task<List<UserAssignmentBaseModal>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit);
     Task<ResultResponse> IsAssignmentPublic(int userId, int assignmentId);
+    Task<bool> SaveImagesForAssignment(int userId, int assignmentId, string imageUrl);
+    Task<List<string>> GetUserAssignmentImagesUrl(int userId, int assignmentId);
+    Task<bool> ClearUserAssignemntImagesUrl(int userId, int assignmentId);
 }

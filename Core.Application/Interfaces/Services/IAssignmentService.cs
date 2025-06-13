@@ -41,7 +41,7 @@ public interface IAssignmentService
     Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId, int assignmentId,
         string statusName, int? offset, int? limit);
     Task<ResponseView<List<UserAssignmentViewForAI>>> GetUserAssignmentViewForAI(int aiTeacherId, int count);
-    ResponseView<List<string>> GetUserAssignmentImages(int userId, int assignmentId);
+    Task<ResponseView<List<string>>> GetUserAssignmentImages(int userId, int assignmentId);
     
     Task<ResponseView<ResultResponse>> MakeUserAssignmentPublic(int userId, int assignmentId);
     

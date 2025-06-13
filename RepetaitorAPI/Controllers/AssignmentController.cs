@@ -1,13 +1,10 @@
 using System.Security.Claims;
-using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Assignments;
 using Core.Application.Models.DTO.Essays;
-using Core.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RepetaitorAPI.Controllers;
@@ -16,7 +13,6 @@ namespace RepetaitorAPI.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class AssignmentController(
-    IJWTTokenGenerator tokenGenerator,
     IAssignmentService assignmentService,
     IHttpContextAccessor httpContextAccessor,
     IAICommunicateService aIService) : ControllerBase

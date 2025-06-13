@@ -17,6 +17,7 @@ namespace Core.Domain.Data
         public DbSet<GeneralComment> GeneralComments => Set<GeneralComment>();
         public DbSet<UserAssignment> UserAssignments => Set<UserAssignment>();
         public DbSet<UserGroups> UserGroups => Set<UserGroups>();
+        public DbSet<AssignmentImagesStore> AssignmentImagesStores => Set<AssignmentImagesStore>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -124,7 +124,6 @@ public class UserAuthorizationService(
                     }
                 };
             }
-            imagesStoreService.CreateDirectoryForUser(result);
             return new ResponseView<SendVerificationCodeResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,

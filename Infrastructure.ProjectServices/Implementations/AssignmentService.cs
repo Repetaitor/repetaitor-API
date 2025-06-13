@@ -11,7 +11,7 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class AssignmentService(
     IAssignmentRepository assignmentRepository,
     IAICommunicateService aiCommunicateService,
-    IImagesStoreService imagesStoreService, IImagesStoreService storeService) : IAssignmentService
+    IImagesStoreService imagesStoreService) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
@@ -154,9 +154,33 @@ public class AssignmentService(
                 var rs = await aiCommunicateService.GetEssayTextFromImage(request.Images);
                 request.Text = rs;
             }
-            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text ?? "",
+
+            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId,
+                request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
-            if (res) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
+            if (res && request.Images.Count > 0)
+            {
+                var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
+                var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
+                if (!clear1 || !clear2)
+                {
+                    return new ResponseView<ResultResponse>()
+                    {
+                        Code = StatusCodesEnum.InternalServerError,
+                        Message = "Failed to clear previous images.",
+                        Data = new ResultResponse() { Result = false }
+                    };
+                }
+                foreach (var imageBase64 in request.Images)
+                {
+                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId, imageBase64);
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        await assignmentRepository.SaveImagesForAssignment(userId, request.AssignmentId, url);
+                    }
+                }
+            }
+
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.Success,
@@ -180,7 +204,7 @@ public class AssignmentService(
         try
         {
             var res = await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
-            res.Images = storeService.GetUserAssignmentImages(userId, assignmentId);;
+            res.Images = await assignmentRepository.GetUserAssignmentImagesUrl(userId, assignmentId);
             return new ResponseView<UserAssignmentModal>()
             {
                 Code = StatusCodesEnum.Success,
@@ -406,17 +430,18 @@ public class AssignmentService(
         }
     }
 
-    public ResponseView<List<string>> GetUserAssignmentImages(int userId, int assignmentId)
+    public async Task<ResponseView<List<string>>> GetUserAssignmentImages(int userId, int assignmentId)
     {
         try
         {
-            var images = imagesStoreService.GetUserAssignmentImages(userId, assignmentId);
+            var images = await assignmentRepository.GetUserAssignmentImagesUrl(userId, assignmentId);
             return new ResponseView<List<string>>()
             {
                 Code = StatusCodesEnum.Success,
                 Data = images
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<List<string>>()
             {
@@ -437,7 +462,8 @@ public class AssignmentService(
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        }catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<ResultResponse>()
             {
@@ -448,17 +474,20 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<List<UserAssignmentBaseModal>>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit)
+    public async Task<ResponseView<List<UserAssignmentBaseModal>>> GetPublicUserAssignments(int userId,
+        int assignmentId, int? offset, int? limit)
     {
         try
         {
-            var userAssignments = await assignmentRepository.GetPublicUserAssignments(userId, assignmentId, offset, limit);
+            var userAssignments =
+                await assignmentRepository.GetPublicUserAssignments(userId, assignmentId, offset, limit);
             return new ResponseView<List<UserAssignmentBaseModal>>()
             {
                 Code = StatusCodesEnum.Success,
                 Data = userAssignments
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<List<UserAssignmentBaseModal>>()
             {
@@ -479,7 +508,8 @@ public class AssignmentService(
                 Code = StatusCodesEnum.Success,
                 Data = isPublicResult
             };
-        }   catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<ResultResponse>()
             {

@@ -143,6 +143,40 @@ public class AssignmentRepository(
         };
     }
 
+    public async Task<bool> SaveImagesForAssignment(int userId, int assignmentId, string imageUrl)
+    {
+        var image = new AssignmentImagesStore()
+        {
+            UserId = userId,
+            AssignmentId = assignmentId,
+            ImageUrl = imageUrl
+        };
+
+        await context.AssignmentImagesStores.AddAsync(image);
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public Task<List<string>> GetUserAssignmentImagesUrl(int userId, int assignmentId)
+    {
+        return context.AssignmentImagesStores
+            .Where(x => x.UserId == userId && x.AssignmentId == assignmentId)
+            .Select(x => x.ImageUrl).ToListAsync();
+    }
+
+    public async Task<bool> ClearUserAssignemntImagesUrl(int userId, int assignmentId)
+    {
+        var images = context.AssignmentImagesStores
+            .Where(x => x.UserId == userId && x.AssignmentId == assignmentId);
+        if (images.IsNullOrEmpty())
+        {
+            return true;
+        }
+        context.AssignmentImagesStores.RemoveRange(images);
+        var t = await context.SaveChangesAsync();
+        return t > 0;
+    }
+
     public async Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId)
     {
         var userAssignments = context.UserAssignments.Where(x => x.UserId == userId);
