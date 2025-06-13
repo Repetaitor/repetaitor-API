@@ -13,7 +13,8 @@ public class UserAuthorizationService(
     IUserRepository userRepository,
     IAuthCodesRepository authCodesRepository,
     IJWTTokenGenerator jwtTokenGenerator,
-    IMailService mailService) : IUserAuthorizationService
+    IMailService mailService,
+    IImagesStoreService imagesStoreService) : IUserAuthorizationService
 {
     private static string GetHashedPassword(string password)
     {
@@ -123,7 +124,7 @@ public class UserAuthorizationService(
                     }
                 };
             }
-
+            imagesStoreService.CreateDirectoryForUser(result);
             return new ResponseView<SendVerificationCodeResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,

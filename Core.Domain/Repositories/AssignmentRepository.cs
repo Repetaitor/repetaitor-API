@@ -1,6 +1,7 @@
 using System.Data;
 using System.Runtime.Intrinsics.X86;
 using Core.Application.Interfaces.Repositories;
+using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Essays;
@@ -17,7 +18,7 @@ public class AssignmentRepository(
     ApplicationContext context,
     IEssayRepository essayRepository,
     IUserRepository userRepository,
-    IGroupRepository groupRepository) : IAssignmentRepository
+    IGroupRepository groupRepository, IImagesStoreService storeService) : IAssignmentRepository
 {
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
@@ -440,7 +441,8 @@ public class AssignmentRepository(
             UserId = assgn.UserId,
             IsEvaluated = assgn.IsEvaluated,
             GeneralComments = await GetGeneralComments(assgn.UserId, assgn.AssignmentId) ?? [],
-            EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? []
+            EvaluationComments = await GetEvaluationTextComments(assgn.UserId, assgn.AssignmentId) ?? [],
+            Images = storeService.GetUserAssignmentImages(assgn.UserId, assgn.AssignmentId) ?? []
         };
     }
 

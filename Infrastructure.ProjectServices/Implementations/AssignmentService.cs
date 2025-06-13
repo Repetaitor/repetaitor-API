@@ -4,10 +4,14 @@ using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Assignments;
 using Core.Application.Models.DTO.Essays;
+using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
-public class AssignmentService(IAssignmentRepository assignmentRepository) : IAssignmentService
+public class AssignmentService(
+    IAssignmentRepository assignmentRepository,
+    IAICommunicateService aiCommunicateService,
+    IImagesStoreService imagesStoreService) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
@@ -19,7 +23,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<ResultResponse>()
             {
@@ -35,7 +40,6 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     {
         try
         {
-            
             var res = await assignmentRepository.CreateNewAssignment(userId,
                 request.Instructions, request.GroupId, request.EssayId, request.DueDate);
             return new ResponseView<AssignmentBaseModal>()
@@ -145,8 +149,14 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
     {
         try
         {
-            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text,
+            if (request is { Text: "", Images.Count: > 0 })
+            {
+                var rs = await aiCommunicateService.GetEssayTextFromImage(request.Images);
+                request.Text = rs;
+            }
+            var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId, request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
+            if (res) await imagesStoreService.StoreImagesAsync(userId, request.AssignmentId, request.Images);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.Success,
@@ -175,7 +185,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<UserAssignmentModal>()
             {
@@ -201,7 +212,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                     TotalCount = res.Item2
                 }
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
@@ -272,7 +284,7 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                 Code = StatusCodesEnum.Success,
                 Data = new ResultResponse() { Result = res }
             };
-        } 
+        }
         catch (Exception ex)
         {
             return new ResponseView<ResultResponse>()
@@ -299,7 +311,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                     TotalCount = res.Item2
                 }
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
@@ -324,7 +337,8 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             return new ResponseView<AssignmentBaseModal>()
             {
@@ -386,6 +400,27 @@ public class AssignmentService(IAssignmentRepository assignmentRepository) : IAs
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching user assignment view for AI: " + ex.Message,
+                Data = null
+            };
+        }
+    }
+
+    public ResponseView<List<string>> GetUserAssignmentImages(int userId, int assignmentId)
+    {
+        try
+        {
+            var images = imagesStoreService.GetUserAssignmentImages(userId, assignmentId);
+            return new ResponseView<List<string>>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = images
+            };
+        } catch (Exception ex)
+        {
+            return new ResponseView<List<string>>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while fetching user assignment images: " + ex.Message,
                 Data = null
             };
         }
