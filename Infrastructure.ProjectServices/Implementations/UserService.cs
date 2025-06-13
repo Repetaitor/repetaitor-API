@@ -38,7 +38,7 @@ public class UserService(
         {
             var userStats = await assignmentRepository.GetAverageUserScoreByDate(userId);
             var userAssignmentsStats = await assignmentRepository.GetUserAssignmentsStatusStat(userId);
-
+            var userPerformance = await assignmentRepository.GetUserPerformance(userId);
             return new ResponseView<StudentDashboardHeaderInfoViewModel>
             {
                 Code = StatusCodesEnum.Success,
@@ -47,7 +47,8 @@ public class UserService(
                     CompletedAssignmentsCount = userAssignmentsStats.CompletedAssignmentsCount,
                     InProgressAssignmentsCount = userAssignmentsStats.InProgressAssignmentsCount,
                     PendingAssignmentsCount = userAssignmentsStats.PendingAssignmentsCount,
-                    UserScoresStats = userStats
+                    UserScoresStats = userStats,
+                    UserPerformanceStats = userPerformance.PerformanceStats
                 }
             };
         }

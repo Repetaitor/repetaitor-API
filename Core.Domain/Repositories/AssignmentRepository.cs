@@ -36,7 +36,7 @@ public class AssignmentRepository(
             }).ToListAsync();
         return new UserPerformanceViewModel()
         {
-            PerformanceStats = userGroupedCompletedAssignments
+            PerformanceStats = userGroupedCompletedAssignments.OrderBy(x => x.DateTime).ToList()
         };
     }
     public async Task<UserPerformanceViewModel> GetAllUserPerformanceForTeacher(int teacherId, DateTime? fromDate = null,
@@ -560,10 +560,10 @@ public class AssignmentRepository(
                             FluencyScoreAvg = double.Round(g.Average(y => y.FluencyScore), 2)
                         }).ToList()
                 }
-            ).OrderBy(x => x.DateTime).ToListAsync();
+            ).ToListAsync();
         return new GroupsPerformance()
         {
-            GroupsPerformanceStatsByDate = groupsStats
+            GroupsPerformanceStatsByDate = groupsStats.OrderBy(x => x.DateTime).ToList()
         };
     }
     // public async Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId)
