@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using Core.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SendGrid;
@@ -8,7 +9,7 @@ using SendGrid.Helpers.Mail;
 
 namespace infrastructure.MailSenderService.Implementations;
 
-public class MailService(IConfiguration configuration, ILogger<IMailService> _logger) : IMailService
+public class MailService(IWebHostEnvironment env, IConfiguration configuration, ILogger<IMailService> _logger) : IMailService
 {
     private readonly string _apiKey = configuration["SendGridApiKey"] ??
                                       throw new ArgumentNullException("SendGridApiKey is not configured");
@@ -19,7 +20,7 @@ public class MailService(IConfiguration configuration, ILogger<IMailService> _lo
         try
         {
             // Console.WriteLine("Sending email to {Email} with subject {Subject}", to, subject);
-            var fileName = Path.Combine(Directory.GetCurrentDirectory(), "AuthCodeView.html");
+            var fileName = Path.Combine(env.ContentRootPath, "AuthCodeView.html");
             string viewBody;
             await using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
