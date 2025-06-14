@@ -15,7 +15,7 @@ public class MailService(IWebHostEnvironment env, IConfiguration configuration, 
                                       throw new ArgumentNullException("SendGridApiKey is not configured");
     private readonly string _email = configuration["GmailOptions:Email"] ??
                                       throw new ArgumentNullException("GmailOptions:Email is not configured");
-    public async Task<(bool, string)> SendAuthMail(string to, string subject, string body)
+    public async Task<bool> SendAuthMail(string to, string subject, string body)
     {
         try
         {
@@ -29,42 +29,18 @@ public class MailService(IWebHostEnvironment env, IConfiguration configuration, 
             }
 
             viewBody = viewBody.Replace("AuthenticationCode", body);
-            // var mail = new MailMessage()
-            // {
-            //     From = new MailAddress(configuration["GmailOptions:Email"]!),
-            //     Subject = subject,
-            //     Body = viewBody,
-            //     IsBodyHtml =  true
-            // };
-            // mail.To.Add(to);
-            // using (var smtclinet = new SmtpClient())
-            // {
-            //     smtclinet.Host = configuration["GmailOptions:Host"]!;
-            //     smtclinet.Port = int.Parse(configuration["GmailOptions:Port"]!);
-            //     smtclinet.Timeout = 1000;
-            //     smtclinet.EnableSsl = true;
-            //     smtclinet.Credentials = new NetworkCredential(configuration["GmailOptions:Email"]!,
-            //         configuration["GmailOptions:Password"]!);
-            //
-            //     await smtclinet.SendMailAsync(mail);
-            //     return true;
-            // }
+            
             var client = new SendGridClient(_apiKey);
             var from = new EmailAddress(_email);
             var toEmail = new EmailAddress(to);
             var msg = MailHelper.CreateSingleEmail(from, toEmail, subject, plainTextContent: null,
                 htmlContent: viewBody);
             var response = await client.SendEmailAsync(msg);
-            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
-            {
-                return (true, "Email sent successfully.");
-            }
-            var responseBody = await response.Body.ReadAsStringAsync();
-            return (false, responseBody);
+            return response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return (false, ex.Message);
+            return false;
         }
     }
 }
