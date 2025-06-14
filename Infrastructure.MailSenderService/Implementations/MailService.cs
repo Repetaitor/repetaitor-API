@@ -12,6 +12,7 @@ public class MailService(IConfiguration configuration, ILogger<IMailService> _lo
     {
         try
         {
+            Console.WriteLine("Sending email to {Email} with subject {Subject}", to, subject);
             var fileName = Path.Combine(Directory.GetCurrentDirectory(), "AuthCodeView.html");
             string viewBody;
             await using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
@@ -43,6 +44,7 @@ public class MailService(IConfiguration configuration, ILogger<IMailService> _lo
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex.Message);
             _logger.LogInformation("Failed to send email to {Email} with subject {Subject}. Exception : {ex}", to, subject, ex);
             return false;
         }
