@@ -82,16 +82,16 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId,
+    public async Task<ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>> GetGroupAssignments(int userId,
         int groupId, int? offset, int? limit)
     {
         try
         {
             var res = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
-            return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
+            return new ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<AssignmentBaseModal>>()
+                Data = new CountedResponse<List<GroupAssignmentBaseModal>>()
                 {
                     Result = res.Item1,
                     TotalCount = res.Item2
@@ -100,11 +100,11 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
-            return new ResponseView<CountedResponse<List<AssignmentBaseModal>>>()
+            return new ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching group assignments: " + ex.Message,
-                Data = new CountedResponse<List<AssignmentBaseModal>>()
+                Data = new CountedResponse<List<GroupAssignmentBaseModal>>()
                 {
                     Result = null,
                     TotalCount = 0

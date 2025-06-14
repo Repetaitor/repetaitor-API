@@ -51,7 +51,7 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<AssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(CountedResponse<List<GroupAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetGroupAssignments([FromQuery] GetGroupAssignmentsRequest
         request)
     {

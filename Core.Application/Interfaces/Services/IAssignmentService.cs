@@ -15,7 +15,7 @@ public interface IAssignmentService
 
     Task<ResponseView<AssignmentBaseModal>> UpdateAssignment(int userId, UpdateAssignmentRequest request);
 
-    Task<ResponseView<CountedResponse<List<AssignmentBaseModal>>>> GetGroupAssignments(int userId, int groupId,
+    Task<ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>> GetGroupAssignments(int userId, int groupId,
         int? offset, int? limit);
 
     Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId, string statusName,

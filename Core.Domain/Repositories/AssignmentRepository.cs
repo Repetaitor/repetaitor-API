@@ -342,18 +342,19 @@ public class AssignmentRepository(
         return true;
     }
 
-    public async Task<(List<AssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId,
+    public async Task<(List<GroupAssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId,
         int? offset,
         int? limit)
     {
         var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
         if (!group)
             throw new Exception("You are not the owner of this group");
-        var assignments = await context.Assignments
+        var assignments
+            = await context.Assignments
             .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
             .Take(limit ?? 5)
             .Include(assignment => assignment.Creator)
-            .Include(assignment => assignment.Essay).Select(assgn => new AssignmentBaseModal()
+            .Include(assignment => assignment.Essay).Select(assgn => new GroupAssignmentBaseModal()
             {
                 Id = assgn.Id,
                 Instructions = assgn.Instructions,
@@ -362,12 +363,22 @@ public class AssignmentRepository(
                 Essay = EssayMapper.ToEssayModal(assgn.Essay),
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
+                CompletedPercentage = GetAssignmentCompletePercentage(assgn.Id)
             }).ToListAsync();
         var cnt = await context.Assignments
             .CountAsync(x => x.GroupId == groupId);
         return (assignments, cnt);
     }
-
+    public decimal GetAssignmentCompletePercentage(int assignmentId)
+    {
+        if (!context.Assignments.Any(x => x.Id == assignmentId))
+            throw new Exception("Assignment not found");
+        var totalUserAssignments = context.UserAssignments.Count(x => x.AssignmentId == assignmentId);
+        if (totalUserAssignments == 0) return 0;
+        var completedUserAssignmentsCount = context.UserAssignments.Count(x =>
+            x.AssignmentId == assignmentId && x.StatusId == 1);
+        return Math.Round((decimal)completedUserAssignmentsCount / totalUserAssignments * 100, 0);
+    }
     public async Task<List<StatusBaseModal>> GetAssignmentStatuses()
     {
         return await context.AssignmentStatuses.Select(s => new StatusBaseModal()
