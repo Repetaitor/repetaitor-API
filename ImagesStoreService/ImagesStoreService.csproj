@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="ImagesStore\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Core.Application\Core.Application.csproj" />
     </ItemGroup>
 

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Core.Domain.Data
 {
-    public sealed class ApplicationContext(DbContextOptions<ApplicationContext> options) : DbContext(options)
+    public sealed class ApplicationContext(DbContextOptions<ApplicationContext> options, IConfiguration configuration) : DbContext(options)
     {
         public DbSet<User> Users => Set<User>();
         public DbSet<AuthenticationCodes> AuthCodes => Set<AuthenticationCodes>();
@@ -58,10 +58,6 @@ namespace Core.Domain.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json")
-                    .Build();
                 optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "test"
                     ? configuration.GetConnectionString("TestConnection")
                     : configuration.GetConnectionString("ProductionConnection"));

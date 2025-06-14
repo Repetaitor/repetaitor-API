@@ -4,28 +4,29 @@ using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Assignments;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace AIService;
 
-public class AICommunicateService : IAICommunicateService
+public class AICommunicateService(IConfiguration configuration) : IAICommunicateService
 {
-    private readonly string apiKey = "AIzaSyDKaIkRaedr7v-K69fm1W5eD2KA-nmbvlE";
+    private readonly string? _apiKey = configuration["GeminiApiKey"];
 
-    private readonly string endpoint =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-03-25:generateContent?key=";
+    private readonly string? _endpoint = configuration["AIEndpoint"];
     private const char FirstDelimiter = '%';
     private const char SecondDelimiter = '$';
     private const char ThirdDelimiter = '&';
     public async Task<EvaluateAssignmentRequest?> GetAIResponse(string essayTitle, string essayText, int expectedWordCount)
     
     {
-        var content = "";
-        await using (FileStream fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/message.txt"))
+        string content;
+        await using (var fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/message.txt"))
         {
             var buffer = new byte[fstream.Length];
-            await fstream.ReadAsync(buffer, 0, buffer.Length);
+            var readAsync = await fstream.ReadAsync(buffer, 0, buffer.Length);
+            if (readAsync == 0) return null;
             content = Encoding.Default.GetString(buffer).Replace("essayTitleValue", essayTitle).Replace("expectedWordCountValue", expectedWordCount.ToString())
                 .Replace("essayTextValue", essayText);
         }
@@ -45,7 +46,7 @@ public class AICommunicateService : IAICommunicateService
             }
         };
 
-        var response = await client.PostAsJsonAsync(endpoint + apiKey, requestBody);
+        var response = await client.PostAsJsonAsync(_endpoint + _apiKey, requestBody);
         if (response.IsSuccessStatusCode)
         {
             content = await response.Content.ReadAsStringAsync();
@@ -157,7 +158,7 @@ public class AICommunicateService : IAICommunicateService
                 }
             };
 
-            var response = await client.PostAsJsonAsync(endpoint + apiKey, requestBody);
+            var response = await client.PostAsJsonAsync(_endpoint + _apiKey, requestBody);
             var content = "";
             if (response.IsSuccessStatusCode)
             {
