@@ -4,14 +4,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace Core.Domain.Data;
 
-public class ApplicationContextFactory(IConfiguration configuration) : IDesignTimeDbContextFactory<ApplicationContext>
+public class ApplicationContextFactory() : IDesignTimeDbContextFactory<ApplicationContext>
 {
     public ApplicationContext CreateDbContext(string[] args)
     {
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables().Build();
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
         optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "test"
-            ? configuration.GetConnectionString("TestConnection")
-            : configuration.GetConnectionString("ProductionConnection"));
+            ? configuration["ConnectionStrings:TestConnection"]
+            : configuration["ConnectionStrings:ProductionConnection"]);
         return new ApplicationContext(optionsBuilder.Options, configuration);
     }
 }
