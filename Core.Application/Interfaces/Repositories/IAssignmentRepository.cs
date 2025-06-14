@@ -16,6 +16,7 @@ public interface IAssignmentRepository
     Task<AssignmentBaseModal> CreateNewAssignment(int userId, string instructions, int groupId,
         int essayId, DateTime dueDate);
     Task<(List<GroupAssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId, int? offset, int? limit);
+    decimal GetAssignmentCompletePercentage(int assignmentId);
     Task<List<StatusBaseModal>> GetAssignmentStatuses();
     Task<bool> SaveOrSubmitAssignment(int userId, int assignmentId, string text, int wordCount, bool isSubmitted);
     Task<List<StatusBaseModal>> GetEvaluationStatuses();

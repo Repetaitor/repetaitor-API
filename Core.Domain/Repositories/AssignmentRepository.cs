@@ -351,10 +351,11 @@ public class AssignmentRepository(
             throw new Exception("You are not the owner of this group");
         var assignments
             = await context.Assignments
-            .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
-            .Take(limit ?? 5)
-            .Include(assignment => assignment.Creator)
-            .Include(assignment => assignment.Essay).Select(assgn => new GroupAssignmentBaseModal()
+                .Include(assignment => assignment.Creator)
+                .Include(assignment => assignment.Essay)
+                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
+                .Take(limit ?? 5).ToListAsync();
+        var assgnsModals = assignments.Select(assgn => new GroupAssignmentBaseModal()
             {
                 Id = assgn.Id,
                 Instructions = assgn.Instructions,
@@ -364,10 +365,10 @@ public class AssignmentRepository(
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
                 CompletedPercentage = GetAssignmentCompletePercentage(assgn.Id)
-            }).ToListAsync();
+            }).ToList();
         var cnt = await context.Assignments
             .CountAsync(x => x.GroupId == groupId);
-        return (assignments, cnt);
+        return (assgnsModals, cnt);
     }
     public decimal GetAssignmentCompletePercentage(int assignmentId)
     {

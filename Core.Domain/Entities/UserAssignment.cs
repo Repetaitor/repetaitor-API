@@ -8,7 +8,7 @@ public class UserAssignment
     public int UserId { get; set; }
     public int AssignmentId { get; set; }
     public int StatusId { get; set; }
-    [DataType("Text")] 
+    [DataType("nvarchar(MAX)")] 
     public string Text { get; set; } = "";
     public int WordCount { get; set; }
     public int GrammarScore { get; set; } = 0;

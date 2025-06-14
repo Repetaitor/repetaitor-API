@@ -6,7 +6,7 @@ namespace Core.Domain.Entities;
 public class Assignment
 {
     public int Id { get; set; }
-    [DataType("Text")]
+    [DataType("nvarchar(MAX)")]
     public string Instructions { get; set; } = "";
     public int GroupId { get; set; }
     public int EssayId { get; set; }

@@ -21,6 +21,12 @@ namespace Core.Domain.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Assignment>().Property(x => x.Instructions)
+                .HasColumnType("nvarchar(MAX)");
+            modelBuilder.Entity<GeneralComment>().Property(x => x.Comment)
+                .HasColumnType("nvarchar(MAX)");
+            modelBuilder.Entity<UserAssignment>().Property(x => x.Text)
+                .HasColumnType("nvarchar(MAX)");
             modelBuilder.Entity<AuthenticationCodes>()
                 .HasIndex(e => e.Email);
             modelBuilder.Entity<EvaluationTextComment>().HasOne(u => u.UserAssignment)

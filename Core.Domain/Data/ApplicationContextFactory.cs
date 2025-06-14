@@ -9,6 +9,7 @@ public class ApplicationContextFactory() : IDesignTimeDbContextFactory<Applicati
     public ApplicationContext CreateDbContext(string[] args)
     {
         var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables().Build();
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
