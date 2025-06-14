@@ -119,9 +119,9 @@ public class UserController(
 
     [HttpPost("[Action]")]
     [ProducesResponseType(typeof(GroupsPerformance), 200)]
-    public async Task<IResult> SendEmailToUser([FromBody] string toEmail, [FromBody] string content)
+    public async Task<IResult> SendEmailToUser([FromBody] string toEmail)
     {
-        var resp = await mailService.SendAuthMail(toEmail, "Verify", content);
-        return Results.Ok(resp);
+        var resp = await mailService.SendAuthMail(toEmail, "Verify", "content");
+        return Results.Ok(resp.Item2);
     }
 }
