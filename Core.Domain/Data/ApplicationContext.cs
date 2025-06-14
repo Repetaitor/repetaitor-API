@@ -59,8 +59,8 @@ namespace Core.Domain.Data
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseSqlServer(configuration["Mode"]?.ToLower() == "test"
-                    ? configuration.GetConnectionString("TestConnection")
-                    : configuration.GetConnectionString("ProductionConnection"));
+                    ? configuration["ConnectionStrings:TestConnection"]
+                    : configuration["ConnectionStrings:ProductionConnection"]);
             }
         }
     }
