@@ -5,22 +5,26 @@ using Microsoft.Extensions.Configuration;
 
 namespace infrastructure.MailSenderService.Implementations;
 
-public class MailService : IMailService
+public class MailService(IConfiguration configuration) : IMailService
 {
-    private readonly IConfigurationRoot configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile("appsettings.json")
-        .Build();
-
     public async Task<bool> SendAuthMail(string to, string subject, string body)
     {
         try
         {
+            var fileName = Path.Combine(Directory.GetCurrentDirectory(), "AuthCodeView.html");
+            string viewBody;
+            await using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                var reader = new StreamReader(fileStream);
+                viewBody = await reader.ReadToEndAsync();
+            }
+            viewBody = viewBody.Replace("AuthenticationCode", body);
             var mail = new MailMessage()
             {
                 From = new MailAddress(configuration["GmailOptions:Email"]!),
                 Subject = subject,
-                Body = $"your auth code is {body}"
+                Body = viewBody,
+                IsBodyHtml =  true
             };
             mail.To.Add(to);
             using (var smtclinet = new SmtpClient())
