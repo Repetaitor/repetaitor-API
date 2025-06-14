@@ -34,7 +34,7 @@ public class UserAuthorizationService(
         {
             var generatedCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
             var result = await mailService.SendAuthMail(email, "Authentication Code", generatedCode);
-            if (!result)
+            if (!result.Item1)
                 return new ResponseView<string>()
                 {
                     Code = StatusCodesEnum.InternalServerError,

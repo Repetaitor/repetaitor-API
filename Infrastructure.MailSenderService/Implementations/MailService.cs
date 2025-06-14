@@ -14,7 +14,7 @@ public class MailService(IConfiguration configuration, ILogger<IMailService> _lo
                                       throw new ArgumentNullException("SendGridApiKey is not configured");
     private readonly string _email = configuration["GmailOptions:Email"] ??
                                       throw new ArgumentNullException("GmailOptions:Email is not configured");
-    public async Task<bool> SendAuthMail(string to, string subject, string body)
+    public async Task<(bool, string)> SendAuthMail(string to, string subject, string body)
     {
         try
         {
@@ -54,11 +54,16 @@ public class MailService(IConfiguration configuration, ILogger<IMailService> _lo
             var msg = MailHelper.CreateSingleEmail(from, toEmail, subject, plainTextContent: null,
                 htmlContent: viewBody);
             var response = await client.SendEmailAsync(msg);
-            return response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted;
+            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
+            {
+                return (true, "Email sent successfully.");
+            }
+            var responseBody = await response.Body.ReadAsStringAsync();
+            return (false, responseBody);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return false;
+            return (false, ex.Message);
         }
     }
 }

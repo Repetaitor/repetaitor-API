@@ -13,7 +13,11 @@ namespace RepetaitorAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserController(IUserService userService, IUserAuthorizationService userAuthorizationService, IHttpContextAccessor httpContextAccessor)
+public class UserController(
+    IMailService mailService,
+    IUserService userService,
+    IUserAuthorizationService userAuthorizationService,
+    IHttpContextAccessor httpContextAccessor)
 {
     [HttpPost("[Action]")]
     [ProducesResponseType(typeof(SendVerificationCodeResponse), 200)]
@@ -27,7 +31,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     [ProducesResponseType(typeof(VerifyEmailResponse), 200)]
     public async Task<IResult> VerifyAuthCode([FromBody] VerifyEmailRequest request)
     {
-        var resp= await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
+        var resp = await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
@@ -36,12 +40,13 @@ public class UserController(IUserService userService, IUserAuthorizationService 
     public async Task<IResult> SignIn([FromBody] UserSignInRequest request)
     {
         var resp = await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
-        if(resp.Code != StatusCodesEnum.Success || resp.Data == null)
+        if (resp.Code != StatusCodesEnum.Success || resp.Data == null)
             return Results.NotFound();
         await httpContextAccessor.HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(resp.Data.ClaimsIdentity))!;
         return Results.Ok(resp.Data.User);
     }
+
     [Authorize]
     [HttpPost("[Action]")]
     [ProducesResponseType(typeof(UserModal), 200)]
@@ -51,11 +56,13 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         {
             await httpContextAccessor.HttpContext?.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)!;
             return Results.Ok();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             return Results.Problem(e.Message);
         }
     }
+
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(UserModal), 200)]
     public async Task<IResult> Me()
@@ -64,6 +71,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetUserDefaultInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(UserModal), 200)]
     public async Task<IResult> GetUserInfoById(int userId)
@@ -71,6 +79,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetUserDefaultInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(StudentDashboardHeaderInfoViewModel), 200)]
     public async Task<IResult> GetStudentDashboardInfo(int userId)
@@ -78,13 +87,16 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetStudentDashboardHeaderInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(UserPerformanceViewModel), 200)]
-    public async Task<IResult> GetStudentPerformanceInfoByDate(int userId, DateTime? fromDate = null, DateTime? toDate = null)
+    public async Task<IResult> GetStudentPerformanceInfoByDate(int userId, DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
         var resp = await userService.GetUserPerformanceAsync(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(TeacherDashboardBaseInfo), 200)]
@@ -94,6 +106,7 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var resp = await userService.GetTeacherDashboardHeaderInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
+
     [Authorize(Roles = "Teacher")]
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(GroupsPerformance), 200)]
@@ -102,5 +115,13 @@ public class UserController(IUserService userService, IUserAuthorizationService 
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await userService.GetTeacherGroupsPerformanceByDate(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+
+    [HttpPost("[Action]")]
+    [ProducesResponseType(typeof(GroupsPerformance), 200)]
+    public async Task<IResult> SendEmailToUser([FromBody] string toEmail, [FromBody] string content)
+    {
+        var resp = await mailService.SendAuthMail(toEmail, "Verify", content);
+        return Results.Ok(resp);
     }
 }
