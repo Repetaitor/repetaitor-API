@@ -20,9 +20,9 @@ public class MailService(IWebHostEnvironment env, IConfiguration configuration, 
         try
         {
             // Console.WriteLine("Sending email to {Email} with subject {Subject}", to, subject);
-            var fileName = Path.Combine(env.ContentRootPath, "AuthCodeView.html");
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Templates", "AuthCodeView.html");
             string viewBody;
-            await using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            await using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 var reader = new StreamReader(fileStream);
                 viewBody = await reader.ReadToEndAsync();
