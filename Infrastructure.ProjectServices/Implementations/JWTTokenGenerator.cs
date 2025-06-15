@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using System.Text;
 using Core.Application.Interfaces.Services;
-using Core.Application.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.ProjectServices.Implementations
