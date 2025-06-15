@@ -27,7 +27,12 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: |
+          if ls **/*Tests.csproj 1> /dev/null 2>&1; then
+            dotnet test --verbosity normal
+          else
+            echo "No test projects found. Skipping tests."
+          fi
       
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
