@@ -3,10 +3,13 @@ using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Essays;
 using Core.Application.Models.DTO.Groups;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
-public class GroupService(IGroupRepository groupRepository) : IGroupService
+public class GroupService(
+    IGroupRepository groupRepository,
+    ILogger<AssignmentService> logger) : IGroupService
 {
     private static readonly Random Random = new Random();
 
@@ -31,6 +34,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -57,6 +61,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -76,8 +81,10 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -100,6 +107,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<List<GroupBaseModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -119,8 +127,10 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -147,6 +157,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<NewGroupCodeResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -172,6 +183,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -197,6 +209,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -208,14 +221,18 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
     public async Task<ResponseView<List<UserModal>>> GetGroupUsers(int userId, int groupId)
     {
-        try {
+        try
+        {
             var res = await groupRepository.GetGroupUsers(userId, groupId);
             return new ResponseView<List<UserModal>>
             {
                 Code = StatusCodesEnum.Success,
                 Data = res
             };
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<List<UserModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -227,7 +244,8 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
     public async Task<ResponseView<List<GroupBaseModal>>> SearchGroup(string groupName)
     {
-        try {
+        try
+        {
             var res = await groupRepository.SearchGroup(groupName);
             return new ResponseView<List<GroupBaseModal>>
             {
@@ -237,6 +255,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<List<GroupBaseModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -248,7 +267,8 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
 
     public async Task<ResponseView<GroupBaseModal>> GetGroupBaseInfoById(int userId, int groupId)
     {
-        try {
+        try
+        {
             var res = await groupRepository.GetGroupBaseInfoById(userId, groupId);
             return new ResponseView<GroupBaseModal>
             {
@@ -258,6 +278,7 @@ public class GroupService(IGroupRepository groupRepository) : IGroupService
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
