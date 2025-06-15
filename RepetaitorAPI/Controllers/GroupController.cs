@@ -1,13 +1,10 @@
 using System.Security.Claims;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Essays;
 using Core.Application.Models.DTO.Groups;
-using Core.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Bcpg;
 
 namespace RepetaitorAPI.Controllers;
 
@@ -17,7 +14,7 @@ namespace RepetaitorAPI.Controllers;
 public class GroupController(
     IGroupService groupService,
     IHttpContextAccessor httpContextAccessor,
-    ILogger<UserController> logger) : ControllerBase
+    ILogger<GroupController> logger) : ControllerBase
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[Action]")]
