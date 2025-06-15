@@ -1,6 +1,7 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
@@ -8,7 +9,8 @@ public class UserService(
     IUserRepository userRepository,
     IAssignmentRepository assignmentRepository,
     IGroupRepository groupRepository,
-    IEssayRepository essayRepository) : IUserService
+    IEssayRepository essayRepository,
+    ILogger<AssignmentService> logger) : IUserService
 {
     public async Task<ResponseView<UserModal>> GetUserDefaultInfoAsync(int userId)
     {
@@ -23,6 +25,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<UserModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -54,6 +57,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<StudentDashboardHeaderInfoViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -77,6 +81,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<UserPerformanceViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -112,6 +117,7 @@ public class UserService(
             };
         } catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<TeacherDashboardBaseInfo>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -135,6 +141,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<GroupsPerformance>
             {
                 Code = StatusCodesEnum.InternalServerError,
