@@ -1,6 +1,7 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
@@ -8,7 +9,8 @@ public class UserService(
     IUserRepository userRepository,
     IAssignmentRepository assignmentRepository,
     IGroupRepository groupRepository,
-    IEssayRepository essayRepository) : IUserService
+    IEssayRepository essayRepository,
+    ILogger<AssignmentService> logger) : IUserService
 {
     public async Task<ResponseView<UserModal>> GetUserDefaultInfoAsync(int userId)
     {
@@ -18,11 +20,12 @@ public class UserService(
             return new ResponseView<UserModal>
             {
                 Code = StatusCodesEnum.Success,
-                Data = res  
+                Data = res
             };
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserInfo exception: {ex}", ex.Message);
             return new ResponseView<UserModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -54,6 +57,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetStudentDashboardHeaderInfoAsync exception: {ex}", ex.Message);
             return new ResponseView<StudentDashboardHeaderInfoViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -77,6 +81,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserPerformance exception: {ex}", ex.Message);
             return new ResponseView<UserPerformanceViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -110,8 +115,10 @@ public class UserService(
                     GroupPerformanceStats = usersPerformanse.PerformanceStats
                 }
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
+            logger.LogInformation("GetTeacherDashboardHeaderInfoAsync exception: {ex}", ex.Message);
             return new ResponseView<TeacherDashboardBaseInfo>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -135,6 +142,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetTeacherGroupsPerformanceByDate exception: {ex}", ex.Message);
             return new ResponseView<GroupsPerformance>
             {
                 Code = StatusCodesEnum.InternalServerError,

@@ -4,14 +4,15 @@ using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Assignments;
 using Core.Application.Models.DTO.Essays;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
 public class AssignmentService(
     IAssignmentRepository assignmentRepository,
     IAICommunicateService aiCommunicateService,
-    IImagesStoreService imagesStoreService) : IAssignmentService
+    IImagesStoreService imagesStoreService,
+    ILogger<AssignmentService> logger) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
@@ -26,6 +27,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("DeleteAssignment exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -50,6 +52,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("CreateNewAssignment exception: {ex}", ex.Message);
             return new ResponseView<AssignmentBaseModal>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -73,6 +76,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("UpdateAssignment exception: {ex}", ex.Message);
             return new ResponseView<AssignmentBaseModal>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -100,6 +104,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetGroupAssignments exception: {ex}", ex.Message);
             return new ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -131,6 +136,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserAssignments exception: {ex}", ex.Message);
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -158,7 +164,7 @@ public class AssignmentService(
             var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId,
                 request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
-            
+
             var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
             var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
             if (!clear1 || !clear2)
@@ -170,12 +176,13 @@ public class AssignmentService(
                     Data = new ResultResponse() { Result = false }
                 };
             }
-            
+
             if (res && request.Images.Count > 0)
             {
                 foreach (var imageBase64 in request.Images)
                 {
-                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId, imageBase64);
+                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId,
+                        imageBase64);
                     if (!string.IsNullOrEmpty(url))
                     {
                         await assignmentRepository.SaveImagesForAssignment(userId, request.AssignmentId, url);
@@ -191,6 +198,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("AssignmentService exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -215,6 +223,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserAssignment exception: {ex}", ex.Message);
             return new ResponseView<UserAssignmentModal>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -242,6 +251,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserNotSeenEvaluatedAssignments exception: {ex}", ex.Message);
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -268,6 +278,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetEvaluationStatuses exception: {ex}", ex.Message);
             return new ResponseView<List<StatusBaseModal>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -290,6 +301,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetAssignmentStatuses exception: {ex}", ex.Message);
             return new ResponseView<List<StatusBaseModal>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -314,6 +326,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("EvaluateAssignment exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -341,6 +354,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetTeacherAssignments exception: {ex}", ex.Message);
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -367,6 +381,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetAssignmentById exception: {ex}", ex.Message);
             return new ResponseView<AssignmentBaseModal>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -396,6 +411,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetAssigmentUsersTasks exception: {ex}", ex.Message);
             return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -423,6 +439,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserAssignmentViewForAI exception: {ex}", ex.Message);
             return new ResponseView<List<UserAssignmentViewForAI>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -445,6 +462,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetUserAssignmentImagesUrl exception: {ex}", ex.Message);
             return new ResponseView<List<string>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -467,6 +485,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("MakeUserAssignmentPublic exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -491,6 +510,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("GetPublicUserAssignments exception: {ex}", ex.Message);
             return new ResponseView<List<UserAssignmentBaseModal>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -513,6 +533,7 @@ public class AssignmentService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("IsAssignmentPublic exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,

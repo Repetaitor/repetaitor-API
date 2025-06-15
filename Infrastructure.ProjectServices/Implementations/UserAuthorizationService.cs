@@ -5,16 +5,15 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO.Authorization;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
 
 public class UserAuthorizationService(
     IUserRepository userRepository,
     IAuthCodesRepository authCodesRepository,
-    IJWTTokenGenerator jwtTokenGenerator,
     IMailService mailService,
-    IImagesStoreService imagesStoreService) : IUserAuthorizationService
+    ILogger<AssignmentService> logger) : IUserAuthorizationService
 {
     private static string GetHashedPassword(string password)
     {
@@ -50,6 +49,7 @@ public class UserAuthorizationService(
             };
         } catch (Exception ex)
         {
+            logger.LogInformation("SendVerificationCode exception: {ex}", ex.Message);
             return new ResponseView<string>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -74,6 +74,7 @@ public class UserAuthorizationService(
             };
         } catch (Exception ex)
         {
+            logger.LogInformation("VerifyEmail exception: {ex}", ex.Message);
             return new ResponseView<VerifyEmailResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -133,6 +134,7 @@ public class UserAuthorizationService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("SignUpUser exception: {ex}", ex.Message);
             return new ResponseView<SendVerificationCodeResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -168,6 +170,7 @@ public class UserAuthorizationService(
         }
         catch (Exception ex)
         {
+            logger.LogInformation("MakeUserSignIn exception: {ex}", ex.Message);
             return new ResponseView<UserSignInResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,

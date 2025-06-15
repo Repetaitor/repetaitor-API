@@ -1,12 +1,10 @@
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Authorization;
 using Core.Application.Models.DTO.Essays;
-using Core.Application.Models.DTO.UserInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace RepetaitorAPI.Controllers;
 
@@ -16,13 +14,15 @@ namespace RepetaitorAPI.Controllers;
 public class EssayController(
     IEssayService essayService,
     IJWTTokenGenerator tokenGenerator,
-    IHttpContextAccessor httpContextAccessor)
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<EssayController> logger) : ControllerBase
 {
     [Authorize(Roles = "Teacher")]
     [HttpPost("[Action]")]
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> AddNewEssay([FromBody] CreateNewEssayRequest request)
     {
+        logger.LogInformation("AddNewEssay request: {request}", JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
@@ -33,6 +33,7 @@ public class EssayController(
     [HttpDelete("[Action]")]
     public async Task<IResult> DeleteEssay([FromQuery] int essayId)
     {
+        logger.LogInformation("DeleteEssay request: {essayId}", essayId);
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.DeleteEssay(essayId, userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
@@ -43,6 +44,7 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
+        logger.LogInformation("UpdateEssay request: {request}", JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
@@ -63,6 +65,7 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> GetEssayById([FromQuery] int essayId)
     {
+        logger.LogInformation("GetEssayById request: {essayId}", essayId);
         var resp = await essayService.GetEssayById(essayId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
