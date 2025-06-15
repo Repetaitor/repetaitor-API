@@ -70,6 +70,8 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         var group = await context.Groups.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == groupId);
         if (group == null)
             throw new Exception("Group not found");
+        if (group.OwnerId != userId)
+            throw new Exception("You are not allowed to update this group");
         group.GroupName = groupTitle;
         await context.SaveChangesAsync();
         return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
