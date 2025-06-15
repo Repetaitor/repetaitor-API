@@ -28,11 +28,12 @@ jobs:
 
       - name: Run tests
         run: |
-          if ls **/*Tests.csproj 1> /dev/null 2>&1; then
+          $testProjects = Get-ChildItem -Recurse -Filter *Tests.csproj
+          if ($testProjects.Count -gt 0) {
             dotnet test --verbosity normal
-          else
-            echo "No test projects found. Skipping tests."
-          fi
+          } else {
+            Write-Host "No test projects found. Skipping tests."
+          }
       
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
