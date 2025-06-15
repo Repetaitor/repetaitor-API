@@ -24,7 +24,7 @@ public class EssayService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("CreateNewEssay exception: {ex}", ex.Message);
             return new ResponseView<EssayModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -50,7 +50,7 @@ public class EssayService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("DeleteEssay exception: {ex}", ex.Message);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -76,7 +76,7 @@ public class EssayService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("UpdateEssay exception: {ex}", ex.Message);
             return new ResponseView<EssayModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -99,7 +99,7 @@ public class EssayService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetUserEssays exception: {ex}", ex.Message);
             return new ResponseView<List<EssayModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -122,7 +122,7 @@ public class EssayService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetEssay exception: {ex}", ex.Message);
             return new ResponseView<EssayModal>
             {
                 Code = StatusCodesEnum.InternalServerError,

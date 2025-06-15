@@ -25,7 +25,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetUserInfo exception: {ex}", ex.Message);
             return new ResponseView<UserModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -57,7 +57,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetStudentDashboardHeaderInfoAsync exception: {ex}", ex.Message);
             return new ResponseView<StudentDashboardHeaderInfoViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -81,7 +81,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetUserPerformance exception: {ex}", ex.Message);
             return new ResponseView<UserPerformanceViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -118,7 +118,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetTeacherDashboardHeaderInfoAsync exception: {ex}", ex.Message);
             return new ResponseView<TeacherDashboardBaseInfo>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -142,7 +142,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex.Message);
+            logger.LogInformation("GetTeacherGroupsPerformanceByDate exception: {ex}", ex.Message);
             return new ResponseView<GroupsPerformance>
             {
                 Code = StatusCodesEnum.InternalServerError,
