@@ -11,7 +11,7 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class AssignmentService(
     IAssignmentRepository assignmentRepository,
     IAICommunicateService aiCommunicateService,
-    IImagesStoreService imagesStoreService, 
+    IImagesStoreService imagesStoreService,
     ILogger<AssignmentService> logger) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
@@ -164,7 +164,7 @@ public class AssignmentService(
             var res = await assignmentRepository.SaveOrSubmitAssignment(userId, request.AssignmentId,
                 request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
-            
+
             var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
             var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
             if (!clear1 || !clear2)
@@ -176,12 +176,13 @@ public class AssignmentService(
                     Data = new ResultResponse() { Result = false }
                 };
             }
-            
+
             if (res && request.Images.Count > 0)
             {
                 foreach (var imageBase64 in request.Images)
                 {
-                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId, imageBase64);
+                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId,
+                        imageBase64);
                     if (!string.IsNullOrEmpty(url))
                     {
                         await assignmentRepository.SaveImagesForAssignment(userId, request.AssignmentId, url);

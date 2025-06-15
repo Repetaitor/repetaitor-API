@@ -12,9 +12,7 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class UserAuthorizationService(
     IUserRepository userRepository,
     IAuthCodesRepository authCodesRepository,
-    IJWTTokenGenerator jwtTokenGenerator,
     IMailService mailService,
-    IImagesStoreService imagesStoreService,
     ILogger<AssignmentService> logger) : IUserAuthorizationService
 {
     private static string GetHashedPassword(string password)

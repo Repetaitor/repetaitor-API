@@ -20,7 +20,7 @@ public class UserService(
             return new ResponseView<UserModal>
             {
                 Code = StatusCodesEnum.Success,
-                Data = res  
+                Data = res
             };
         }
         catch (Exception ex)
@@ -115,7 +115,8 @@ public class UserService(
                     GroupPerformanceStats = usersPerformanse.PerformanceStats
                 }
             };
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             logger.LogInformation("SignUp request: {ex}", ex);
             return new ResponseView<TeacherDashboardBaseInfo>
