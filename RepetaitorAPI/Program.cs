@@ -5,6 +5,7 @@ using Core.Domain.Data;
 using Core.Domain.Repositories;
 using infrastructure.MailSenderService.Implementations;
 using Infrastructure.ProjectServices.Implementations;
+using Microsoft.Extensions.Logging.AzureAppServices;
 using RepetaitorAPI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,13 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
     .AddEnvironmentVariables();
+builder.Logging.AddAzureWebAppDiagnostics();
+builder.Services.Configure<AzureFileLoggerOptions>(options =>
+{
+    options.FileName = "repetaitor-logs-";
+    options.FileSizeLimit = 10 * 1024 * 1024; // 10 MB
+    options.RetainedFileCountLimit = 10; // Keep the last 10 log files
+});
 builder.Services.AddDbContext<ApplicationContext>();
 builder.Services.AddHostedService<AITeacher>();
 builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();

@@ -8,21 +8,23 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace RepetaitorAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 public class UserController(
-    IMailService mailService,
     IUserService userService,
     IUserAuthorizationService userAuthorizationService,
-    IHttpContextAccessor httpContextAccessor)
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<UserController> logger) : ControllerBase
 {
     [HttpPost("[Action]")]
     [ProducesResponseType(typeof(SendVerificationCodeResponse), 200)]
     public async Task<IResult> SignUp([FromBody] SignUpUserRequest request)
     {
+        logger.LogInformation("SignUp request: {request}", JsonConvert.SerializeObject(request));
         var resp = await userAuthorizationService.SignUpUser(request);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
@@ -31,6 +33,7 @@ public class UserController(
     [ProducesResponseType(typeof(VerifyEmailResponse), 200)]
     public async Task<IResult> VerifyAuthCode([FromBody] VerifyEmailRequest request)
     {
+        logger.LogInformation("VerifyAuthCode request: {request}", JsonConvert.SerializeObject(request));
         var resp = await userAuthorizationService.VerifyEmail(request.Guid, request.Email, request.Code);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
@@ -39,6 +42,7 @@ public class UserController(
     [ProducesResponseType(typeof(UserModal), 200)]
     public async Task<IResult> SignIn([FromBody] UserSignInRequest request)
     {
+        logger.LogInformation("SignIn request: {request}", JsonConvert.SerializeObject(request));
         var resp = await userAuthorizationService.MakeUserSignIn(request.Email, request.Password);
         if (resp.Code != StatusCodesEnum.Success || resp.Data == null)
             return Results.NotFound();
