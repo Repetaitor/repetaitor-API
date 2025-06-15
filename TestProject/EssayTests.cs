@@ -18,7 +18,7 @@ public class EssayTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string>())
             .Build();
-
+        services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddDbContext<ApplicationContext>(options =>
             options.UseInMemoryDatabase(Guid.NewGuid().ToString()));

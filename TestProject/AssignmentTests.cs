@@ -25,7 +25,7 @@ public class AssignmentTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddDbContext<ApplicationContext>(options =>
             options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        
+        services.AddLogging();
         services.AddScoped<IImagesStoreService, FakeImageStoreService>();
         services.AddScoped<IEssayService, EssayService>();
         services.AddScoped<IAssignmentRepository, AssignmentRepository>();
