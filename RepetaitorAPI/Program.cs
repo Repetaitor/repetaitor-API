@@ -22,6 +22,7 @@ builder.Services.Configure<AzureFileLoggerOptions>(options =>
     options.RetainedFileCountLimit = 10; // Keep the last 10 log files
 });
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
 builder.Services.AddDbContext<ApplicationContext>();
 builder.Services.AddHostedService<AITeacher>();
 builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
