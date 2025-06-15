@@ -1,10 +1,7 @@
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Authorization;
 using Core.Application.Models.DTO.Essays;
-using Core.Application.Models.DTO.UserInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
