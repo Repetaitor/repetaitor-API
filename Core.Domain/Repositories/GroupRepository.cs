@@ -92,6 +92,8 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
         if (group == null)
             throw new Exception("Group not found");
+        if(group.OwnerId == userId)
+            throw new Exception("You are the owner of this group, you cannot join it as a student");
         var haveRealStudGroup = await context.UserGroups.Include(g => g.Group)
             .AnyAsync(u => u.UserId == userId && !u.Group.IsAIGroup);
         if (haveRealStudGroup)
