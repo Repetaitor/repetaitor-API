@@ -290,6 +290,8 @@ public class AssignmentRepository(
             .Include(assignment => assignment.Essay).FirstOrDefaultAsync(x => x.Id == assignmentId);
         if (assignment == null)
             throw new Exception("Assignment not found");
+        if (assignment.CreatorId != userId)
+            throw new Exception("You are not the owner of this assignment");
         assignment.Instructions = instructions;
         assignment.EssayId = essayId;
         assignment.DueDate = dueDate;

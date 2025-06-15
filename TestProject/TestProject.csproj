@@ -23,6 +23,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Core.Domain\Core.Domain.csproj" />
+      <ProjectReference Include="..\ImagesStoreService\ImagesStoreService.csproj" />
+      <ProjectReference Include="..\Infrastructure.AIService\Infrastructure.AIService.csproj" />
       <ProjectReference Include="..\Infrastructure.ProjectServices\Infrastructure.ProjectServices.csproj" />
     </ItemGroup>
 
