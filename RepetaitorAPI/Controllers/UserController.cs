@@ -78,7 +78,7 @@ public class UserController(
     [ProducesResponseType(typeof(UserModal), 200)]
     public async Task<IResult> GetUserInfoById(int userId)
     {
-        logger.LogInformation("SignUp request: {userId}", userId);
+        logger.LogInformation("GetUserInfoById request: {userId}", userId);
         var resp = await userService.GetUserDefaultInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
@@ -87,7 +87,7 @@ public class UserController(
     [ProducesResponseType(typeof(StudentDashboardHeaderInfoViewModel), 200)]
     public async Task<IResult> GetStudentDashboardInfo(int userId)
     {
-        logger.LogInformation("SignUp request: {userId}", userId);
+        logger.LogInformation("GetStudentDashboardInfo request: {userId}", userId);
         var resp = await userService.GetStudentDashboardHeaderInfoAsync(userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
@@ -97,7 +97,7 @@ public class UserController(
     public async Task<IResult> GetStudentPerformanceInfoByDate(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
     {
-        logger.LogInformation("SignUp request: {userId}, {fromDate}, {toDate}", userId, fromDate, toDate);
+        logger.LogInformation("GetStudentPerformanceInfoByDate request: {userId}, {fromDate}, {toDate}", userId, fromDate, toDate);
         var resp = await userService.GetUserPerformanceAsync(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
@@ -117,7 +117,7 @@ public class UserController(
     [ProducesResponseType(typeof(GroupsPerformance), 200)]
     public async Task<IResult> GetTeacherGroupsPerformanceByDate(DateTime? fromDate = null, DateTime? toDate = null)
     {
-        logger.LogInformation("SignUp request: {fromDate}, {toDate}", fromDate, toDate);
+        logger.LogInformation("GetTeacherGroupsPerformanceByDate request: {fromDate}, {toDate}", fromDate, toDate);
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await userService.GetTeacherGroupsPerformanceByDate(userId, fromDate, toDate);
         return ControllerReturnConverter.ConvertToReturnType(resp);

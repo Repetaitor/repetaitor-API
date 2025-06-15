@@ -22,7 +22,7 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> AddNewEssay([FromBody] CreateNewEssayRequest request)
     {
-        logger.LogInformation("SignUp request: {request}", JsonConvert.SerializeObject(request));
+        logger.LogInformation("AddNewEssay request: {request}", JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.CreateNewEssay(request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
@@ -33,7 +33,7 @@ public class EssayController(
     [HttpDelete("[Action]")]
     public async Task<IResult> DeleteEssay([FromQuery] int essayId)
     {
-        logger.LogInformation("SignUp request: {essayId}", essayId);
+        logger.LogInformation("DeleteEssay request: {essayId}", essayId);
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.DeleteEssay(essayId, userId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
@@ -44,7 +44,7 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> UpdateEssay([FromBody] UpdateEssayRequest request)
     {
-        logger.LogInformation("SignUp request: {request}", JsonConvert.SerializeObject(request));
+        logger.LogInformation("UpdateEssay request: {request}", JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await essayService.UpdateEssay(request.EssayId, request.EssayTitle, request.EssayDescription,
             request.ExpectedWordCount, userId);
@@ -65,7 +65,7 @@ public class EssayController(
     [ProducesResponseType(typeof(EssayModal), 200)]
     public async Task<IResult> GetEssayById([FromQuery] int essayId)
     {
-        logger.LogInformation("SignUp request: {essayId}", essayId);
+        logger.LogInformation("GetEssayById request: {essayId}", essayId);
         var resp = await essayService.GetEssayById(essayId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
