@@ -34,7 +34,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -61,7 +61,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -84,7 +84,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -107,7 +107,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<List<GroupBaseModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -130,7 +130,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -157,7 +157,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<NewGroupCodeResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -183,7 +183,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -209,7 +209,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -232,7 +232,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<List<UserModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -255,7 +255,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<List<GroupBaseModal>>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -278,7 +278,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("SignUp request: {ex}", ex);
+            logger.LogInformation("SignUp request: {ex}", ex.Message);
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.InternalServerError,
