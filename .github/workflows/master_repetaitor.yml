@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          $testProjects = Get-ChildItem -Recurse -Filter *Tests.csproj
+          $testProjects = Get-ChildItem -Recurse -Filter *TestProject.csproj
           if ($testProjects.Count -gt 0) {
             dotnet test --verbosity normal
           } else {
