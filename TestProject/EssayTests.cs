@@ -21,7 +21,7 @@ public class EssayTests
 
         services.AddSingleton<IConfiguration>(configuration);
         services.AddDbContext<ApplicationContext>(options =>
-            options.UseInMemoryDatabase(Guid.NewGuid().ToString())); // уникальное имя
+            options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
 
         services.AddScoped<IEssayRepository, EssayRepository>();
         services.AddScoped<IEssayService, EssayService>();
