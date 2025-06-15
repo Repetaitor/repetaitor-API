@@ -157,7 +157,7 @@ public class GroupService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("UpdateGroupCode exception: {ex}", ex.Message);
+            logger.LogInformation("RegenerateGroupCode exception: {ex}", ex.Message);
             return new ResponseView<NewGroupCodeResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,

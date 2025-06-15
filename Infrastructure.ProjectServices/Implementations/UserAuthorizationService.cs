@@ -49,7 +49,7 @@ public class UserAuthorizationService(
             };
         } catch (Exception ex)
         {
-            logger.LogInformation("CreateAuthCode exception: {ex}", ex.Message);
+            logger.LogInformation("SendVerificationCode exception: {ex}", ex.Message);
             return new ResponseView<string>()
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -74,7 +74,7 @@ public class UserAuthorizationService(
             };
         } catch (Exception ex)
         {
-            logger.LogInformation("CheckAuthCode exception: {ex}", ex.Message);
+            logger.LogInformation("VerifyEmail exception: {ex}", ex.Message);
             return new ResponseView<VerifyEmailResponse>
             {
                 Code = StatusCodesEnum.InternalServerError,
@@ -170,7 +170,7 @@ public class UserAuthorizationService(
         }
         catch (Exception ex)
         {
-            logger.LogInformation("CheckIfUser exception: {ex}", ex.Message);
+            logger.LogInformation("MakeUserSignIn exception: {ex}", ex.Message);
             return new ResponseView<UserSignInResponse>()
             {
                 Code = StatusCodesEnum.InternalServerError,
