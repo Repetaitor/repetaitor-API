@@ -14,11 +14,6 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (logger.IsEnabled(LogLevel.Information))
-            {
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
-
             using (var scope = scopeFactory.CreateScope())
             {
                 try
@@ -49,7 +44,7 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
                     logger.LogError(ex, "An error occurred while processing assignments.");
                 }
             }
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
 }
