@@ -6,7 +6,6 @@ using Core.Domain.Entities;
 using Core.Domain.Mappers;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Domain.Repositories;
 

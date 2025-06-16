@@ -18,7 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.MailSenderSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.AIService", "Infrastructure.AIService\Infrastructure.AIService.csproj", "{29610F07-C8AC-4D4A-B307-F11EC8160A01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImagesStoreService", "ImagesStoreService\ImagesStoreService.csproj", "{559AF486-F8F3-49F7-A7DD-A6D7C41B45D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.ImagesStoreService", "Infrastructure.ImagesStoreService\Infrastructure.ImagesStoreService.csproj", "{559AF486-F8F3-49F7-A7DD-A6D7C41B45D6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{F4DAFE27-1E25-452C-AB0D-04E9CD6B616B}"
 EndProject

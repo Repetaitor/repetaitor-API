@@ -3,6 +3,7 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Domain.Data;
 using Core.Domain.Repositories;
+using Infrastructure.ImagesStoreService.Implementations;
 using infrastructure.MailSenderService.Implementations;
 using Infrastructure.ProjectServices.Implementations;
 using Microsoft.Extensions.Logging.AzureAppServices;
@@ -26,7 +27,7 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogL
 builder.Services.AddDbContext<ApplicationContext>();
 builder.Services.AddHostedService<AITeacher>();
 builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
-builder.Services.AddScoped<IImagesStoreService, ImagesStoreService.ImagesStoreService>();
+builder.Services.AddScoped<IImagesStoreService, ImagesStoreService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthCodesRepository, AuthCodesRepository>();

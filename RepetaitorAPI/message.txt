@@ -56,9 +56,9 @@ If you want to add a comment with statusId 2 ("Suggestion") and your comment is 
 
 This will help us extract the correct substring and its exact indices later.
 
-⚠️ Do NOT return startIndex or endIndex. Only use delimiters in the essay text as explained.
+Do NOT return startIndex or endIndex. Only use delimiters in the essay text as explained.
 
-⚠️ All comments (both in text markers and JSON) MUST be written in **Georgian language only**.
+All comments (both in text markers and JSON) MUST be written in **Georgian language only**.
 
 Essay title: essayTitleValue,
 ExpectedWordCount: expectedWordCountValue,

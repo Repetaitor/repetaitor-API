@@ -1,9 +1,7 @@
 using Core.Application.Interfaces.Repositories;
-using Core.Application.Models;
 using Core.Domain.Data;
 using Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Cms;
 
 namespace Core.Domain.Repositories;
 

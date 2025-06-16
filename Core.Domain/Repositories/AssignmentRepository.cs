@@ -1,5 +1,4 @@
 using System.Data;
-using System.Runtime.Intrinsics.X86;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
