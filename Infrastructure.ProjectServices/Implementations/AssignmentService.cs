@@ -11,7 +11,6 @@ namespace Infrastructure.ProjectServices.Implementations;
 public class AssignmentService(
     IAssignmentRepository assignmentRepository,
     IAICommunicateService aiCommunicateService,
-    IImagesStoreService imagesStoreService,
     ILogger<AssignmentService> logger) : IAssignmentService
 {
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
@@ -165,9 +164,8 @@ public class AssignmentService(
                 request.Text ?? "",
                 request.WordCount, request.IsSubmitted);
 
-            var clear1 = await imagesStoreService.ClearUserAssignmentImages(userId, request.AssignmentId);
-            var clear2 = await assignmentRepository.ClearUserAssignemntImagesUrl(userId, request.AssignmentId);
-            if (!clear1 || !clear2)
+            var clear1 = await assignmentRepository.ClearUserAssignemntImagesFromDb(userId, request.AssignmentId);
+            if (!clear1)
             {
                 return new ResponseView<ResultResponse>()
                 {
@@ -179,15 +177,7 @@ public class AssignmentService(
 
             if (res && request.Images.Count > 0)
             {
-                foreach (var imageBase64 in request.Images)
-                {
-                    var url = await imagesStoreService.UploadBase64ImageAsync(userId, request.AssignmentId,
-                        imageBase64);
-                    if (!string.IsNullOrEmpty(url))
-                    {
-                        await assignmentRepository.SaveImagesForAssignment(userId, request.AssignmentId, url);
-                    }
-                }
+               await assignmentRepository.SaveImagesForAssignmentDb(userId, request.AssignmentId, request.Images);
             }
 
             return new ResponseView<ResultResponse>()
@@ -214,7 +204,7 @@ public class AssignmentService(
         try
         {
             var res = await assignmentRepository.GetUserAssignment(callerId, userId, assignmentId);
-            res.Images = await assignmentRepository.GetUserAssignmentImagesUrl(userId, assignmentId);
+            res.Images = await assignmentRepository.GetImagesForUserAssignmentDb(userId, assignmentId);
             return new ResponseView<UserAssignmentModal>()
             {
                 Code = StatusCodesEnum.Success,

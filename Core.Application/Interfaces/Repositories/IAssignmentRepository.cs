@@ -50,4 +50,7 @@ public interface IAssignmentRepository
     Task<bool> SaveImagesForAssignment(int userId, int assignmentId, string imageUrl);
     Task<List<string>> GetUserAssignmentImagesUrl(int userId, int assignmentId);
     Task<bool> ClearUserAssignemntImagesUrl(int userId, int assignmentId);
+    Task<bool> ClearUserAssignemntImagesFromDb(int userId, int assignmentId);
+    Task<bool> SaveImagesForAssignmentDb(int userId, int assignmentId, List<string> imagesBase64);
+    Task<List<string>> GetImagesForUserAssignmentDb(int userId, int assignmentId);
 }

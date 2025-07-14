@@ -18,6 +18,7 @@ namespace Core.Domain.Data
         public DbSet<UserAssignment> UserAssignments => Set<UserAssignment>();
         public DbSet<UserGroups> UserGroups => Set<UserGroups>();
         public DbSet<AssignmentImagesStore> AssignmentImagesStores => Set<AssignmentImagesStore>();
+        public DbSet<UserAssignmentImages> UserAssignmentImages => Set<UserAssignmentImages>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,6 +1,5 @@
 using System.Data;
 using Core.Application.Interfaces.Repositories;
-using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Essays;
@@ -15,10 +14,8 @@ namespace Core.Domain.Repositories;
 
 public class AssignmentRepository(
     ApplicationContext context,
-    IEssayRepository essayRepository,
     IUserRepository userRepository,
-    IGroupRepository groupRepository,
-    IImagesStoreService storeService) : IAssignmentRepository
+    IGroupRepository groupRepository) : IAssignmentRepository
 {
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
@@ -174,6 +171,35 @@ public class AssignmentRepository(
         context.AssignmentImagesStores.RemoveRange(images);
         var t = await context.SaveChangesAsync();
         return t > 0;
+    }
+
+    public async Task<bool> ClearUserAssignemntImagesFromDb(int userId, int assignmentId)
+    {
+        var imgs = context.UserAssignmentImages
+            .Where(x => x.UserId == userId && x.AssignmentId == assignmentId);
+        context.UserAssignmentImages.RemoveRange(imgs); 
+        await context.SaveChangesAsync().ContinueWith(t => t.Result > 0);
+        return true;
+    }
+
+    public async Task<bool> SaveImagesForAssignmentDb(int userId, int assignmentId, List<string> imagesBase64)
+    {
+        var images = imagesBase64.Select(image => new UserAssignmentImages()
+        {
+            UserId = userId,
+            AssignmentId = assignmentId,
+            ImageBase64 = image
+        }).ToList();
+        context.UserAssignmentImages.AddRange(images);
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<string>> GetImagesForUserAssignmentDb(int userId, int assignmentId)
+    {
+        var images = await context.UserAssignmentImages.Where(x => x.UserId == userId && x.AssignmentId == assignmentId)
+            .Select(x => x.ImageBase64).ToListAsync();
+        return images;
     }
 
     public async Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId)

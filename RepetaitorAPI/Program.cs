@@ -27,7 +27,7 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogL
 builder.Services.AddDbContext<ApplicationContext>();
 builder.Services.AddHostedService<AITeacher>();
 builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
-builder.Services.AddScoped<IImagesStoreService, ImagesStoreService>();
+//builder.Services.AddScoped<IImagesStoreService, ImagesStoreService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthCodesRepository, AuthCodesRepository>();
