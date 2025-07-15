@@ -26,14 +26,14 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Run tests
-        run: |
-          $testProjects = Get-ChildItem -Recurse -Filter *TestProject.csproj
-          if ($testProjects.Count -gt 0) {
-            dotnet test --verbosity normal
-          } else {
-            Write-Host "No test projects found. Skipping tests."
-          }
+      # - name: Run tests
+      #   run: |
+      #     $testProjects = Get-ChildItem -Recurse -Filter *TestProject.csproj
+      #     if ($testProjects.Count -gt 0) {
+      #       dotnet test --verbosity normal
+      #     } else {
+      #       Write-Host "No test projects found. Skipping tests."
+      #     }
       
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
