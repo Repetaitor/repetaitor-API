@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Infrastructure.ProjectServices.Implementations;
 
 public class GroupService(
+    IChatRepository chatRepository,
     IGroupRepository groupRepository,
     ILogger<AssignmentService> logger) : IGroupService
 {
@@ -26,6 +27,9 @@ public class GroupService(
         {
             var newGroupCode = GenerateClassCode();
             var res = await groupRepository.CreateGroup(groupName, newGroupCode, ownerId);
+            var chatId = await chatRepository.CreateGroupChatAsync(res.GroupName, res.Id);
+            var rs  =await chatRepository.AddUserToGroupChatAsync(ownerId, chatId);
+            if(!rs) Console.WriteLine("Failed to add owner to group chat");
             return new ResponseView<GroupBaseModal>
             {
                 Code = StatusCodesEnum.Success,
@@ -49,7 +53,6 @@ public class GroupService(
         try
         {
             var res = await groupRepository.DeleteGroup(userId, groupId);
-
             return new ResponseView<ResultResponse>
             {
                 Code = StatusCodesEnum.Success,

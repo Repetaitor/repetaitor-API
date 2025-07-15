@@ -13,6 +13,8 @@ public class RepetaitorGroup
 
     public bool IsAIGroup { get; set; } = false;
     
+    public int ChatId { get; set; }
+    
     [DataType("DateTime")]
     public DateTime CreateDate { get; set; }
     public virtual User Owner { get; set; }

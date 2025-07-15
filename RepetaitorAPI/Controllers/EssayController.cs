@@ -13,7 +13,6 @@ namespace RepetaitorAPI.Controllers;
 [ApiController]
 public class EssayController(
     IEssayService essayService,
-    IJWTTokenGenerator tokenGenerator,
     IHttpContextAccessor httpContextAccessor,
     ILogger<EssayController> logger) : ControllerBase
 {

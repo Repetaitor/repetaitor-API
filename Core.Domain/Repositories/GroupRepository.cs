@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Core.Domain.Repositories;
 
-public class GroupRepository(ApplicationContext context) : IGroupRepository
+public class GroupRepository(ApplicationContext context, IChatRepository chatRepository) : IGroupRepository
 {
     public async Task<GroupBaseModal> CreateGroup(string groupName, string groupCode, int ownerId)
     {
@@ -31,12 +31,15 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
         var group = await context.Groups.FirstOrDefaultAsync(x => x.Id == groupId);
         if (group == null)
             throw new Exception("Group not found");
-
         if (group.OwnerId != userId)
         {
             throw new Exception("You are not allowed to delete this group");
         }
-
+        var res = await chatRepository.DeleteChatPermanentlyAsync(group.ChatId, userId);
+        if (!res)
+        {
+            throw new Exception("Failed to delete group chat");
+        }
         context.Groups.Remove(group);
         await context.SaveChangesAsync();
         return true;
@@ -116,6 +119,12 @@ public class GroupRepository(ApplicationContext context) : IGroupRepository
 
 
         await context.SaveChangesAsync();
+        if (!group.IsAIGroup)
+        {
+            var rs = await chatRepository.AddUserToGroupChatAsync(userId, group.ChatId);
+            var rs1 = await chatRepository.CreatePrivateChatAsync("", userId, group.OwnerId);
+            return rs && rs1 > 0;
+        }
         return true;
     }
 

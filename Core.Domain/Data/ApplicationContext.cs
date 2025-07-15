@@ -19,6 +19,10 @@ namespace Core.Domain.Data
         public DbSet<UserGroups> UserGroups => Set<UserGroups>();
         public DbSet<AssignmentImagesStore> AssignmentImagesStores => Set<AssignmentImagesStore>();
         public DbSet<UserAssignmentImages> UserAssignmentImages => Set<UserAssignmentImages>();
+        public DbSet<Chats> Chats => Set<Chats>();
+        public DbSet<ChatMessages> ChatMessages => Set<ChatMessages>();
+        public DbSet<UserChats> UserChats => Set<UserChats>();
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
