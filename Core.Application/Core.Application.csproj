@@ -30,4 +30,8 @@
       <Compile Remove="Interfaces\Repositories\IEsseyTasksRepository.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Core.Domain\Core.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
