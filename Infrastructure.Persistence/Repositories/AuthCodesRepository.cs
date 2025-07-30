@@ -1,14 +1,12 @@
 using Core.Application.Interfaces.Repositories;
-using Core.Domain.Data;
 using Core.Domain.Entities;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
 public class AuthCodesRepository(ApplicationContext context, IUserRepository userRepository) : IAuthCodesRepository
 {
-    private ApplicationContext _context = context;
-
     public async Task<string> CreateAuthCode(string code, string email, int userId)
     {
         var newGuid = Guid.NewGuid();
@@ -20,14 +18,14 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
             Email = email,
             IsVerified = false
         };
-        await _context.AuthCodes.AddAsync(auth);
-        await _context.SaveChangesAsync();
+        await context.AuthCodes.AddAsync(auth);
+        await context.SaveChangesAsync();
         return newGuid.ToString();
     }
 
     public async Task<bool> CheckAuthCode(string guid, string email, string code)
     {
-        var cd = await _context.AuthCodes.FirstOrDefaultAsync(x =>
+        var cd = await context.AuthCodes.FirstOrDefaultAsync(x =>
             x.Guid == guid && x.Email == email && x.IsVerified == false);
         if (cd == null || cd.Email != email || cd.Code != code)
             throw new Exception("Invalid authentication code or email.");
@@ -37,14 +35,14 @@ public class AuthCodesRepository(ApplicationContext context, IUserRepository use
         }
 
         cd.IsVerified = true;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         var res = await userRepository.ActivateUser(cd.UserId);
         return res;
     }
 
     public async Task<bool> EmailIsVerified(string guid, string email)
     {
-        var cd = await _context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
+        var cd = await context.AuthCodes.FirstOrDefaultAsync(x => x.Email == email && x.Guid == guid);
         if (cd == null)
         {
             throw new Exception("Authentication code not found for the provided email.");

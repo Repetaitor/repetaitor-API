@@ -6,35 +6,26 @@ namespace Infrastructure.ProjectServices.Implementations;
 
 public class ChatService(IChatRepository chatRepository) : IChatService
 {
-    public async Task<ResponseView<bool>> AddMessageToChatAsync(int userId, int chatId, string message)
+    public async Task<ResponseView<ChatMessageViewModel>> AddMessageToChatAsync(int userId, int chatId, string message)
     {
         try
         {
             var sendRes = await chatRepository.AddMessageToChatAsync(userId, chatId, message);
 
-            if (sendRes)
+            return new ResponseView<ChatMessageViewModel>
             {
-                return new ResponseView<bool>
-                {
-                    Code = StatusCodesEnum.Success,
-                    Data = true
-                };
-            }
-
-            return new ResponseView<bool>
-            {
-                Code = StatusCodesEnum.BadRequest,
-                Message = "Failed to add message.",
-                Data = false
+                Code = StatusCodesEnum.Success,
+                Data = sendRes
             };
+            
         }
         catch (Exception ex)
         {
-            return new ResponseView<bool>
+            return new ResponseView<ChatMessageViewModel>
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = ex.Message,
-                Data = false
+                Data = null
             };
         }
     }
@@ -75,6 +66,28 @@ public class ChatService(IChatRepository chatRepository) : IChatService
         catch (Exception ex)
         {
             return new ResponseView<List<ChatMessageViewModel>>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
+
+    public async Task<ResponseView<List<string>>> GetChatMembers(int chatId)
+    {
+        try
+        {
+            var members = await chatRepository.GetChatMembers(chatId);
+            return new ResponseView<List<string>>
+            {
+                Code = StatusCodesEnum.Success,
+                Data = members
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<List<string>>
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = ex.Message,

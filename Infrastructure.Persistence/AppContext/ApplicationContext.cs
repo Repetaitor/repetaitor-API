@@ -2,7 +2,7 @@ using Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace Core.Domain.Data
+namespace Infrastructure.Persistence.AppContext
 {
     public sealed class ApplicationContext(DbContextOptions<ApplicationContext> options, IConfiguration configuration) : DbContext(options)
     {

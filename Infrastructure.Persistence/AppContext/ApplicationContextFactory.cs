@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Core.Domain.Data;
+namespace Infrastructure.Persistence.AppContext;
 
 public class ApplicationContextFactory() : IDesignTimeDbContextFactory<ApplicationContext>
 {

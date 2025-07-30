@@ -1,8 +1,8 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Domain.Data;
-using Core.Domain.Repositories;
+using Infrastructure.Persistence.AppContext;
+using Infrastructure.Persistence.Repositories;
 using Infrastructure.ProjectServices.Implementations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

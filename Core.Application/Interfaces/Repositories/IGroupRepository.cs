@@ -18,4 +18,7 @@ public interface IGroupRepository
     Task<List<GroupBaseModal>> SearchGroup(string groupName);
     Task<int> TeacherGroupsCount(int teacherId);
     Task<int> TeacherGroupsEnrolledStudentsCount(int teacherId);
+    Task<bool> GroupExists(int groupId);
+    Task<bool> IsUserInGroup(int userId, int groupId);
+    Task<bool> IsUserGroupOwner(int userId, int groupId);
 }

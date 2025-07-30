@@ -3,14 +3,14 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Essays;
-using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
 public class AssignmentRepository(
     ApplicationContext context,

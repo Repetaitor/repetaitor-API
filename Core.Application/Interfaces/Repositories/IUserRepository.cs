@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<int> AddUser(string firstName, string lastName, string email, string password, string role);
     Task<bool> ActivateUser(int userId);
     Task<UserModal> GetUserInfo(int userId);
+    Task<bool> UserExist(int userId);
 }

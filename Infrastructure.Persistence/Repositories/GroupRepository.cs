@@ -1,13 +1,13 @@
 using System.Data;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
-using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
 public class GroupRepository(ApplicationContext context, IChatRepository chatRepository) : IGroupRepository
 {
@@ -189,6 +189,21 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
             .Include(x => x.Group)
             .Where(x => x.Group.OwnerId == teacherId)
             .CountAsync();
+    }
+
+    public async Task<bool> GroupExists(int groupId)
+    {
+        return await context.Groups.AnyAsync(x => x.Id == groupId);
+    }
+
+    public async Task<bool> IsUserInGroup(int userId, int groupId)
+    {
+        return await context.UserGroups.AnyAsync(x => x.UserId == userId && x.GroupId == groupId);
+    }
+
+    public async Task<bool> IsUserGroupOwner(int userId, int groupId)
+    {
+        return await context.Groups.AnyAsync(x => x.Id == groupId && x.OwnerId == userId);
     }
 
     public async Task<List<UserModal>> GetGroupUsers(int userId, int groupId)

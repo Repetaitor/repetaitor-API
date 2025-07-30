@@ -1,11 +1,11 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
-using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
 public class EssayRepository(ApplicationContext context) : IEssayRepository
 {
@@ -83,5 +83,15 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
     public async Task<int> GetEssayCount(int userId)
     {
         return await context.Essays.CountAsync(x => x.CreatorId == userId);
+    }
+
+    public async Task<bool> EssayExists(int essayId)
+    {
+        return await context.Essays.AnyAsync(x => x.Id == essayId);
+    }
+
+    public async Task<bool> IsUserEssayCreator(int userId, int essayId)
+    {
+        return await context.Essays.AnyAsync(x => x.Id == essayId && x.CreatorId == userId);
     }
 }

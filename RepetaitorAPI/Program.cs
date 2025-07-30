@@ -1,12 +1,14 @@
 using AIService;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
-using Core.Domain.Data;
-using Core.Domain.Repositories;
 using infrastructure.MailSenderService.Implementations;
+using Infrastructure.Persistence.AppContext;
+using Infrastructure.Persistence.Repositories;
 using Infrastructure.ProjectServices.Implementations;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using RepetaitorAPI;
+using RepetaitorAPI.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +48,7 @@ builder.Services.ConfigureSwaggGen();
 builder.Services.ConfigureAuthorization();
 builder.Services.ConfigureCors();
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 
 var app = builder.Build();
@@ -60,4 +63,12 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapControllers();
+	
+app.MapHub<ChatHub>("/chatHub",
+    options => {
+        options.ApplicationMaxBufferSize = 128;
+        options.TransportMaxBufferSize = 128;
+        options.LongPolling.PollTimeout = TimeSpan.FromMinutes(1);
+        options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
+    });
 app.Run();

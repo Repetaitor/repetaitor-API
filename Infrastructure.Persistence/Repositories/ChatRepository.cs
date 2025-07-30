@@ -1,11 +1,11 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
-using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
 public class ChatRepository(ApplicationContext context) : IChatRepository
 {
@@ -89,7 +89,7 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
         return true;
     }
 
-    public async Task<bool> AddMessageToChatAsync(int userId, int chatId, string message)
+    public async Task<ChatMessageViewModel> AddMessageToChatAsync(int userId, int chatId, string message)
     {
         if (!await context.UserChats.AnyAsync(x => x.UserId == userId && x.ChatId == chatId))
         {
@@ -105,7 +105,12 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
         };
         await context.ChatMessages.AddAsync(mes);
         await context.SaveChangesAsync();
-        return true;
+        return new ChatMessageViewModel
+        {
+            ByUser = UserMapper.ToUserModal(await context.Users.FirstOrDefaultAsync(x => x.Id == userId)),
+            Message = mes.Message,
+            SendAt = mes.SendAt
+        } ;
     }
 
     public async Task<bool> RemoveUserFromAllChatAsync(int userId)
@@ -175,7 +180,7 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
 
         var messages = await context.ChatMessages
             .Where(x => x.ChatId == chatId)
-            .OrderByDescending(x => x.SendAt)
+            .OrderBy(x => x.SendAt)
             .ToListAsync();
         var result = new List<ChatMessageViewModel>();
         foreach (var message in messages)
@@ -221,5 +226,23 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
         context.Chats.Remove(chat);
         await context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<bool> IsChatExists(int chatId)
+    {
+        return await context.Chats.AnyAsync(x => x.Id == chatId);
+    }
+
+    public async Task<bool> IsUserInChatAsync(int userId, int chatId)
+    {
+        return await context.UserChats.AnyAsync(x => x.UserId == userId && x.ChatId == chatId);
+    }
+
+    public async Task<List<string>> GetChatMembers(int chatId)
+    {
+        var userIds = await context.UserChats.Where(x => x.ChatId == chatId)
+            .Select(x => x.UserId.ToString())
+            .ToListAsync();
+        return userIds;
     }
 }

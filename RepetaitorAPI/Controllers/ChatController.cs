@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace RepetaitorAPI.Controllers;
 [Authorize]
+[Route("api/[controller]")]
+[ApiController]
 public class ChatController(IChatService chatService, 
     IHttpContextAccessor httpContextAccessor, 
     ILogger<ChatController> logger) : ControllerBase

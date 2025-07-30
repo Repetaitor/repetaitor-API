@@ -1,16 +1,16 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
-using Core.Domain.Data;
 using Core.Domain.Entities;
 using Core.Domain.Mappers;
+using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Core.Domain.Repositories;
+namespace Infrastructure.Persistence.Repositories;
 
-public class UserRepository(ApplicationContext context, IServiceProvider _serviceProvider) : IUserRepository
+public class UserRepository(ApplicationContext context, IServiceProvider serviceProvider) : IUserRepository
 {
-    private IGroupRepository GroupRepository => _serviceProvider.GetRequiredService<IGroupRepository>();
+    private IGroupRepository GroupRepository => serviceProvider.GetRequiredService<IGroupRepository>();
 
     public async Task<bool> EmailExists(string email)
     {
@@ -58,5 +58,10 @@ public class UserRepository(ApplicationContext context, IServiceProvider _servic
         if (user == null)
             throw new Exception("User not found");
         return UserMapper.ToUserModal(user);
+    }
+
+    public async Task<bool> UserExist(int userId)
+    {
+        return await context.Users.AnyAsync(x => x.Id == userId && x.isActive);
     }
 }
