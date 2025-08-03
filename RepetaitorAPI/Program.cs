@@ -1,4 +1,5 @@
 using AIService;
+using Core.Application;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Infrastructure.ImagesStore;
@@ -29,6 +30,7 @@ builder.Services.Configure<AzureFileLoggerOptions>(options =>
 });
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Error);
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Error);
+builder.Services.AddApplicationServices();
 builder.Services.AddAiService();
 builder.Services.AddMailService();
 builder.Services.AddProjectServices();

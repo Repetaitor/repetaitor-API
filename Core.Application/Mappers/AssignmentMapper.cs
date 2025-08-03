@@ -1,21 +1,13 @@
+using AutoMapper;
 using Core.Application.Models;
 using Core.Domain.Entities;
 
-namespace Core.Domain.Mappers;
+namespace Core.Application.Mappers;
 
-public static class AssignmentMapper
+public class AssignmentProfile : Profile
 {
-    public static AssignmentBaseModal ToAssignmentBaseModal(Assignment assgn)
+    public AssignmentProfile()
     {
-        return new AssignmentBaseModal()
-        {
-            Id = assgn.Id,
-            Instructions = assgn.Instructions,
-            GroupId = assgn.GroupId,
-            Creator = UserMapper.ToUserModal(assgn.Creator),
-            Essay = EssayMapper.ToEssayModal(assgn.Essay),
-            DueDate = assgn.DueDate,
-            CreationTime = assgn.CreationTime,
-        };
+        CreateMap<Assignment, AssignmentBaseModal>();
     }
 }

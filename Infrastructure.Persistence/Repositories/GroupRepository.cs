@@ -1,15 +1,16 @@
 using System.Data;
+using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Entities;
-using Core.Domain.Mappers;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class GroupRepository(ApplicationContext context, IChatRepository chatRepository) : IGroupRepository
+public class GroupRepository(ApplicationContext context, IChatRepository chatRepository, IMapper mapper)
+    : IGroupRepository
 {
     public async Task<GroupBaseModal> CreateGroup(string groupName, string groupCode, int ownerId)
     {
@@ -35,11 +36,13 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
         {
             throw new Exception("You are not allowed to delete this group");
         }
+
         var res = await chatRepository.DeleteChatPermanentlyAsync(group.ChatId, userId);
         if (!res)
         {
             throw new Exception("Failed to delete group chat");
         }
+
         context.Groups.Remove(group);
         await context.SaveChangesAsync();
         return true;
@@ -55,16 +58,18 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
             throw new Exception("You are not a member of any group");
         }
 
-        return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+        return mapper.Map<GroupBaseModal>((group, context.UserGroups.Count(t => t.GroupId == group.Id)));
     }
 
     public async Task<List<GroupBaseModal>> GetTeacherGroups(int userId)
     {
-        return await context.Groups.Include(x => x.Owner)
+        var groups = await context.Groups.Include(x => x.Owner)
             .Where(x => x.OwnerId == userId)
-            .OrderByDescending(x => x.CreateDate).Select(x =>
-                GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
-            .ToListAsync();
+            .OrderByDescending(x => x.CreateDate).AsNoTracking().ToListAsync();
+
+        return groups.Select(x =>
+                mapper.Map<GroupBaseModal>((x, context.UserGroups.Count(t => t.GroupId == x.Id))))
+            .ToList();
     }
 
     public async Task<GroupBaseModal> UpdateGroupTitle(int userId, int groupId, string groupTitle)
@@ -76,7 +81,7 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
             throw new Exception("You are not allowed to update this group");
         group.GroupName = groupTitle;
         await context.SaveChangesAsync();
-        return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+        return mapper.Map<GroupBaseModal>((group, context.UserGroups.Count(t => t.GroupId == group.Id)));
     }
 
     public async Task<bool> UpdateGroupCode(int userId, int groupId, string groupCode)
@@ -94,7 +99,7 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
         var group = await context.Groups.FirstOrDefaultAsync(x => x.GroupCode == groupCode);
         if (group == null)
             throw new Exception("Group not found");
-        if(group.OwnerId == userId)
+        if (group.OwnerId == userId)
             throw new Exception("You are the owner of this group, you cannot join it as a student");
         var haveRealStudGroup = await context.UserGroups.Include(g => g.Group)
             .AnyAsync(u => u.UserId == userId && !u.Group.IsAIGroup);
@@ -125,6 +130,7 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
             var rs1 = await chatRepository.CreatePrivateChatAsync("", userId, group.OwnerId);
             return rs && rs1 > 0;
         }
+
         return true;
     }
 
@@ -165,17 +171,17 @@ public class GroupRepository(ApplicationContext context, IChatRepository chatRep
         if (group.OwnerId != userId &&
             context.UserGroups.Any(x => x.UserId == userId && groupId == group.Id))
             throw new Exception("You are not a member of this group");
-        return GroupMapper.ToGroupModal(group, context.UserGroups.Count(t => t.GroupId == group.Id));
+        return mapper.Map<GroupBaseModal>((group, context.UserGroups.Count(t => t.GroupId == group.Id)));
     }
 
     public async Task<List<GroupBaseModal>> SearchGroup(string groupName)
     {
-        return await context.Groups
+        var groups = await context.Groups
             .Include(x => x.Owner)
             .Where(x => EF.Functions.Like(x.GroupName.ToLower(), $"%{groupName.ToLower()}%"))
-            .OrderByDescending(x => x.CreateDate).Select(x =>
-                GroupMapper.ToGroupModal(x, context.UserGroups.Count(t => t.GroupId == x.Id))).AsNoTracking()
-            .ToListAsync();
+            .OrderByDescending(x => x.CreateDate).AsNoTracking().ToListAsync();
+        return groups.Select(x =>
+            mapper.Map<GroupBaseModal>((x, context.UserGroups.Count(t => t.GroupId == x.Id)))).ToList();
     }
 
     public async Task<int> TeacherGroupsCount(int teacherId)

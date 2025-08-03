@@ -1,10 +1,10 @@
 using System.Data;
+using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Application.Models.DTO;
 using Core.Application.Models.DTO.Essays;
 using Core.Domain.Entities;
-using Core.Domain.Mappers;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ namespace Infrastructure.Persistence.Repositories;
 public class AssignmentRepository(
     ApplicationContext context,
     IUserRepository userRepository,
-    IGroupRepository groupRepository) : IAssignmentRepository
+    IGroupRepository groupRepository, IMapper mapper) : IAssignmentRepository
 {
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
@@ -113,8 +113,8 @@ public class AssignmentRepository(
                 .Take(limit ?? 5).Select(x =>
                     new UserAssignmentBaseModal()
                     {
-                        Student = UserMapper.ToUserModal(x.User),
-                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Student = mapper.Map<UserModal>(x.User),
+                        Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
                         Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                         IsEvaluated = x.IsEvaluated,
                         TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
@@ -298,8 +298,8 @@ public class AssignmentRepository(
             Id = assignment.Id,
             Instructions = assignment.Instructions,
             GroupId = assignment.GroupId,
-            Creator = UserMapper.ToUserModal(assignment.Creator),
-            Essay = EssayMapper.ToEssayModal(assignment.Essay),
+            Creator = mapper.Map<UserModal>(assignment.Creator),
+            Essay = mapper.Map<EssayModal>(assignment.Essay),
             DueDate = assignment.DueDate,
             CreationTime = assignment.CreationTime,
         };
@@ -326,8 +326,8 @@ public class AssignmentRepository(
             Id = assignment.Id,
             Instructions = assignment.Instructions,
             GroupId = assignment.GroupId,
-            Creator = UserMapper.ToUserModal(assignment.Creator),
-            Essay = EssayMapper.ToEssayModal(assignment.Essay),
+            Creator = mapper.Map<UserModal>(assignment.Creator),
+            Essay = mapper.Map<EssayModal>(assignment.Essay),
             DueDate = assignment.DueDate,
             CreationTime = assignment.CreationTime,
         };
@@ -387,8 +387,8 @@ public class AssignmentRepository(
                 Id = assgn.Id,
                 Instructions = assgn.Instructions,
                 GroupId = assgn.GroupId,
-                Creator = UserMapper.ToUserModal(assgn.Creator),
-                Essay = EssayMapper.ToEssayModal(assgn.Essay),
+                Creator = mapper.Map<UserModal>(assgn.Creator),
+                Essay = mapper.Map<EssayModal>(assgn.Essay),
                 DueDate = assgn.DueDate,
                 CreationTime = assgn.CreationTime,
                 CompletedPercentage = GetAssignmentCompletePercentage(assgn.Id)
@@ -486,8 +486,8 @@ public class AssignmentRepository(
                 .Take(limit ?? 5).Select(x =>
                     new UserAssignmentBaseModal()
                     {
-                        Student = UserMapper.ToUserModal(x.User),
-                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Student = mapper.Map<UserModal>(x.User),
+                        Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
                         Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                         IsEvaluated = x.IsEvaluated,
                         TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
@@ -524,8 +524,8 @@ public class AssignmentRepository(
             .ThenInclude(a => a.Essay).Include(x => x.Status)
             .Select(x => new UserAssignmentBaseModal()
             {
-                Student = UserMapper.ToUserModal(x.User),
-                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                Student = mapper.Map<UserModal>(x.User),
+                Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
                 Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                 TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
                 IsEvaluated = x.IsEvaluated,
@@ -613,8 +613,8 @@ public class AssignmentRepository(
             .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId).Skip(offset ?? 0)
             .Take(limit ?? 5).Select(x => new UserAssignmentBaseModal()
             {
-                Student = UserMapper.ToUserModal(x.User),
-                Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                Student = mapper.Map<UserModal>(x.User),
+                Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
                 Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                 TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
                 ActualWordCount = x.WordCount,
@@ -646,8 +646,8 @@ public class AssignmentRepository(
                 .Take(limit ?? 10).Select(x =>
                     new UserAssignmentBaseModal()
                     {
-                        Student = UserMapper.ToUserModal(x.User),
-                        Assignment = AssignmentMapper.ToAssignmentBaseModal(x.Assignment),
+                        Student = mapper.Map<UserModal>(x.User),
+                        Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
                         Status = new StatusBaseModal() { Id = x.Status.Id, Name = x.Status.Name },
                         IsEvaluated = x.IsEvaluated,
                         TotalScore = x.IsEvaluated ? x.FluencyScore + x.GrammarScore : -1,
@@ -705,24 +705,24 @@ public class AssignmentRepository(
                         ((fromDate == null && toDate == null) ||
                          (x.SubmitDate >= fromDate && x.SubmitDate <= toDate)))
             .GroupBy(x => new { x.Assignment.CreationTime.Year, x.Assignment.CreationTime.Month })
-            .Select(x =>
+            .AsNoTracking().ToListAsync();
+        return new GroupsPerformance()
+        {
+            GroupsPerformanceStatsByDate = groupsStats.Select(x =>
                 new GroupByDatePerformanceStat()
                 {
                     DateTime = new DateTime(x.Key.Year, x.Key.Month, 1),
                     GroupsPerformanceStats = x.GroupBy(t => t.Assignment.GroupId)
                         .Select(g => new GroupPerformanceStat()
                         {
-                            Group = GroupMapper.ToGroupModal(context.Groups.FirstOrDefault(v => v.Id == g.Key)!,
-                                context.UserGroups.Count(v => v.GroupId == g.Key)),
+                            Group = mapper.Map<GroupBaseModal>((context.Groups.FirstOrDefault(v => v.Id == g.Key),
+                                context.UserGroups.Count(v => v.GroupId == g.Key))),
                             TotalScoreAvg = double.Round(g.Average(y => y.FluencyScore + y.GrammarScore), 2),
                             GrammarScoreAvg = double.Round(g.Average(y => y.GrammarScore), 2),
                             FluencyScoreAvg = double.Round(g.Average(y => y.FluencyScore), 2)
                         }).ToList()
                 }
-            ).ToListAsync();
-        return new GroupsPerformance()
-        {
-            GroupsPerformanceStatsByDate = groupsStats.OrderBy(x => x.DateTime).ToList()
+            ).OrderBy(x => x.DateTime).ToList()
         };
     }
     // public async Task<ResponseView<bool>> AssignToAllStudentsInGroup(int assignmentId, int groupId)

@@ -1,19 +1,13 @@
+using AutoMapper;
 using Core.Application.Models;
 using Core.Domain.Entities;
 
-namespace Core.Domain.Mappers;
+namespace Core.Application.Mappers;
 
-public static class UserMapper
+public class UserProfile : Profile
 {
-    public static UserModal ToUserModal(User user)
+    public UserProfile()
     {
-        return new UserModal()
-        {
-            Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email,
-            Role = user.Role
-        };
+        CreateMap<User, UserModal>();
     }
 }

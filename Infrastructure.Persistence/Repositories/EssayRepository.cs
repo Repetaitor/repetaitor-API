@@ -1,13 +1,13 @@
+using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Entities;
-using Core.Domain.Mappers;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class EssayRepository(ApplicationContext context) : IEssayRepository
+public class EssayRepository(ApplicationContext context, IMapper mapper) : IEssayRepository
 {
     public async Task<EssayModal> CreateNewEssay(string essayTitle, string essayDescription, int expectedWordCount,
         int creatorId)
@@ -21,7 +21,7 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
         };
         await context.Essays.AddAsync(newEssay);
         await context.SaveChangesAsync();
-        return EssayMapper.ToEssayModal(newEssay);
+        return mapper.Map<EssayModal>(newEssay);
     }
 
     public async Task<bool> DeleteEssay(int essayId, int byUser)
@@ -60,12 +60,12 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
         essay.EssayDescription = essayDescription;
         essay.ExpectedWordCount = expectedWordCount;
         await context.SaveChangesAsync();
-        return EssayMapper.ToEssayModal(essay);
+        return mapper.Map<EssayModal>(essay);
     }
 
     public async Task<List<EssayModal>> GetUserEssays(int userId)
     {
-        return await context.Essays.Where(x => x.CreatorId == userId).Select(x => EssayMapper.ToEssayModal(x))
+        return await context.Essays.Where(x => x.CreatorId == userId).Select(x => mapper.Map<EssayModal>(x))
             .AsNoTracking().ToListAsync();
     }
 
@@ -77,7 +77,7 @@ public class EssayRepository(ApplicationContext context) : IEssayRepository
             throw new Exception("Essay not found");
         }
 
-        return EssayMapper.ToEssayModal(essay);
+        return mapper.Map<EssayModal>(essay);
     }
 
     public async Task<int> GetEssayCount(int userId)

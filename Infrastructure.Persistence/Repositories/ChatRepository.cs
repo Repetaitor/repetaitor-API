@@ -1,13 +1,13 @@
+using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Entities;
-using Core.Domain.Mappers;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class ChatRepository(ApplicationContext context) : IChatRepository
+public class ChatRepository(ApplicationContext context, IMapper mapper) : IChatRepository
 {
     public async Task<int> CreateGroupChatAsync(string chatName, int groupId)
     {
@@ -105,12 +105,7 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
         };
         await context.ChatMessages.AddAsync(mes);
         await context.SaveChangesAsync();
-        return new ChatMessageViewModel
-        {
-            ByUser = UserMapper.ToUserModal(await context.Users.FirstOrDefaultAsync(x => x.Id == userId)),
-            Message = mes.Message,
-            SendAt = mes.SendAt
-        } ;
+        return mapper.Map<ChatMessageViewModel>((mes, await context.Users.FirstOrDefaultAsync(x => x.Id == userId)));
     }
 
     public async Task<bool> RemoveUserFromAllChatAsync(int userId)
@@ -138,25 +133,14 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
                 var user = await context.Users
                     .FirstOrDefaultAsync(x => x.Id == withUserId.UserId);
                 if (user == null) continue;
-                var privateChatBaseInfo = new PrivateChatViewModel()
-                {
-                    ChatId = chatInfo.Id,
-                    WithUser = UserMapper.ToUserModal(user),
-                    ChatName = string.IsNullOrEmpty(chatInfo.ChatName)
-                        ? $"{user.FirstName} {user.LastName}"
-                        : chatInfo.ChatName
-                };
+                var privateChatBaseInfo = mapper.Map<PrivateChatViewModel>((chatInfo, user));
                 result.PrivateChats.Add(privateChatBaseInfo);
             }
             else if (chatInfo.ChatType == 1)
             {
                 var group = await context.Groups.FirstOrDefaultAsync(x => x.ChatId == chatInfo.Id);
                 if (group == null) continue;
-                var groupChatBaseInfo = new GroupChatViewModel()
-                {
-                    ChatId = chatInfo.Id,
-                    ChatName = string.IsNullOrEmpty(chatInfo.ChatName) ? group.GroupName : chatInfo.ChatName
-                };
+                var groupChatBaseInfo = mapper.Map<GroupChatViewModel>((chatInfo, group));
                 result.GroupChats.Add(groupChatBaseInfo);
             }
         }
@@ -187,15 +171,8 @@ public class ChatRepository(ApplicationContext context) : IChatRepository
         {
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == message.UserId);
             if (user == null) continue;
-            var chatMessageViewModel = new ChatMessageViewModel()
-            {
-                ByUser = UserMapper.ToUserModal(user),
-                Message = message.Message,
-                SendAt = message.SendAt
-            };
-            result.Add(chatMessageViewModel);
+            result.Add(mapper.Map<ChatMessageViewModel>((message, user)));
         }
-
         return result;
     }
 

@@ -1,14 +1,14 @@
+using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
 using Core.Domain.Entities;
-using Core.Domain.Mappers;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class UserRepository(ApplicationContext context, IServiceProvider serviceProvider) : IUserRepository
+public class UserRepository(ApplicationContext context, IServiceProvider serviceProvider, IMapper mapper) : IUserRepository
 {
     private IGroupRepository GroupRepository => serviceProvider.GetRequiredService<IGroupRepository>();
 
@@ -22,7 +22,7 @@ public class UserRepository(ApplicationContext context, IServiceProvider service
         var user = await context.Users.FirstOrDefaultAsync(x => x.Email == email && x.Password == password);
         if (user == null)
             throw new Exception("User not found or password is incorrect");
-        return UserMapper.ToUserModal(user);
+        return mapper.Map<UserModal>(user);
     }
 
     public async Task<int> AddUser(string firstName, string lastName, string email, string password,
@@ -57,7 +57,7 @@ public class UserRepository(ApplicationContext context, IServiceProvider service
         var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
             throw new Exception("User not found");
-        return UserMapper.ToUserModal(user);
+        return mapper.Map<UserModal>(user);
     }
 
     public async Task<bool> UserExist(int userId)
