@@ -3,7 +3,7 @@ using Azure.Storage.Blobs;
 using Core.Application.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.ImagesStoreService.Implementations;
+namespace Infrastructure.ImagesStore.Implementations;
 
 public class ImagesStoreService : IImagesStoreService
 {
