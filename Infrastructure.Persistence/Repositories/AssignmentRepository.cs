@@ -363,6 +363,7 @@ public class AssignmentRepository(
             StatusId = x.StatusId,
             Comment = x.Comment,
         }).ToList();
+        userAssgn.EvaluateDate = DateTime.Now;
         await context.EvaluationTextComments.AddRangeAsync(textComments);
         await context.GeneralComments.AddRangeAsync(generalCommentList);
         await context.SaveChangesAsync();
