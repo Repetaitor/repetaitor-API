@@ -1,9 +1,11 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO;
-using Core.Application.Models.DTO.Assignments;
-using Core.Application.Models.DTO.Essays;
+using Core.Application.Models.RequestsDTO;
+using Core.Application.Models.RequestsDTO.Assignments;
+using Core.Application.Models.RequestsDTO.Essays;
+using Core.Application.Models.ReturnViewModels;
+using Core.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;
@@ -85,66 +87,70 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>> GetGroupAssignments(int userId,
-        int groupId, int? offset, int? limit)
+    public async Task<ResponseView<PaginatedResponse<List<GroupAssignmentBaseModal>>>> GetGroupAssignments(int userId,
+        int groupId, int? pageIndex, int? pageSize)
     {
         try
         {
-            var res = await assignmentRepository.GetGroupAssignments(userId, groupId, offset, limit);
-            return new ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>()
+            var res = await assignmentRepository.GetGroupAssignments(userId, groupId, pageIndex, pageSize);
+            return new ResponseView<PaginatedResponse<List<GroupAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<GroupAssignmentBaseModal>>()
-                {
-                    Result = res.Item1,
-                    TotalCount = res.Item2
-                }
+                Data = new PaginatedResponse<List<GroupAssignmentBaseModal>>(
+                    res.Item2,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    res.Item1 ?? []
+                )
             };
         }
         catch (Exception ex)
         {
             logger.LogInformation("GetGroupAssignments exception: {ex}", ex.Message);
-            return new ResponseView<CountedResponse<List<GroupAssignmentBaseModal>>>()
+            return new ResponseView<PaginatedResponse<List<GroupAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching group assignments: " + ex.Message,
-                Data = new CountedResponse<List<GroupAssignmentBaseModal>>()
-                {
-                    Result = null,
-                    TotalCount = 0
-                }
+                Data = new PaginatedResponse<List<GroupAssignmentBaseModal>>(
+                    0,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    null!
+                )
             };
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
-        string statusName, bool isAIAssignment, int? offset, int? limit)
+    public async Task<ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>> GetUserAssignments(int userId,
+        string statusName, bool isAIAssignment, int? pageIndex, int? pageSize)
     {
         try
         {
-            var res = await assignmentRepository.GetUserAssignments(userId, statusName, isAIAssignment, offset, limit);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            var res = await assignmentRepository.GetUserAssignments(userId, statusName, isAIAssignment, pageIndex,
+                pageSize);
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = res.Item1,
-                    TotalCount = res.Item2
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    res.Item2,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    res.Item1 ?? []
+                )
             };
         }
         catch (Exception ex)
         {
             logger.LogInformation("GetUserAssignments exception: {ex}", ex.Message);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching user assignments: " + ex.Message,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = null,
-                    TotalCount = 0
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    0,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    null)
             };
         }
     }
@@ -177,7 +183,7 @@ public class AssignmentService(
 
             if (res && request.Images.Count > 0)
             {
-               await assignmentRepository.SaveImagesForAssignmentDb(userId, request.AssignmentId, request.Images);
+                await assignmentRepository.SaveImagesForAssignmentDb(userId, request.AssignmentId, request.Images);
             }
 
             return new ResponseView<ResultResponse>()
@@ -223,34 +229,35 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(
-        int userId, int? offset, int? limit)
+    public async Task<ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>> GetUserNotSeenEvaluatedAssignments(
+        int userId, int? pageIndex, int? pageSize)
     {
         try
         {
-            var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, offset, limit);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            var res = await assignmentRepository.GetUserNotSeenEvaluatedAssignments(userId, pageIndex, pageSize);
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = res.Item1,
-                    TotalCount = res.Item2
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    res.Item2,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    res.Item1 ?? []
+                )
             };
         }
         catch (Exception ex)
         {
             logger.LogInformation("GetUserNotSeenEvaluatedAssignments exception: {ex}", ex.Message);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching user not seen evaluated assignments: " + ex.Message,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = null,
-                    TotalCount = 0
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    0,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    null)
             };
         }
     }
@@ -326,34 +333,35 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(
-        int userId, int? offset, int? limit)
+    public async Task<ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>> GetTeacherAssignments(
+        int userId, int? pageIndex, int? pageSize)
     {
         try
         {
-            var res = await assignmentRepository.GetTeacherAssignments(userId, offset, limit);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            var res = await assignmentRepository.GetTeacherAssignments(userId, pageIndex, pageSize);
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = res.Item1,
-                    TotalCount = res.Item2
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    res.Item2,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    res.Item1 ?? []
+                )
             };
         }
         catch (Exception ex)
         {
             logger.LogInformation("GetTeacherAssignments exception: {ex}", ex.Message);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching teacher assignments: " + ex.Message,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = null,
-                    TotalCount = 0
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    0,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    null)
             };
         }
     }
@@ -381,36 +389,37 @@ public class AssignmentService(
         }
     }
 
-    public async Task<ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId,
+    public async Task<ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>> GetAssigmentUsersTasks(int userId,
         int assignmentId,
-        string statusName, int? offset, int? limit)
+        string statusName, int? pageIndex, int? pageSize)
     {
         try
         {
-            var res = await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, offset,
-                limit);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            var res = await assignmentRepository.GetAssigmentUsersTasks(userId, assignmentId, statusName, pageIndex,
+                pageSize);
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.Success,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = res.Item1,
-                    TotalCount = res.Item2
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    res.Item2,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    res.Item1 ?? []
+                )
             };
         }
         catch (Exception ex)
         {
             logger.LogInformation("GetAssigmentUsersTasks exception: {ex}", ex.Message);
-            return new ResponseView<CountedResponse<List<UserAssignmentBaseModal>>>()
+            return new ResponseView<PaginatedResponse<List<UserAssignmentBaseModal>>>()
             {
                 Code = StatusCodesEnum.InternalServerError,
                 Message = "An error occurred while fetching assignment users tasks: " + ex.Message,
-                Data = new CountedResponse<List<UserAssignmentBaseModal>>()
-                {
-                    Result = null,
-                    TotalCount = 0
-                }
+                Data = new PaginatedResponse<List<UserAssignmentBaseModal>>(
+                    0,
+                    pageSize ?? 5,
+                    pageIndex ?? 1,
+                    null)
             };
         }
     }

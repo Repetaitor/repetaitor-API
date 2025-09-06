@@ -2,8 +2,8 @@ using System.Data;
 using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
-using Core.Application.Models.DTO;
-using Core.Application.Models.DTO.Essays;
+using Core.Application.Models.RequestsDTO.Essays;
+using Core.Application.Models.ReturnViewModels;
 using Core.Domain.Entities;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;
@@ -15,7 +15,8 @@ namespace Infrastructure.Persistence.Repositories;
 public class AssignmentRepository(
     ApplicationContext context,
     IUserRepository userRepository,
-    IGroupRepository groupRepository, IMapper mapper) : IAssignmentRepository
+    IGroupRepository groupRepository,
+    IMapper mapper) : IAssignmentRepository
 {
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
@@ -83,20 +84,25 @@ public class AssignmentRepository(
         };
     }
 
-    public async Task<List<UserAssignmentBaseModal>> GetPublicUserAssignments(int userId, int assignmentId, int? offset, int? limit)
+    public async Task<List<UserAssignmentBaseModal>> GetPublicUserAssignments(int userId, int assignmentId, int? offset,
+        int? limit)
     {
         var userAssignment =
             await context.UserAssignments.FirstOrDefaultAsync(x =>
                 x.AssignmentId == assignmentId && x.UserId == userId);
-        if(userAssignment is not { StatusId: 1 }) {
+        if (userAssignment is not { StatusId: 1 })
+        {
             throw new Exception("You are not allowed to see public assignments of this AI Assignment");
         }
+
         var assignment =
             await context.Assignments.Include(x => x.Creator).Include(x => x.Essay)
                 .FirstOrDefaultAsync(x => x.Id == assignmentId);
-        if(assignment is not { CreatorId: 1019 }) {
+        if (assignment is not { CreatorId: 1019 })
+        {
             throw new Exception("This is not AI assignment");
         }
+
         var userAssignments =
             await context.UserAssignments
                 .Include(x => x.Status)
@@ -168,6 +174,7 @@ public class AssignmentRepository(
         {
             return true;
         }
+
         context.AssignmentImagesStores.RemoveRange(images);
         var t = await context.SaveChangesAsync();
         return t > 0;
@@ -177,7 +184,7 @@ public class AssignmentRepository(
     {
         var imgs = context.UserAssignmentImages
             .Where(x => x.UserId == userId && x.AssignmentId == assignmentId);
-        context.UserAssignmentImages.RemoveRange(imgs); 
+        context.UserAssignmentImages.RemoveRange(imgs);
         await context.SaveChangesAsync().ContinueWith(t => t.Result > 0);
         return true;
     }
@@ -371,8 +378,7 @@ public class AssignmentRepository(
     }
 
     public async Task<(List<GroupAssignmentBaseModal>?, int)> GetGroupAssignments(int userId, int groupId,
-        int? offset,
-        int? limit)
+        int? pageIndex, int? pageSize)
     {
         var group = await context.Groups.AnyAsync(x => x.OwnerId == userId && x.Id == groupId);
         if (!group)
@@ -381,23 +387,25 @@ public class AssignmentRepository(
             = await context.Assignments
                 .Include(assignment => assignment.Creator)
                 .Include(assignment => assignment.Essay)
-                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime).Skip(offset ?? 0)
-                .Take(limit ?? 5).ToListAsync();
+                .Where(x => x.GroupId == groupId).OrderByDescending(x => x.CreationTime)
+                .Skip((pageIndex - 1) * pageSize ?? 0)
+                .Take(pageSize ?? 5).ToListAsync();
         var assgnsModals = assignments.Select(assgn => new GroupAssignmentBaseModal()
-            {
-                Id = assgn.Id,
-                Instructions = assgn.Instructions,
-                GroupId = assgn.GroupId,
-                Creator = mapper.Map<UserModal>(assgn.Creator),
-                Essay = mapper.Map<EssayModal>(assgn.Essay),
-                DueDate = assgn.DueDate,
-                CreationTime = assgn.CreationTime,
-                CompletedPercentage = GetAssignmentCompletePercentage(assgn.Id)
-            }).ToList();
+        {
+            Id = assgn.Id,
+            Instructions = assgn.Instructions,
+            GroupId = assgn.GroupId,
+            Creator = mapper.Map<UserModal>(assgn.Creator),
+            Essay = mapper.Map<EssayModal>(assgn.Essay),
+            DueDate = assgn.DueDate,
+            CreationTime = assgn.CreationTime,
+            CompletedPercentage = GetAssignmentCompletePercentage(assgn.Id)
+        }).ToList();
         var cnt = await context.Assignments
             .CountAsync(x => x.GroupId == groupId);
         return (assgnsModals, cnt);
     }
+
     public decimal GetAssignmentCompletePercentage(int assignmentId)
     {
         if (!context.Assignments.Any(x => x.Id == assignmentId))
@@ -408,6 +416,7 @@ public class AssignmentRepository(
             x.AssignmentId == assignmentId && x.StatusId == 1);
         return Math.Round((decimal)completedUserAssignmentsCount / totalUserAssignments * 100, 0);
     }
+
     public async Task<List<StatusBaseModal>> GetAssignmentStatuses()
     {
         return await context.AssignmentStatuses.Select(s => new StatusBaseModal()
@@ -467,8 +476,8 @@ public class AssignmentRepository(
 
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId,
         string statusName,
-        bool IsAIAssignment, int? offset,
-        int? limit)
+        bool IsAIAssignment, int? pageIndex,
+        int? pageSize)
     {
         var userAssgns =
             await context.UserAssignments
@@ -483,8 +492,8 @@ public class AssignmentRepository(
                 .Where(x => x.UserId == userId &&
                             (statusName == string.Empty || x.Status.Name == statusName) &&
                             x.Assignment.Group.IsAIGroup == IsAIAssignment)
-                .OrderByDescending(x => x.Assignment.CreationTime).Skip(offset ?? 0)
-                .Take(limit ?? 5).Select(x =>
+                .OrderByDescending(x => x.Assignment.CreationTime).Skip((pageIndex - 1) * pageSize ?? 0)
+                .Take(pageSize ?? 5).Select(x =>
                     new UserAssignmentBaseModal()
                     {
                         Student = mapper.Map<UserModal>(x.User),
@@ -506,8 +515,8 @@ public class AssignmentRepository(
     }
 
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserNotSeenEvaluatedAssignments(
-        int userId, int? offset,
-        int? limit)
+        int userId, int? pageIndex,
+        int? pageSize)
     {
         var user = await userRepository.GetUserInfo(userId);
         if (user == null)
@@ -518,7 +527,7 @@ public class AssignmentRepository(
 
         var assignments = await context.UserAssignments
             .Where(x => x.UserId == userId && assignmentIds.Contains(x.AssignmentId) && x.IsEvaluated &&
-                        !x.FeedbackSeen).Skip(offset ?? 0).Take(limit ?? 5).Include(x => x.User)
+                        !x.FeedbackSeen).Skip((pageIndex - 1) * pageSize ?? 0).Take(pageSize ?? 5).Include(x => x.User)
             .Include(x => x.Assignment)
             .ThenInclude(a => a.Creator)
             .Include(x => x.Assignment)
@@ -604,15 +613,16 @@ public class AssignmentRepository(
     }
 
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetTeacherAssignments(int userId,
-        int? offset, int? limit)
+        int? pageIndex, int? pageSize)
     {
         var studentsSubmitAssignments = await context.UserAssignments.Include(x => x.User)
             .Include(x => x.Assignment).ThenInclude(x => x.Creator)
             .Include(x => x.Assignment)
             .ThenInclude(a => a.Essay)
             .Include(x => x.Status)
-            .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId).Skip(offset ?? 0)
-            .Take(limit ?? 5).Select(x => new UserAssignmentBaseModal()
+            .Where(x => x.StatusId == 1 && !x.IsEvaluated && x.Assignment.CreatorId == userId)
+            .Skip((pageIndex - 1) * pageSize ?? 0)
+            .Take(pageSize ?? 5).Select(x => new UserAssignmentBaseModal()
             {
                 Student = mapper.Map<UserModal>(x.User),
                 Assignment = mapper.Map<AssignmentBaseModal>(x.Assignment),
@@ -629,8 +639,8 @@ public class AssignmentRepository(
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetAssigmentUsersTasks(int userId,
         int assignmentId,
         string statusName,
-        int? offset,
-        int? limit)
+        int? pageIndex,
+        int? pageSize)
     {
         if (!await context.Assignments.AnyAsync(x => x.Id == assignmentId && x.CreatorId == userId))
             throw new Exception("You are not the owner of this assignment");
@@ -643,8 +653,8 @@ public class AssignmentRepository(
                 .Include(userAssignment => userAssignment.Status).Where(x =>
                     x.AssignmentId == assignmentId &&
                     (statusName == string.Empty || x.Status.Name == statusName.ToLower()))
-                .OrderBy(x => x.StatusId).Skip(offset ?? 0)
-                .Take(limit ?? 10).Select(x =>
+                .OrderBy(x => x.StatusId).Skip((pageIndex - 1) * pageSize ?? 0)
+                .Take(pageSize ?? 10).Select(x =>
                     new UserAssignmentBaseModal()
                     {
                         Student = mapper.Map<UserModal>(x.User),

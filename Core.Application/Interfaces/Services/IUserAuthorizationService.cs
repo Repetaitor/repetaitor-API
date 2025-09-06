@@ -1,6 +1,5 @@
-using Application.Models;
-using Core.Application.Models;
-using Core.Application.Models.DTO.Authorization;
+using Core.Application.Models.RequestsDTO.Authorization;
+using Core.Application.Models.ReturnViewModels;
 
 namespace Core.Application.Interfaces.Services;
 

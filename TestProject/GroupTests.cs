@@ -2,6 +2,7 @@ using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
 using Core.Domain.Entities;
+using Core.Domain.Enums;
 using Infrastructure.Persistence.AppContext;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.ProjectServices.Implementations;

@@ -2,6 +2,7 @@ using System.Data;
 using AutoMapper;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Models;
+using Core.Application.Models.ReturnViewModels;
 using Core.Domain.Entities;
 using Infrastructure.Persistence.AppContext;
 using Microsoft.Data.SqlClient;

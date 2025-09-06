@@ -1,7 +1,10 @@
 using System.Security.Claims;
+using Core.Application.Converters;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Authorization;
+using Core.Application.Models.RequestsDTO.Authorization;
+using Core.Application.Models.ReturnViewModels;
+using Core.Domain.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;

@@ -1,6 +1,6 @@
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Assignments;
+using Core.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

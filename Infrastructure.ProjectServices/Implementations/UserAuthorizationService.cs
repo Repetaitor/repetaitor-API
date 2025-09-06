@@ -4,7 +4,9 @@ using System.Text;
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO.Authorization;
+using Core.Application.Models.RequestsDTO.Authorization;
+using Core.Application.Models.ReturnViewModels;
+using Core.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.ProjectServices.Implementations;

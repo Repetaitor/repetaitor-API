@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using Core.Application.Converters;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
-using Core.Application.Models.DTO;
-using Core.Application.Models.DTO.Assignments;
-using Core.Application.Models.DTO.Essays;
+using Core.Application.Models.RequestsDTO;
+using Core.Application.Models.RequestsDTO.Assignments;
+using Core.Application.Models.RequestsDTO.Essays;
+using Core.Application.Models.ReturnViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -56,19 +58,19 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<GroupAssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(PaginatedResponse<List<GroupAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetGroupAssignments([FromQuery] GetGroupAssignmentsRequest
         request)
     {
         logger.LogInformation("GetGroupAssignments request: {request}", JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
-        var resp = await assignmentService.GetGroupAssignments(userId, request.GroupId, request.Offset,
-            request.Limit);
+        var resp = await assignmentService.GetGroupAssignments(userId, request.GroupId, request.PageIndex,
+            request.PageSize);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<UserAssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(PaginatedResponse<List<UserAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetUserAssignments(
         [FromQuery] GetUserAssignmentsRequest request)
     {
@@ -76,8 +78,8 @@ public class AssignmentController(
         var resp = await assignmentService.GetUserAssignments(request.UserId,
             request.StatusName,
             request.IsAIAssignment,
-            request.Offset,
-            request.Limit);
+            request.PageIndex,
+            request.PageSize);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 
@@ -95,7 +97,7 @@ public class AssignmentController(
     }
 
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<UserAssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(PaginatedResponse<List<UserAssignmentBaseModal>>), 200)]
     public async Task<IResult>
         GetUserNotSeenEvaluatedAssignments(
             [FromQuery] GetUserNotSeenEvaluatedAssignmentsRequest request)
@@ -138,7 +140,7 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<UserAssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(PaginatedResponse<List<UserAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetNeedEvaluationAssignments(
         [FromQuery] GetNeedEvaluationAssignmentsRequest request)
     {
@@ -160,7 +162,7 @@ public class AssignmentController(
 
     [Authorize(Roles = "Teacher")]
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(CountedResponse<List<UserAssignmentBaseModal>>), 200)]
+    [ProducesResponseType(typeof(PaginatedResponse<List<UserAssignmentBaseModal>>), 200)]
     public async Task<IResult> GetUsersTasksByAssignment(
         [FromQuery] GetUsersTasksByAssignmentRequest request)
     {
@@ -217,7 +219,8 @@ public class AssignmentController(
     [ProducesResponseType(typeof(ResultResponse), 200)]
     public async Task<IResult> ChangeUserAssignmentPublicStatus([FromBody] MakeUserAssignmentPublicRequest request)
     {
-        logger.LogInformation("ChangeUserAssignmentPublicStatus request: {request}", JsonConvert.SerializeObject(request));
+        logger.LogInformation("ChangeUserAssignmentPublicStatus request: {request}",
+            JsonConvert.SerializeObject(request));
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.MakeUserAssignmentPublic(userId, request.AssignmentId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
@@ -228,7 +231,8 @@ public class AssignmentController(
     public async Task<IResult> GetPublicUserAssignments([FromQuery] int assignmentId, [FromQuery] int? offset,
         [FromQuery] int? limit)
     {
-        logger.LogInformation("GetPublicUserAssignments request: {assignmentId} {offset} {limit}", assignmentId, offset, limit);
+        logger.LogInformation("GetPublicUserAssignments request: {assignmentId} {offset} {limit}", assignmentId, offset,
+            limit);
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.GetPublicUserAssignments(userId, assignmentId, offset, limit);
         return ControllerReturnConverter.ConvertToReturnType(resp);

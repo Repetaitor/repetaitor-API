@@ -1,4 +1,4 @@
-using Core.Application.Models;
+using Core.Application.Models.ReturnViewModels;
 
 namespace Core.Application.Interfaces.Repositories;
 

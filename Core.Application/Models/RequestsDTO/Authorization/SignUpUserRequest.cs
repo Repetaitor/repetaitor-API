@@ -1,0 +1,10 @@
+namespace Core.Application.Models.RequestsDTO.Authorization;
+
+public class SignUpUserRequest
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Email { get; set; }
+    public string Role { get; set; } = "Student";
+    public string Password { get; set; }
+}
