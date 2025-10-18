@@ -64,8 +64,6 @@ This will help us extract the correct substring and its exact indices later.
 
 Do NOT return startIndex or endIndex. Only use delimiters in the essay text as explained.
 
-All comments (both in text markers and JSON) MUST be written in **Georgian language only**.
-
 Essay title: essayTitleValue,
 ExpectedWordCount: expectedWordCountValue,
 Essay Text: essayTextValue

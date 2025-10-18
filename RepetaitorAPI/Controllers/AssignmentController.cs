@@ -240,7 +240,7 @@ public class AssignmentController(
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
     [HttpGet("[action]")]
-    [ProducesResponseType(typeof(ResponseView<string>), 200)]
+    [ProducesResponseType(typeof(EvaluationNewModal), 200)]
     public async Task<IResult> EvaluateEssay(string essayTitle, string essayText, int wordCount)
     {
         var resp = await aIService.GetAIResponse(essayTitle, essayText, wordCount);
