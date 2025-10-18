@@ -4,9 +4,6 @@ using Core.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SendGrid;
-using SendGrid.Helpers.Mail;
-
 namespace infrastructure.MailSenderService.Implementations;
 
 public class MailService(IWebHostEnvironment env, IConfiguration configuration, ILogger<IMailService> _logger)
