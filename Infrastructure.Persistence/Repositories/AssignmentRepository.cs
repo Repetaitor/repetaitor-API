@@ -1,7 +1,6 @@
 using System.Data;
 using AutoMapper;
 using Core.Application.Interfaces.Repositories;
-using Core.Application.Models;
 using Core.Application.Models.RequestsDTO.Essays;
 using Core.Application.Models.ReturnViewModels;
 using Core.Domain.Entities;
@@ -476,7 +475,7 @@ public class AssignmentRepository(
 
     public async Task<(List<UserAssignmentBaseModal>?, int)> GetUserAssignments(int userId,
         string statusName,
-        bool IsAIAssignment, int? pageIndex,
+        bool isAiAssignment, int? pageIndex,
         int? pageSize)
     {
         var userAssgns =
@@ -491,7 +490,7 @@ public class AssignmentRepository(
                 .Include(userAssignment => userAssignment.User)
                 .Where(x => x.UserId == userId &&
                             (statusName == string.Empty || x.Status.Name == statusName) &&
-                            x.Assignment.Group.IsAIGroup == IsAIAssignment)
+                            x.Assignment.Group.IsAIGroup == isAiAssignment)
                 .OrderByDescending(x => x.Assignment.CreationTime).Skip((pageIndex - 1) * pageSize ?? 0)
                 .Take(pageSize ?? 5).Select(x =>
                     new UserAssignmentBaseModal()
@@ -510,7 +509,7 @@ public class AssignmentRepository(
                 x.UserId == userId &&
                 (statusName == string.Empty ||
                  x.Status.Name == statusName) &&
-                x.Assignment.Group.IsAIGroup == IsAIAssignment);
+                x.Assignment.Group.IsAIGroup == isAiAssignment);
         return (userAssgns, cnt);
     }
 
