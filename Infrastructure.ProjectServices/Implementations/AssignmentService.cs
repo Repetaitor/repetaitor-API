@@ -1,6 +1,7 @@
 using Core.Application.Interfaces.Repositories;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Core.Application.Models.QuizModels;
 using Core.Application.Models.RequestsDTO;
 using Core.Application.Models.RequestsDTO.Assignments;
 using Core.Application.Models.RequestsDTO.Essays;
@@ -15,6 +16,74 @@ public class AssignmentService(
     IAICommunicateService aiCommunicateService,
     ILogger<AssignmentService> logger) : IAssignmentService
 {
+    public async Task<ResponseView<QuizViewModel>> CreateUserQuizAsync(List<string> questionTypes)
+    {
+        try
+        {
+            var quiz = await aiCommunicateService.GetQuizQuestions(questionTypes);
+            return new ResponseView<QuizViewModel>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = quiz
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseView<QuizViewModel>
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "",
+                Data = null
+            };
+        }
+    }
+    public async Task<string> GetEssayTitle()
+    {
+        try
+        {
+            return await aiCommunicateService.GetEssayTitle();
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+    public async Task<bool> AddDetailedScores(int userId, int assignmentId, int vocabulary, int spellingAndPunctuation, int grammar)
+    {
+        try
+        {
+            return await assignmentRepository.AddDetailedScores(userId, assignmentId, vocabulary, spellingAndPunctuation, grammar);
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation("DeleteAssignment exception: {ex}", ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<ResponseView<string>> GetSuggestion(int userId)
+    {
+        try
+        {
+            var res = await assignmentRepository.GetSuggestion(userId);
+            return new ResponseView<string>()
+            {
+                Code = StatusCodesEnum.Success,
+                Data = res.SuggetionText
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation("DeleteAssignment exception: {ex}", ex.Message);
+            return new ResponseView<string>()
+            {
+                Code = StatusCodesEnum.InternalServerError,
+                Message = "An error occurred while deleting the assignment: " + ex.Message,
+                Data = ""
+            };
+        }
+    }
+
     public async Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId)
     {
         try

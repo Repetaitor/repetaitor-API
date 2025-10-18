@@ -6,6 +6,10 @@ namespace Core.Application.Interfaces.Repositories;
 
 public interface IAssignmentRepository
 {
+    Task<bool> AddDetailedScores(int userId, int assignmentId, int vocabulary, int spellingAndPunctuation,
+        int grammar);
+    Task<SuggetionView> GetSuggestion(int userId);
+
     Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null, DateTime? toDate = null);
     Task<UserAssignmentsStatusesStats> GetUserAssignmentsStatusStat(int userId);
     Task<ResultResponse> DeleteAssignment(int userId, int assignmentId);

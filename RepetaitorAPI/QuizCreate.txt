@@ -1,0 +1,33 @@
+﻿Create a quiz with 20 multiple-choice questions covering the following 3 English skills:
+
+1. Vocabulary (QuestionType = 1)
+2. Spelling (QuestionType = 2)
+3. Grammar (QuestionType = 3)
+
+This Quiz must contains Questions ONLY type of : SkillsNameEnter
+
+The output must be ONLY in the following JSON format, without explanations or any additional text:
+
+{
+  "Questions": [
+    {
+      "QuestionId": 0,
+      "QuestionType": 1,
+      "QuestionText": "Sample question text",
+      "Explanation": "Explanation for the answer",
+      "Options": ["Option A", "Option B", "Option C", "Option D"],
+      "CorrectAnswerIndex": 2
+    },
+    ...
+  ]
+}
+
+Rules:
+- Include a mix of the 3 skills.
+- Use unique QuestionIds starting from 0.
+- Each question must have exactly 4 answer options.
+- Set the correct index (0–3) in `CorrectAnswerIndex`.
+- Return only valid JSON that conforms exactly to this structure.
+- Do not include any explanations or formatting outside the JSON.
+
+Start generating when ready.

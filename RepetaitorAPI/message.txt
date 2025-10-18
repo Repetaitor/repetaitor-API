@@ -27,6 +27,11 @@ The JSON format must be exactly as follows:
   "fluencyScore": 0,
   "grammarScore": 0,
   "markedEssayText": "",
+  "detailedGrammarScore" : {
+      "Vocabulary": 0, 
+      "SpellingAndPunctuation": 0,
+      "Grammar": 0,
+  }
   "generalComments": [
     {
       "statusId": 0,
@@ -39,6 +44,7 @@ Where:
 - fluencyScore and grammarScore are integers from 0 to 8.
 - markedEssayText is the essay text with marked error or comment fragments.
 - generalComments are overall comments about the essay.
+- detailedGrammarScore contains sub-scores for Vocabulary, SpellingAndPunctuation, and Grammar, each an integer from 0 to 100.
 
 Comment Status IDs:
 - 1 – Strength

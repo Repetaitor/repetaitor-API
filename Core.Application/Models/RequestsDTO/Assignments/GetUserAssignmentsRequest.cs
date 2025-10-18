@@ -4,7 +4,7 @@ public class GetUserAssignmentsRequest
 {
     public int UserId { get; set; }
     public string StatusName { get; set; } = string.Empty;
-    public bool IsAIAssignment { get; set; } = false;
+    public bool IsAIAssignment { get; set; } = true;
     public int? PageIndex { get; set; }
     public int? PageSize { get; set; }
 }

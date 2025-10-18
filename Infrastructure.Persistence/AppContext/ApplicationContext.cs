@@ -6,6 +6,7 @@ namespace Infrastructure.Persistence.AppContext
 {
     public sealed class ApplicationContext(DbContextOptions<ApplicationContext> options, IConfiguration configuration) : DbContext(options)
     {
+        public DbSet<DetailedScores> DetailedGrammarScores { get; set; }
         public DbSet<User> Users => Set<User>();
         public DbSet<AuthenticationCodes> AuthCodes => Set<AuthenticationCodes>();
         public DbSet<Essay> Essays => Set<Essay>();

@@ -1,3 +1,4 @@
+using Core.Application.Models.QuizModels;
 using Core.Application.Models.ReturnViewModels;
 
 namespace Core.Application.Interfaces.Services;

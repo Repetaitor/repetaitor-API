@@ -21,16 +21,18 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
                     var assignmentService = scope.ServiceProvider.GetRequiredService<IAssignmentService>();
                     var aiService = scope.ServiceProvider.GetRequiredService<IAICommunicateService>();
                     var assignments = await assignmentService.GetUserAssignmentViewForAI(1019, 5);
-                    if (assignments.Code == StatusCodesEnum.Success && assignments.Data != null && assignments.Data.Count != 0)
+                    if (assignments.Code == StatusCodesEnum.Success && assignments.Data != null &&
+                        assignments.Data.Count != 0)
                     {
                         foreach (var assignment in assignments.Data)
                         {
                             var result = await aiService.GetAIResponse(assignment.EssayTitle, assignment.EssayText,
                                 assignment.ExpectedWordCount);
-                            if (result == null) continue;
-                            result.AssignmentId = assignment.AssignmentId;
-                            result.UserId = assignment.UserId;
-                            var res = await assignmentService.EvaluateAssignments(1019, result);
+                            if (result.Item1 == null) continue;
+                            var req = result.Item1;
+                            req.AssignmentId = assignment.AssignmentId;
+                            req.UserId = assignment.UserId;
+                            var res = await assignmentService.EvaluateAssignments(1019, req);
                             if (res.Code != 0 || !res.Data!.Result)
                             {
                                 Console.WriteLine(
@@ -44,6 +46,7 @@ public class AITeacher(ILogger<AITeacher> logger, IServiceScopeFactory scopeFact
                     logger.LogError(ex, "An error occurred while processing assignments.");
                 }
             }
+
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }

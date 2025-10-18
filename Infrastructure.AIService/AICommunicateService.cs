@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Core.Application.Models.QuizModels;
 using Core.Application.Models.RequestsDTO.Assignments;
 using Core.Application.Models.ReturnViewModels;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +20,7 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
     private const char FirstDelimiter = '%';
     private const char SecondDelimiter = '$';
     private const char ThirdDelimiter = '&';
-    public async Task<EvaluateAssignmentRequest?> GetAIResponse(string essayTitle, string essayText, int expectedWordCount)
+    public async Task<(EvaluateAssignmentRequest?, QuizViewModel)> GetAIResponse(string essayTitle, string essayText, int expectedWordCount)
     
     {
         string content;
@@ -27,7 +28,7 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
         {
             var buffer = new byte[fstream.Length];
             var readAsync = await fstream.ReadAsync(buffer, 0, buffer.Length);
-            if (readAsync == 0) return null;
+            if (readAsync == 0) return (null, null!);
             content = Encoding.Default.GetString(buffer).Replace("essayTitleValue", essayTitle).Replace("expectedWordCountValue", expectedWordCount.ToString())
                 .Replace("essayTextValue", essayText);
         }
@@ -57,7 +58,7 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
             .Replace("```json\n", "")
             .Replace("\n```", "");
         var convert = JsonConvert.DeserializeObject<AIReturnViewModel>(doc!);
-        if (convert == null) return null;
+        if (convert == null) return (null, null!);
         var resp = new EvaluateAssignmentRequest
         {
             FluencyScore = convert.FluencyScore,
@@ -92,7 +93,97 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
                actualIndex++;
            }
         }
-        return resp;
+        var suggSkills = new List<string>();
+        if (convert.DetailedGrammarScore.Vocabulary < 80)
+        {
+            suggSkills.Add("Vocabulary ");
+        }
+
+        if (convert.DetailedGrammarScore.SpellingAndPunctuation < 80)
+        {
+            suggSkills.Add("Spelling and punctuation");
+        }
+
+        if (convert.DetailedGrammarScore.Grammar < 80)
+        {
+            suggSkills.Add("Grammar");
+        }
+
+        var quiz = await GetQuizQuestions(suggSkills);
+        return (resp, quiz);
+    }
+
+    public async Task<QuizViewModel?> GetQuizQuestions(List<string> questionTypes)
+    {
+        string content;
+        await using (var fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/QuizCreate.txt"))
+        {
+            var buffer = new byte[fstream.Length];
+            var readAsync = await fstream.ReadAsync(buffer, 0, buffer.Length);
+            if (readAsync == 0) return null;
+            content = Encoding.Default.GetString(buffer).Replace("SkillsNameEnter", string.Join(", ", questionTypes));
+        }
+        using var client = new HttpClient();
+        client.Timeout = TimeSpan.FromSeconds(200);
+        var requestBody = new
+        {
+            contents = new[]
+            {
+                new
+                {
+                    parts = new[]
+                    {
+                        new { text = content }
+                    }
+                }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(_endpoint + _apiKey, requestBody);
+        if (response.IsSuccessStatusCode)
+        {
+            content = await response.Content.ReadAsStringAsync();
+        }
+        var doc = JObject.Parse(content)["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString()
+            .Replace("```json\n", "")
+            .Replace("\n```", "");
+        var convert = JsonConvert.DeserializeObject<QuizViewModel>(doc!);
+        return convert;
+    }
+
+    public async Task<string> GetEssayTitle()
+    {
+        string str;
+        await using (var fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/GenEssayTitle.txt"))
+        {
+            var buffer = new byte[fstream.Length];
+            var readAsync = await fstream.ReadAsync(buffer, 0, buffer.Length);
+            if (readAsync == 0) return "";
+            str = Encoding.Default.GetString(buffer);
+        }
+        using var client = new HttpClient();
+        client.Timeout = TimeSpan.FromSeconds(200);
+        var requestBody = new
+        {
+            contents = new[]
+            {
+                new
+                {
+                    parts = new[]
+                    {
+                        new { text = str }
+                    }
+                }
+            }
+        };
+        var response = await client.PostAsJsonAsync(_endpoint + _apiKey, requestBody);
+        var content = "";
+        if (response.IsSuccessStatusCode)
+        {
+            content = await response.Content.ReadAsStringAsync();
+        }
+
+        return JObject.Parse(content)["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString() ?? "";
     }
 
     private (int, string, int) CustomParser(string txt)

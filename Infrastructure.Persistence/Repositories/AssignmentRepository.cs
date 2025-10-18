@@ -18,6 +18,53 @@ public class AssignmentRepository(
     IGroupRepository groupRepository,
     IMapper mapper) : IAssignmentRepository
 {
+    public async Task<bool> AddDetailedScores(int userId, int assignmentId, int vocabulary, int spellingAndPunctuation,
+        int grammar)
+    {
+        var newDetailedScores = new DetailedScores()
+        {
+            UserId = userId,
+            AssignmentId = assignmentId,
+            Vocabulary = vocabulary,
+            SpellingAndPunctuation = spellingAndPunctuation,
+            Grammar = grammar
+        };
+        await context.DetailedGrammarScores.AddAsync(newDetailedScores);
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<SuggetionView> GetSuggestion(int userId)
+    {
+        var user = context.DetailedGrammarScores.Where(x => x.UserId == userId);
+        var vocabAvg = await user.AverageAsync(x => x.Vocabulary);
+        var spellingAvg = await user.AverageAsync(x => x.SpellingAndPunctuation);
+        var grammarAvg = await user.AverageAsync(x => x.Grammar);
+        var sugg = "You need to improve yours skills into: ";
+        var suggSkills = new List<string>();
+        var suggSkillsVals = new List<int>();
+        if (vocabAvg < 80)
+        {
+            suggSkills.Add("Vocabulary ");
+            suggSkillsVals.Add(1);
+        }
+
+        if (spellingAvg < 80)
+        {
+            suggSkills.Add("Spelling and punctuation");
+            suggSkillsVals.Add(2);
+        }
+
+        if (grammarAvg < 80)
+        {
+            suggSkills.Add("Grammar");
+            suggSkillsVals.Add(3);
+        }
+
+        return new SuggetionView
+            { NeedImprovement = suggSkills.Count > 0, SuggetionText = sugg + string.Join(", ", suggSkills), SuggetionValues = suggSkillsVals, SuggetionCategories = suggSkills};
+    }
+
     public async Task<UserPerformanceViewModel> GetUserPerformance(int userId, DateTime? fromDate = null,
         DateTime? toDate = null)
     {
@@ -139,7 +186,7 @@ public class AssignmentRepository(
             throw new Exception("User assignment not found");
         }
 
-        return new ResultResponse()
+        return new ResultResponse
         {
             Result = userAssignment.IsPublic
         };

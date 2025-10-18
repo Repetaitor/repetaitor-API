@@ -1,0 +1,17 @@
+﻿I want you to generate one essay title. The essay written on this title should be around 120–170 words, so make sure the title is suitable for that length.
+
+Use the following examples as a pattern and style reference. The new title should follow the same structure and topic style.
+Examples:
+
+Some people think that nowadays you can learn English from the internet, without a teacher. Do you agree or disagree with this opinion? State your opinion and support it with reasons and examples.
+
+Some people think that you can have a good school-leaving party without spending a lot of money. Do you agree or disagree with this opinion? State your opinion and support it with reasons and examples.
+
+Some people think that you can get a good education only in a foreign country. Do you agree or disagree with this opinion? State your opinion and support it with reasons and examples.
+
+Many young people decide to work while studying at university. What do YOU think about this? Give your own opinion and support it with arguments.
+
+It is important that every person knows the history of his or her country. What do YOU think about this? Give your own opinion and support it with arguments.
+
+Task:
+Generate one new essay title in the same style and tone as the examples above.

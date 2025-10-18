@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Core.Application.Converters;
 using Core.Application.Interfaces.Services;
 using Core.Application.Models;
+using Core.Application.Models.QuizModels;
 using Core.Application.Models.RequestsDTO;
 using Core.Application.Models.RequestsDTO.Assignments;
 using Core.Application.Models.RequestsDTO.Essays;
@@ -12,7 +13,6 @@ using Newtonsoft.Json;
 
 namespace RepetaitorAPI.Controllers;
 
-[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class AssignmentController(
@@ -184,22 +184,6 @@ public class AssignmentController(
         var resp = await assignmentService.DeleteAssignment(userId, assignmentId);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
-
-    [HttpPost("[action]")]
-    [ProducesResponseType(typeof(string), 200)]
-    public async Task<IResult> GetTextFromImage([FromBody] string[] imagesBase64)
-    {
-        try
-        {
-            var resp = await aIService.GetEssayTextFromImage([..imagesBase64]);
-            return Results.Ok(resp);
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(ex.Message);
-        }
-    }
-
     [HttpGet("[action]")]
     [ProducesResponseType(typeof(List<string>), 200)]
     public async Task<IResult> GetUserAssignmentImages(int userId, int assignmentId)
@@ -245,6 +229,59 @@ public class AssignmentController(
         logger.LogInformation("IsAssignmentPublic request: {assignmentId}", assignmentId);
         var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
         var resp = await assignmentService.IsAssignmentPublic(userId, assignmentId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(ResponseView<string>), 200)]
+    public async Task<IResult> GetSuggestions()
+    {
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)!.Value!);
+        var resp = await assignmentService.GetSuggestion(userId);
+        return ControllerReturnConverter.ConvertToReturnType(resp);
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(ResponseView<string>), 200)]
+    public async Task<IResult> EvaluateEssay(string essayTitle, string essayText, int wordCount)
+    {
+        var resp = await aIService.GetAIResponse(essayTitle, essayText, wordCount);
+        return Results.Ok(new EvaluationNewModal()
+        {
+            evaluationScore = new EvaluationScore()
+            {
+                FluencyScore = resp.Item1!.FluencyScore,
+                GrammarScore = resp.Item1!.GrammarScore,
+                EvaluationTextComments = resp.Item1!.EvaluationTextComments,
+                GeneralComments = resp.Item1!.GeneralComments
+            },
+            quiz = resp.Item2
+        });
+    }
+    [HttpGet("[action]")]
+    [ProducesResponseType(typeof(ResponseView<string>), 200)]
+    public async Task<IResult> GenerateEssayTitle()
+    {
+        var resp = await assignmentService.GetEssayTitle();
+        return Results.Ok(resp);
+    }
+    [HttpPost("[action]")]
+    [ProducesResponseType(typeof(string), 200)]
+    public async Task<IResult> GetTextFromImage([FromBody] string[] imagesBase64)
+    {
+        try
+        {
+            var resp = await aIService.GetEssayTextFromImage([..imagesBase64]);
+            return Results.Ok(resp);
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    }
+    [HttpGet("[Action]")]
+    [ProducesResponseType(typeof(QuizViewModel), 200)]
+    public async Task<IResult> GetQuizForImprove(List<string> questionTypes)
+    {
+        var resp = await assignmentService.CreateUserQuizAsync(questionTypes);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }

@@ -1,4 +1,5 @@
 using Core.Application.Models;
+using Core.Application.Models.QuizModels;
 using Core.Application.Models.RequestsDTO;
 using Core.Application.Models.RequestsDTO.Assignments;
 using Core.Application.Models.RequestsDTO.Essays;
@@ -11,6 +12,11 @@ namespace Core.Application.Interfaces.Services;
 
 public interface IAssignmentService
 {
+    Task<ResponseView<QuizViewModel>> CreateUserQuizAsync(List<string> questionTypes);
+    Task<string> GetEssayTitle();
+    Task<bool> AddDetailedScores(int userId, int assignmentId, int vocabulary, int spellingAndPunctuation,
+        int grammar);
+    Task<ResponseView<string>> GetSuggestion(int userId);
     Task<ResponseView<ResultResponse>> DeleteAssignment(int userId, int assignmentId);
     Task<ResponseView<AssignmentBaseModal>> CreateNewAssignment(int userId, CreateNewAssignmentsRequest request);
 
