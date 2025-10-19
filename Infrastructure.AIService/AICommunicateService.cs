@@ -236,7 +236,7 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
                     {
                         parts = new object[]
                         {
-                            new { text = "Please extract the text from this image." },
+                            new { text = "Extract only the raw text from the image. Do not add any comments, explanations, headings, or introductions. Return the text exactly as it appears." },
                             new
                             {
                                 inlineData = new
