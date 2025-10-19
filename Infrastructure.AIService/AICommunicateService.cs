@@ -109,14 +109,14 @@ public class AICommunicateService(IConfiguration configuration) : IAICommunicate
             suggSkills.Add("Grammar");
         }
 
-        var quiz = await GetQuizQuestions(suggSkills);
+        var quiz = await GetQuizQuestions(suggSkills , "/QuizCreate.txt");
         return (resp, quiz);
     }
 
-    public async Task<QuizViewModel?> GetQuizQuestions(List<string> questionTypes)
+    public async Task<QuizViewModel?> GetQuizQuestions(List<string> questionTypes, string promptPath)
     {
         string content;
-        await using (var fstream = File.OpenRead(Directory.GetCurrentDirectory() + "/QuizCreate.txt"))
+        await using (var fstream = File.OpenRead(Directory.GetCurrentDirectory() + promptPath))
         {
             var buffer = new byte[fstream.Length];
             var readAsync = await fstream.ReadAsync(buffer, 0, buffer.Length);

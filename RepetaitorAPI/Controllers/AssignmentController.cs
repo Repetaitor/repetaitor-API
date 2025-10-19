@@ -279,9 +279,9 @@ public class AssignmentController(
     }
     [HttpGet("[Action]")]
     [ProducesResponseType(typeof(QuizViewModel), 200)]
-    public async Task<IResult> GetQuizForImprove(List<string> questionTypes)
+    public async Task<IResult> GetQuizForImprove([FromQuery] List<string> questionType)
     {
-        var resp = await assignmentService.CreateUserQuizAsync(questionTypes);
+        var resp = await assignmentService.CreateUserQuizAsync(questionType);
         return ControllerReturnConverter.ConvertToReturnType(resp);
     }
 }

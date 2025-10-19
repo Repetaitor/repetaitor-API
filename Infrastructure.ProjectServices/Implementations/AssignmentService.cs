@@ -20,7 +20,7 @@ public class AssignmentService(
     {
         try
         {
-            var quiz = await aiCommunicateService.GetQuizQuestions(questionTypes);
+            var quiz = await aiCommunicateService.GetQuizQuestions(questionTypes, "/QuizCreateCustom.txt");
             return new ResponseView<QuizViewModel>()
             {
                 Code = StatusCodesEnum.Success,
